@@ -9,11 +9,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\Images\Background.jpg" />
+    <None Remove="Assets\Images\Logo.jpg" />
     <None Remove="Images\bg.jpg" />
     <None Remove="Images\phai.png" />
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Assets\Images\Background.jpg" />
+    <Resource Include="Assets\Images\Logo.jpg" />
     <Resource Include="Images\bg.jpg" />
     <Resource Include="Images\phai.png" />
   </ItemGroup>
