@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Input;
 using THUVIENZ.BLL;
@@ -53,14 +53,12 @@ namespace THUVIENZ.ViewModels
 
                 if (role != null)
                 {
-                    // Thông báo thành công (Spirit: WOW aesthetics - thông báo rõ ràng)
+                    // Thông báo thành công
                     MessageBox.Show(
-                        $"Chào mừng quay trở lại! Đăng nhập thành công với quyền: {role}", 
+                        $"{role} đăng nhập thành công! Chào mừng bạn quay trở lại.", 
                         "Thành công", 
                         MessageBoxButton.OK, 
                         MessageBoxImage.Information);
-
-                    // TODO: Thực hiện điều hướng màn hình tùy theo quyền (Admin -> Dashboard, Reader -> Search)
                 }
                 else
                 {

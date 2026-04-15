@@ -43,6 +43,8 @@ namespace THUVIENZ.DAL
                     throw; // Ném ngoại lệ để BLL hoặc ViewModel xử lý hoặc thông báo người dùng
                 }
             }
+            return null;
+        }
         /// <summary>
         /// Lấy thông tin tài khoản dựa trên tên đăng nhập (Dùng cho quy trình xác thực BCrypt).
         /// </summary>
