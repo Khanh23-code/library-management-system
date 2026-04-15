@@ -52,7 +52,7 @@ namespace THUVIENZ.BLL
                     // Thử kiểm tra theo chuẩn BCrypt Hash
                     isPasswordValid = BCrypt.Net.BCrypt.Verify(password, account.MatKhau);
                 }
-                catch (BCryptHelperException)
+                catch (Exception)
                 {
                     // Nếu dữ liệu trong DB không phải dạng Hash (BCrypt sẽ quăng lỗi), 
                     // ta sử dụng cơ chế FALLBACK: So sánh văn bản thuần túy (Plaintext).
