@@ -48,7 +48,7 @@
                         <Border Background="#F3F4F6" 
                         CornerRadius="12" 
                         Height="55" 
-                        Margin="0,0,0,20" 
+                        Margin="0,0,0,0" 
                         BorderBrush="#E5E7EB" 
                         BorderThickness="2">
                             <Grid>

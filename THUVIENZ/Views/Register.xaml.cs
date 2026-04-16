@@ -22,11 +22,11 @@ namespace THUVIENZ.Views
             try
             {
                 string fullName = txtFullName.Text;
-                string username = txtUserID.Text;
+                string id = txtId.Text;
                 string password = txtPassword.Password;
                 string confirmPassword = txtConfirmPassword.Password;
 
-                if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+                if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(password))
                 {
                     MessageBox.Show("Vui lòng điền đầy đủ thông tin.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
@@ -59,5 +59,6 @@ namespace THUVIENZ.Views
             new Login().Show();
             this.Close();
         }
+
     }
 }
