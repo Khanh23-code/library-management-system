@@ -1,10 +1,10 @@
-using System.Windows;
+using System.Windows.Controls;
 using THUVIENZ.Core;
 using THUVIENZ.ViewModels;
 
 namespace THUVIENZ.Views
 {
-    public partial class Profile : Window
+    public partial class Profile : UserControl
     {
         private readonly ProfileViewModel _viewModel;
 

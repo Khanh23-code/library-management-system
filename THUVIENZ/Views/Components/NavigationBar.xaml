@@ -30,20 +30,79 @@
         </Style>
     </UserControl.Resources>
 
-    <Border Margin="25,25,0,25" CornerRadius="35" Background="#60000000">
+    <Border Height="620" Margin="40,0,0,0" CornerRadius="35" Background="#60000000">
         <Border.Effect>
             <DropShadowEffect BlurRadius="20" Opacity="0.3" ShadowDepth="5" Color="Black"/>
         </Border.Effect>
         <StackPanel Margin="0,40,0,10">
             <TextBlock Text="📚 Librix" FontSize="36" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,60"/>
 
-            <Button Content="👤  Hồ sơ cá nhân" Click="BtnProfile_Click" Style="{DynamicResource MenuBtn}"/>
-            <Button Content="❤️  Sách yêu thích" Click="BtnFavorite_Click" Style="{DynamicResource MenuBtn}"/>
-            <Button Content="🔍  Tìm kiếm sách" Click="BtnSearch_Click" Style="{DynamicResource MenuBtn}"/>
-            <Button Content="💰  Đang mượn" Click="BtnBorrowing_Click" Style="{DynamicResource MenuBtn}"/>
-            <Button Content="📜  Thông báo" Click="BtnNotifications_Click" Style="{DynamicResource MenuBtn}"/>
+            <Button Content="👤  Hồ sơ cá nhân" Click="BtnProfile_Click">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource MenuBtn}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ActivePage, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="Profile">
+                                <Setter Property="Background" Value="#50FFFFFF"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
 
-            <Border Height="1" Background="#30FFFFFF" Margin="20,40,20,40"/>
+            <Button Content="❤️  Sách yêu thích" Click="BtnFavorite_Click">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource MenuBtn}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ActivePage, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="Favorite">
+                                <Setter Property="Background" Value="#50FFFFFF"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+
+            <Button Content="🔍  Tìm kiếm sách" Click="BtnSearch_Click">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource MenuBtn}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ActivePage, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="Search">
+                                <Setter Property="Background" Value="#50FFFFFF"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+
+            <Button Content="💰  Đang mượn" Click="BtnBorrowing_Click">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource MenuBtn}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ActivePage, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="Borrowing">
+                                <Setter Property="Background" Value="#50FFFFFF"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+
+            <Button Content="📜  Thông báo" Click="BtnNotifications_Click">
+                <Button.Style>
+                    <Style TargetType="Button" BasedOn="{StaticResource MenuBtn}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ActivePage, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="Notifications">
+                                <Setter Property="Background" Value="#50FFFFFF"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+
+            <Border Height="1" Background="#30FFFFFF" Margin="20"/>
 
             <Button Content="🚪  Đăng xuất" Click="BtnLogout_Click" Style="{DynamicResource MenuBtn}" Foreground="#FF6B6B"/>
         </StackPanel>
