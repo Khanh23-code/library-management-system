@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:THUVIENZ"
         Title="Favorites" Height="900" Width="1400"
+        WindowState="Maximized"
         WindowStartupLocation="CenterScreen" FontFamily="Segoe UI">
 
     <Window.Resources>
