@@ -1,9 +1,9 @@
-using System.Windows;
+using System.Windows.Controls;
 using THUVIENZ.ViewModels;
 
 namespace THUVIENZ.Views
 {
-    public partial class Search : Window
+    public partial class Search : UserControl
     {
         private readonly SearchViewModel _viewModel;
 
@@ -11,11 +11,9 @@ namespace THUVIENZ.Views
         {
             InitializeComponent();
 
-            // Khá»Ÿi táº¡o ViewModel vÃ  thiáº¿t láº­p DataContext
             _viewModel = new SearchViewModel();
             this.DataContext = _viewModel;
 
-            // Táº£i danh sÃ¡ch sÃ¡ch máº·c Ä‘á»‹nh khi vá»«a má»Ÿ mÃ n hÃ¬nh
             _viewModel.ExecuteSearch();
         }
     }

@@ -1,8 +1,8 @@
-﻿using System.Windows;
+﻿using System.Windows.Controls;
 
 namespace THUVIENZ.Views
 {
-    public partial class Favorite : Window
+    public partial class Favorite : UserControl
     {
         public Favorite() { InitializeComponent(); }
 

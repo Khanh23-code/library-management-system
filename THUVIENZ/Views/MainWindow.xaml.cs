@@ -1,23 +1,24 @@
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using THUVIENZ.Views; 
 
-namespace THUVIENZ.Views;
-
-/// <summary>
-/// Interaction logic for MainWindow.xaml
-/// </summary>
-public partial class MainWindow : Window
+namespace THUVIENZ
 {
-    public MainWindow()
+    public partial class MainWindow : Window
     {
-        InitializeComponent();
+        public MainWindow()
+        {
+            InitializeComponent();
+
+            NavBar.OnNavigate += NavBar_OnNavigate;
+            NavBar_OnNavigate(new Profile(), "Profile");
+        }
+
+        private void NavBar_OnNavigate(UserControl newPage, string pageName)
+        {
+            MainContent.Content = newPage;
+
+            NavBar.ActivePage = pageName;
+        }
     }
 }

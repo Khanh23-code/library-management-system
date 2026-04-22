@@ -1,9 +1,9 @@
-using System.Windows;
+using System.Windows.Controls;
 using THUVIENZ.ViewModels;
 
 namespace THUVIENZ.Views
 {
-    public partial class Borrowing : Window
+    public partial class Borrowing : UserControl
     {
         private readonly BorrowingViewModel _viewModel;
 
