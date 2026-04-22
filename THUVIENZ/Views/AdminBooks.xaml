@@ -1,0 +1,148 @@
+﻿<UserControl x:Class="THUVIENZ.Views.AdminBooks"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:comp="clr-namespace:THUVIENZ.Views.Components">
+
+    <UserControl.Resources>
+        <Style x:Key="ModernDataGrid" TargetType="DataGrid">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="RowBackground" Value="White"/>
+            <Setter Property="AlternatingRowBackground" Value="#F9FAFB"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="GridLinesVisibility" Value="None"/>
+            <Setter Property="AutoGenerateColumns" Value="False"/>
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Setter Property="SelectionMode" Value="Single"/>
+            <Setter Property="SelectionUnit" Value="FullRow"/>
+            <Setter Property="FontSize" Value="16"/>
+        </Style>
+
+        <Style TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#F3F4F6"/>
+            <Setter Property="Foreground" Value="#6B7280"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Padding" Value="15,12"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="BorderBrush" Value="#E5E7EB"/>
+        </Style>
+
+        <Style TargetType="DataGridRow">
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="BorderBrush" Value="#F3F4F6"/>
+            <Setter Property="Padding" Value="0,10"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#EFF6FF"/>
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#F3F4F6"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="DataGridCell">
+            <Setter Property="Padding" Value="15,10"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Padding="{TemplateBinding Padding}" Background="Transparent">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Border Background="White" CornerRadius="35"
+                HorizontalAlignment="Center" VerticalAlignment="Center" 
+                Width="900" Height="620">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="30" Opacity="0.2" ShadowDepth="10" Color="Black"/>
+            </Border.Effect>
+
+            <Grid Margin="60,50,60,50">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Margin="0,0,0,30">
+                    <TextBlock Text="Quản lý Kho Sách" FontSize="36" FontWeight="Bold" Foreground="#111827"/>
+                    <TextBlock Text="Thêm, sửa, xóa và tra cứu thông tin sách trong thư viện" FontSize="16" Foreground="#6B7280" Margin="0,5,0,0"/>
+                </StackPanel>
+
+                <comp:SearchBar Grid.Row="1" Margin="0,0,0,30"/>
+
+                <Border Grid.Row="2" Background="White" CornerRadius="20" BorderBrush="#E5E7EB" BorderThickness="1" Margin="0,0,0,20">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="10" Opacity="0.05" ShadowDepth="2"/>
+                    </Border.Effect>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <DataGrid Style="{StaticResource ModernDataGrid}" Margin="10" SelectionChanged="DataGrid_SelectionChanged">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Mã Sách" Binding="{Binding BookID}" Width="100"/>
+                                <DataGridTextColumn Header="Tên Sách" Binding="{Binding Title}" Width="*"/>
+                                <DataGridTextColumn Header="Tác Giả" Binding="{Binding Author}" Width="180"/>
+                                <DataGridTextColumn Header="Thể Loại" Binding="{Binding Category}" Width="130"/>
+                                <DataGridTextColumn Header="Trạng Thái" Binding="{Binding Status}" Width="100"/>
+
+                                <DataGridTemplateColumn Header="Hành Động" Width="140">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <Button Content="Sửa" Background="#EFF6FF" Foreground="#2563EB" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" Padding="15,6" Margin="0,0,8,0">
+                                                    <Button.Resources>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="CornerRadius" Value="8"/>
+                                                        </Style>
+                                                    </Button.Resources>
+                                                </Button>
+
+                                                <Button Content="Xóa" Background="#FEF2F2" Foreground="#DC2626" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" Padding="15,6">
+                                                    <Button.Resources>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="CornerRadius" Value="8"/>
+                                                        </Style>
+                                                    </Button.Resources>
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </ScrollViewer>
+                </Border>
+
+                <Button Grid.Row="3" Content="+ Thêm sách mới" Click="BtnShowAddPopup_Click" HorizontalAlignment="Right" Width="180" Height="50" Background="#10B981" Foreground="White" FontSize="18" FontWeight="Bold" Cursor="Hand">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="15">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#059669"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </Grid>
+        </Border>
+
+        <comp:AddBookPopup x:Name="AddPopup" Visibility="Collapsed"/>
+    </Grid>
+</UserControl>
