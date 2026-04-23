@@ -37,5 +37,29 @@ namespace THUVIENZ.Views
             forgotWindow.Show();
             this.Close();
         }
+
+        private void BtnLogin_Click(object sender, RoutedEventArgs e)
+        {
+            // 1. Lấy ID người dùng nhập vào
+            string id = txtUserID.Text.Trim();
+
+            // 2. Kiểm tra xác thực (giả sử bạn gọi AuthService để check pass)
+            // if (_authService.Login(id, txtPassword.Password)) 
+
+            if (!string.IsNullOrEmpty(id))
+            {
+                // 3. LƯU QUAN TRỌNG: Gán ID vào Session trước khi mở MainWindow
+                THUVIENZ.Core.UserSession.UserID = id;
+
+                // 4. Mở MainWindow và đóng cửa sổ Login hiện tại
+                MainWindow mainWindow = new MainWindow();
+                mainWindow.Show();
+                this.Close();
+            }
+            else
+            {
+                MessageBox.Show("Vui lòng nhập ID đăng nhập!");
+            }
+        }
     }
 }

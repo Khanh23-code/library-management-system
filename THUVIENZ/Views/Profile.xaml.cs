@@ -17,9 +17,9 @@ namespace THUVIENZ.Views
             this.DataContext = _viewModel;
 
             // Táº£i dá»¯ liá»‡u hồ sơ cá»§a Ä‘á»™c giáº£ Ä‘angÄƒng nháº­p
-            if (!string.IsNullOrEmpty(UserSession.Username))
+            if (!string.IsNullOrEmpty(UserSession.UserID))
             {
-                _viewModel.LoadProfileData(UserSession.Username);
+                _viewModel.LoadProfileData(UserSession.UserID);
             }
         }
     }
