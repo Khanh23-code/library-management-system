@@ -11,10 +11,6 @@ namespace THUVIENZ
         public MainWindow()
         {
             InitializeComponent();
-
-            UserSession.UserID = "AD_001"; // Giả lập đăng nhập thành công với ID Admin
-            //UserSession.UserID = "RD_001"; // Giả lập đăng nhập thành công với ID Reader
-
             ApplyRouting();
         }
 
