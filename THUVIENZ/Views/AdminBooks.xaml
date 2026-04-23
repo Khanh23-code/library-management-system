@@ -1,7 +1,8 @@
 ﻿<UserControl x:Class="THUVIENZ.Views.AdminBooks"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:comp="clr-namespace:THUVIENZ.Views.Components">
+             xmlns:comp="clr-namespace:THUVIENZ.Views.Components"
+             xmlns:pop="clr-namespace:THUVIENZ.Views.Popups">
 
     <UserControl.Resources>
         <Style x:Key="ModernDataGrid" TargetType="DataGrid">
@@ -84,7 +85,7 @@
                     </Border.Effect>
 
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <DataGrid Style="{StaticResource ModernDataGrid}" Margin="10" SelectionChanged="DataGrid_SelectionChanged">
+                        <DataGrid Style="{StaticResource ModernDataGrid}" Margin="10">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Mã Sách" Binding="{Binding BookID}" Width="100"/>
                                 <DataGridTextColumn Header="Tên Sách" Binding="{Binding Title}" Width="*"/>
@@ -143,6 +144,6 @@
             </Grid>
         </Border>
 
-        <comp:AddBookPopup x:Name="AddPopup" Visibility="Collapsed"/>
+        <pop:AddBookPopup x:Name="AddPopup" Visibility="Collapsed"/>
     </Grid>
 </UserControl>

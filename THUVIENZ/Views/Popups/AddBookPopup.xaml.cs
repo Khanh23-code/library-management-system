@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 
-namespace THUVIENZ.Views.Components
+namespace THUVIENZ.Views.Popups
 {
     public partial class AddBookPopup : UserControl
     {

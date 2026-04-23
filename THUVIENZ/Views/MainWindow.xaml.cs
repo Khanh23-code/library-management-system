@@ -19,6 +19,13 @@ namespace THUVIENZ
             MainContent.Content = newPage;
 
             NavBar.ActivePage = pageName;
+
+            if (newPage is AdminReaders readersPage)
+            {
+                readersPage.OnSubNavigate += (subPage) => {
+                    MainContent.Content = subPage;
+                };
+            }
         }
     }
 }
