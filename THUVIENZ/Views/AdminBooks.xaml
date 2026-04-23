@@ -85,7 +85,7 @@
                     </Border.Effect>
 
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <DataGrid Style="{StaticResource ModernDataGrid}" Margin="10">
+                        <DataGrid x:Name="dgBooks" Style="{StaticResource ModernDataGrid}" Margin="10">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Mã Sách" Binding="{Binding BookID}" Width="100"/>
                                 <DataGridTextColumn Header="Tên Sách" Binding="{Binding Title}" Width="*"/>

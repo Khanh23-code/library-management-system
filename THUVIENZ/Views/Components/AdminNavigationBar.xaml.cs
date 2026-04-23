@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
-using THUVIENZ.Views;
+using THUVIENZ.Views; // Chứa AdminBooks, AdminReaders, v.v.
 
 namespace THUVIENZ.Views.Components
 {
     public partial class AdminNavigationBar : UserControl
     {
-        // Biến đánh dấu trang đang active để XAML đổi màu
         public static readonly DependencyProperty ActivePageProperty =
             DependencyProperty.Register("ActivePage", typeof(string), typeof(AdminNavigationBar), new PropertyMetadata(string.Empty));
 
@@ -17,7 +16,7 @@ namespace THUVIENZ.Views.Components
             set { SetValue(ActivePageProperty, value); }
         }
 
-        // Sự kiện báo ra ngoài MainWindow để chuyển trang
+        // Sự kiện dùng chung để MainWindow bắt được
         public event Action<UserControl, string> OnNavigate;
 
         public AdminNavigationBar()
@@ -27,24 +26,29 @@ namespace THUVIENZ.Views.Components
 
         private void BtnBooks_Click(object sender, RoutedEventArgs e)
         {
-            // Tạm thời gọi đến class AdminBooks (ta sẽ tạo nó sau)
-            // OnNavigate?.Invoke(new AdminBooks(), "Books"); 
+            OnNavigate?.Invoke(new AdminBooks(), "Books");
         }
 
         private void BtnReaders_Click(object sender, RoutedEventArgs e)
         {
-            // OnNavigate?.Invoke(new AdminReaders(), "Readers"); 
+            var readersPage = new AdminReaders();
+            // Lắng nghe thêm sự kiện Sub-Navigate (Xem yêu cầu) nếu có
+            readersPage.OnSubNavigate += (subPage) => {
+                // Khi trang con báo chuyển, ta báo thẳng ra MainWindow
+                // nhưng không đổi ActivePage trên Nav
+                OnNavigate?.Invoke(subPage, "Readers");
+            };
+            OnNavigate?.Invoke(readersPage, "Readers");
         }
 
         private void BtnBorrowing_Click(object sender, RoutedEventArgs e)
         {
-            // Có thể tái sử dụng view Borrowing cũ hoặc tạo AdminBorrowing
-            // OnNavigate?.Invoke(new Borrowing(), "Borrowing"); 
+            OnNavigate?.Invoke(new AdminBorrowing(), "Borrowing");
         }
 
         private void BtnReport_Click(object sender, RoutedEventArgs e)
         {
-            // OnNavigate?.Invoke(new AdminReport(), "Report"); 
+            // OnNavigate?.Invoke(new AdminReport(), "Report");
         }
 
         private void BtnLogout_Click(object sender, RoutedEventArgs e)

@@ -17,7 +17,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <local:NavigationBar x:Name="NavBar" Grid.Column="0" Margin="0,0,20,0"/>
+        <ContentControl x:Name="NavContainer" Grid.Column="0"/>
 
         <ContentControl x:Name="MainContent" Grid.Column="1" Margin="20"/>
     </Grid>
