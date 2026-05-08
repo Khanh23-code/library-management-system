@@ -1,7 +1,8 @@
 <UserControl x:Class="THUVIENZ.NavigationBar"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:THUVIENZ">
+             xmlns:local="clr-namespace:THUVIENZ"
+             xmlns:fa="http://schemas.awesome.incremented/wpf/xaml/fontawesome.sharp">
     <UserControl.Resources>
         <Style x:Key="MenuBtn" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
@@ -37,7 +38,17 @@
         <StackPanel Margin="0,40,0,10">
             <TextBlock Text="📚 Librix" FontSize="36" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" Margin="0,0,0,60"/>
 
-            <Button Content="👤  Hồ sơ cá nhân" Click="BtnProfile_Click">
+            <Button Click="BtnProfile_Click">
+                <Button.Content>
+                    <StackPanel Orientation="Horizontal">
+                        <fa:IconImage Icon="User"
+                                      Width="22" Height="22" Margin="0,0,15,0"
+                                      Foreground="{Binding Path=Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+
+                        <TextBlock Text="Hồ sơ cá nhân" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button.Content>
+
                 <Button.Style>
                     <Style TargetType="Button" BasedOn="{StaticResource MenuBtn}">
                         <Style.Triggers>
@@ -50,7 +61,17 @@
                 </Button.Style>
             </Button>
 
-            <Button Content="❤️  Sách yêu thích" Click="BtnFavorite_Click">
+            <Button Click="BtnFavorite_Click">
+                <Button.Content>
+                    <StackPanel Orientation="Horizontal">
+                        <fa:IconImage Icon="Heart" 
+                                      Width="22" Height="22" Margin="0,0,15,0"
+                                      Foreground="{Binding Path=Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+
+                        <TextBlock Text="Sách yêu thích" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button.Content>
+                
                 <Button.Style>
                     <Style TargetType="Button" BasedOn="{StaticResource MenuBtn}">
                         <Style.Triggers>
@@ -63,7 +84,17 @@
                 </Button.Style>
             </Button>
 
-            <Button Content="🔍  Tìm kiếm sách" Click="BtnSearch_Click">
+            <Button Click="BtnSearch_Click">
+                <Button.Content>
+                    <StackPanel Orientation="Horizontal">
+                        <fa:IconImage Icon="MagnifyingGlass" 
+                      Width="22" Height="22" Margin="0,0,15,0"
+                      Foreground="{Binding Path=Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+
+                        <TextBlock Text="Tìm kiếm" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button.Content>
+
                 <Button.Style>
                     <Style TargetType="Button" BasedOn="{StaticResource MenuBtn}">
                         <Style.Triggers>
@@ -76,7 +107,17 @@
                 </Button.Style>
             </Button>
 
-            <Button Content="💰  Đang mượn" Click="BtnBorrowing_Click">
+            <Button Click="BtnBorrowing_Click">
+                <Button.Content>
+                    <StackPanel Orientation="Horizontal">
+                        <fa:IconImage Icon="Book" 
+                      Width="22" Height="22" Margin="0,0,15,0"
+                      Foreground="{Binding Path=Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+
+                        <TextBlock Text="Đang mượn" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button.Content>
+
                 <Button.Style>
                     <Style TargetType="Button" BasedOn="{StaticResource MenuBtn}">
                         <Style.Triggers>
@@ -89,7 +130,17 @@
                 </Button.Style>
             </Button>
 
-            <Button Content="📜  Thông báo" Click="BtnNotifications_Click">
+            <Button Click="BtnNotifications_Click">
+                <Button.Content>
+                    <StackPanel Orientation="Horizontal">
+                        <fa:IconImage Icon="Bell" 
+                      Width="22" Height="22" Margin="0,0,15,0"
+                      Foreground="{Binding Path=Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+
+                        <TextBlock Text="Thông báo" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button.Content>
+
                 <Button.Style>
                     <Style TargetType="Button" BasedOn="{StaticResource MenuBtn}">
                         <Style.Triggers>
@@ -104,7 +155,17 @@
 
             <Border Height="1" Background="#30FFFFFF" Margin="20"/>
 
-            <Button Content="🚪  Đăng xuất" Click="BtnLogout_Click" Style="{DynamicResource MenuBtn}" Foreground="#FF6B6B"/>
+            <Button Click="BtnLogout_Click" Style="{DynamicResource MenuBtn}" Foreground="#FF6B6B">
+                <Button.Content>
+                    <StackPanel Orientation="Horizontal">
+                        <fa:IconImage Icon="SignOut" 
+                      Width="22" Height="22" Margin="0,0,15,0"
+                      Foreground="{Binding Path=Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+
+                        <TextBlock Text="Đăng xuất" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button.Content>
+            </Button>
         </StackPanel>
     </Border>
 </UserControl>

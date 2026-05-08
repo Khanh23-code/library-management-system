@@ -25,7 +25,7 @@ namespace THUVIENZ.ViewModels
             get => _id;
             set
             {
-                _idError = value;
+                _id = value;
 
                 if (string.IsNullOrEmpty(_id))
                     IdError = "Mã số không được để trống.";
@@ -35,7 +35,7 @@ namespace THUVIENZ.ViewModels
                     IdError = string.Empty;
 
                 OnPropertyChanged();
-                CommandManager.InvalidateRequerySuggested(); // Cập nhật trạng thái của các command liên quan nếu có
+                CommandManager.InvalidateRequerySuggested(); 
             }
         }
 
