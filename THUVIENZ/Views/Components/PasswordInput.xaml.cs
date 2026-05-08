@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
+using FontAwesome.Sharp;
 
 namespace THUVIENZ.UserControls
 {
@@ -86,14 +87,19 @@ namespace THUVIENZ.UserControls
             lblPlaceholder.Visibility = string.IsNullOrEmpty(txtPasswordVisible.Text) ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        // Đoạn xử lý nút con mắt giữ nguyên
         private void btnShowPassword_Click(object sender, RoutedEventArgs e)
         {
+            // Lấy reference của IconImage từ bên trong ControlTemplate
+            var iconPassword = (IconImage)btnShowPassword.Template.FindName("iconPassword", btnShowPassword);
+
             if (txtPasswordVisible.Visibility == Visibility.Collapsed)
             {
                 txtPasswordVisible.Visibility = Visibility.Visible;
                 txtPassword.Visibility = Visibility.Collapsed;
-                btnShowPassword.Content = " ";
+
+                // ĐỔI SANG ICON CON MẮT BỊ GẠCH CHÉO
+                if (iconPassword != null) iconPassword.Icon = IconChar.EyeSlash;
+
                 txtPasswordVisible.Focus();
                 txtPasswordVisible.CaretIndex = txtPasswordVisible.Text.Length;
             }
@@ -101,10 +107,13 @@ namespace THUVIENZ.UserControls
             {
                 txtPasswordVisible.Visibility = Visibility.Collapsed;
                 txtPassword.Visibility = Visibility.Visible;
-                btnShowPassword.Content = "👁";
+
+                // ĐỔI LẠI ICON CON MẮT MỞ
+                if (iconPassword != null) iconPassword.Icon = IconChar.Eye;
+
                 txtPassword.Focus();
 
-                var selectMethod = typeof(PasswordBox).GetMethod("Select", BindingFlags.Instance | BindingFlags.NonPublic);
+                var selectMethod = typeof(PasswordBox).GetMethod("Select", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
                 if (selectMethod != null)
                 {
                     selectMethod.Invoke(txtPassword, new object[] { txtPassword.Password.Length, 0 });
