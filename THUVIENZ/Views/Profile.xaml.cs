@@ -16,10 +16,10 @@ namespace THUVIENZ.Views
             _viewModel = new ProfileViewModel();
             this.DataContext = _viewModel;
 
-            // Táº£i dá»¯ liá»‡u hồ sơ cá»§a Ä‘á»™c giáº£ Ä‘angÄƒng nháº­p
+            // Tải dữ liệu hồ sơ của độc giả đang đăng nhập
             if (!string.IsNullOrEmpty(UserSession.UserID))
             {
-                _viewModel.LoadProfileData(UserSession.UserID);
+                _ = _viewModel.LoadProfileDataAsync(UserSession.UserID);
             }
         }
     }

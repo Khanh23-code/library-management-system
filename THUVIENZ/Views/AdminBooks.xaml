@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="THUVIENZ.Views.AdminBooks"
+<UserControl x:Class="THUVIENZ.Views.AdminBooks"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:comp="clr-namespace:THUVIENZ.Views.Components"
@@ -85,13 +85,12 @@
                     </Border.Effect>
 
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <DataGrid x:Name="dgBooks" Style="{StaticResource ModernDataGrid}" Margin="10">
+                        <DataGrid x:Name="dgBooks" ItemsSource="{Binding BooksList}" SelectedItem="{Binding SelectedBook}" Style="{StaticResource ModernDataGrid}" Margin="10">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Mã Sách" Binding="{Binding BookID}" Width="100"/>
-                                <DataGridTextColumn Header="Tên Sách" Binding="{Binding Title}" Width="*"/>
-                                <DataGridTextColumn Header="Tác Giả" Binding="{Binding Author}" Width="180"/>
-                                <DataGridTextColumn Header="Thể Loại" Binding="{Binding Category}" Width="130"/>
-                                <DataGridTextColumn Header="Trạng Thái" Binding="{Binding Status}" Width="100"/>
+                                <DataGridTextColumn Header="Mã Sách" Binding="{Binding MaSach}" Width="100"/>
+                                <DataGridTextColumn Header="Tên Sách" Binding="{Binding TenSach}" Width="*"/>
+                                <DataGridTextColumn Header="Tác Giả" Binding="{Binding TacGia}" Width="180"/>
+                                <DataGridTextColumn Header="Trạng Thái" Binding="{Binding TinhTrang}" Width="120"/>
 
                                 <DataGridTemplateColumn Header="Hành Động" Width="140">
                                     <DataGridTemplateColumn.CellTemplate>

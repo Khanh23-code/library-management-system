@@ -103,5 +103,27 @@ namespace THUVIENZ.Models
                 OnPropertyChanged();
             }
         }
+
+        private byte[] _rowVersion = Array.Empty<byte>();
+        public byte[] RowVersion
+        {
+            get => _rowVersion;
+            set
+            {
+                _rowVersion = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private string? _hinhAnh;
+        public string? HinhAnh
+        {
+            get => _hinhAnh;
+            set
+            {
+                _hinhAnh = value;
+                OnPropertyChanged();
+            }
+        }
     }
 }

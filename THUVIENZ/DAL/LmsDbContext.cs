@@ -63,6 +63,10 @@ namespace THUVIENZ.DAL
             modelBuilder.Entity<ThamSo>().HasKey(t => t.TenThamSo);
             modelBuilder.Entity<PhieuThuTienPhat>().HasKey(p => p.MaPhieuThu);
 
+            modelBuilder.Entity<Sach>()
+                .Property(s => s.RowVersion)
+                .IsRowVersion();
+
             // 3. Định nghĩa Khóa phức hợp (Composite Keys cho các bảng Chi Tiết)
             modelBuilder.Entity<ChiTietPhieuMuon>()
                 .HasKey(c => new { c.MaPhieuMuon, c.MaSach });

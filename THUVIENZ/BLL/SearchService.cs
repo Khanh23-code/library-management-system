@@ -1,31 +1,64 @@
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using THUVIENZ.DAL;
 using THUVIENZ.Models;
+using THUVIENZ.Models.DTOs;
 
 namespace THUVIENZ.BLL
 {
     /// <summary>
-    /// Service xử lý logic tìm kiếm và lọc sách.
+    /// Service xử lý logic tìm kiếm và gợi ý sách cho người dùng.
     /// </summary>
     public class SearchService
     {
-        private readonly SachRepository _sachRepository;
+        private readonly LmsDbContext _context;
 
-        public SearchService()
+        public SearchService() : this(new LmsDbContext())
         {
-            _sachRepository = new SachRepository();
+        }
+
+        public SearchService(LmsDbContext context)
+        {
+            _context = context;
         }
 
         /// <summary>
-        /// Thực hiện tìm kiếm sách.
+        /// Thực hiện tìm kiếm sách đầy đủ (Kết quả chính).
         /// </summary>
-        public List<Sach> Search(string? keyword)
+        public async Task<IEnumerable<Sach>> SearchAsync(string? keyword)
         {
-            // Trình xử lý: Xóa khoảng trắng thừa
             string cleanKeyword = keyword?.Trim() ?? string.Empty;
+            
+            return await _context.Sachs
+                .AsNoTracking()
+                .Where(s => s.TenSach.Contains(cleanKeyword) || s.TacGia.Contains(cleanKeyword))
+                .ToListAsync();
+        }
 
-            // Chuyển tiếp yêu cầu xuống DAL
-            return _sachRepository.SearchBooks(cleanKeyword);
+        /// <summary>
+        /// Lấy danh sách gợi ý nhanh khi người dùng đang nhập từ khóa (Search Suggestions).
+        /// Giới hạn kết quả Top 10 và tối ưu hiệu năng bằng AsNoTracking.
+        /// </summary>
+        public async Task<IEnumerable<SuggestionDto>> GetSuggestionsAsync(string? query)
+        {
+            string cleanQuery = query?.Trim() ?? string.Empty;
+            if (string.IsNullOrEmpty(cleanQuery)) return Enumerable.Empty<SuggestionDto>();
+
+            return await _context.Sachs
+                .AsNoTracking()
+                .Where(s => s.TenSach.Contains(cleanQuery) || s.TacGia.Contains(cleanQuery))
+                .Take(10) // Giới hạn Top 10 theo yêu cầu của Lead
+                .Select(s => new SuggestionDto
+                {
+                    MaSach = s.MaSach,
+                    DisplayText = s.TenSach,
+                    SecondaryText = s.TacGia,
+                    // Nếu từ khóa khớp với tên sách thì để loại là Title, ngược lại là Author
+                    Loai = s.TenSach.Contains(cleanQuery) ? "Title" : "Author"
+                })
+                .ToListAsync();
         }
     }
 }

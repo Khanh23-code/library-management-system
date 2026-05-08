@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="THUVIENZ.Views.AdminReaders"
+<UserControl x:Class="THUVIENZ.Views.AdminReaders"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:comp="clr-namespace:THUVIENZ.Views.Components"
@@ -26,7 +26,7 @@
                         <TextBlock Text="Quản lý thông tin, tìm kiếm và xóa tài khoản của độc giả" FontSize="16" Foreground="#6B7280" Margin="0,5,0,0"/>
                     </StackPanel>
 
-                    <Button Content="🔔 Xem Yêu cầu (2)" HorizontalAlignment="Right" VerticalAlignment="Center" 
+                    <Button Content="{Binding PendingRequestCount, StringFormat='🔔 Xem Yêu cầu ({0})'}" HorizontalAlignment="Right" VerticalAlignment="Center" 
                             Width="160" Height="45" Background="#F59E0B" Foreground="White" 
                             FontSize="16" FontWeight="Bold" Cursor="Hand" Click="BtnViewRequests_Click">
                         <Button.Style>
@@ -53,11 +53,23 @@
                 <comp:SearchBar Grid.Row="1" Margin="0,0,0,20"/>
 
                 <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" BorderThickness="0" Margin="0,0,0,20" Padding="0,5,10,5">
-                    <WrapPanel Orientation="Horizontal">
-                        <comp:ReaderCard ReaderName="Nguyễn Văn A" ReaderId="RD-20511" Address="TP.HCM" Gender="Nam" Email="nguyenvana@gmail.com" Phone="0901234567" AvatarSource="/Assets/phai.png" OnDeleteClick="ReaderCard_OnDeleteClick"/>
-                        <comp:ReaderCard ReaderName="Trần Thị B" ReaderId="RD-20512" Address="Hà Nội" Gender="Nữ" Email="tranthib@outlook.com" Phone="0987654321" AvatarSource="/Assets/phai.png" OnDeleteClick="ReaderCard_OnDeleteClick"/>
-                        <comp:ReaderCard ReaderName="Lê Văn C" ReaderId="RD-20513" Address="Đà Nẵng" Gender="Nam" Email="levanc@gmail.com" Phone="0912345678" AvatarSource="/Assets/phai.png" OnDeleteClick="ReaderCard_OnDeleteClick"/>
-                    </WrapPanel>
+                    <ItemsControl ItemsSource="{Binding Readers}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <comp:ReaderCard ReaderName="{Binding HoTen}" ReaderId="{Binding MaDocGia}" 
+                                                  Address="{Binding DiaChi}" Gender="{Binding GioiTinh}" 
+                                                  Email="{Binding Email}" Phone="{Binding SoDienThoai}" 
+                                                  AvatarSource="/Assets/phai.png" 
+                                                  DeleteCommand="{Binding DataContext.DeleteReaderCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  DeleteCommandParameter="{Binding}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </ScrollViewer>
 
             </Grid>

@@ -76,19 +76,30 @@ namespace THUVIENZ.ViewModels
         /// <summary>
         /// Lấy dữ liệu thống kê mượn sách theo bộ lọc thời gian.
         /// </summary>
-        private void ExecuteLoadBookStats()
+        private async void ExecuteLoadBookStats()
         {
-            var stats = _reportService.GetTopBorrowedBooks(FromDate, ToDate);
-            BookStats = new ObservableCollection<BookStatDTO>(stats);
+            try
+            {
+                var stats = await _reportService.GetTopBorrowedBooksAsync(FromDate, ToDate);
+                BookStats = new ObservableCollection<BookStatDTO>(stats);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Lỗi LoadBookStats: " + ex.Message);
+            }
         }
 
-        /// <summary>
-        /// Lấy dữ liệu thống kê nợ và quá hạn của độc giả.
-        /// </summary>
-        private void ExecuteLoadReaderStats()
+        private async void ExecuteLoadReaderStats()
         {
-            var stats = _reportService.GetReaderOverdueReports();
-            ReaderStats = new ObservableCollection<ReaderStatDTO>(stats);
+            try
+            {
+                var stats = await _reportService.GetReaderOverdueReportsAsync();
+                ReaderStats = new ObservableCollection<ReaderStatDTO>(stats);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Lỗi LoadReaderStats: " + ex.Message);
+            }
         }
     }
 }

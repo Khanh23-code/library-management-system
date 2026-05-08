@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using THUVIENZ.BLL;
 using THUVIENZ.Core;
 using THUVIENZ.Models;
@@ -44,15 +45,15 @@ namespace THUVIENZ.ViewModels
         /// <summary>
         /// Tải dữ liệu hồ sơ và danh sách sách đang mượn dựa trên tên đăng nhập.
         /// </summary>
-        public void LoadProfileData(string username)
+        public async Task LoadProfileDataAsync(string username)
         {
             // 1. Lấy thông tin độc giả
-            CurrentReader = _profileService.GetReaderInfo(username);
+            CurrentReader = await _profileService.GetReaderInfoAsync(username);
             
             // 2. Nếu tìm thấy độc giả, tải danh sách sách đang mượn
             if (CurrentReader != null)
             {
-                List<Sach> books = _profileService.GetActiveBorrowedBooks(CurrentReader.MaDocGia);
+                var books = await _profileService.GetActiveBorrowedBooksAsync(CurrentReader.MaDocGia);
                 BorrowedBooks = new ObservableCollection<Sach>(books);
             }
         }

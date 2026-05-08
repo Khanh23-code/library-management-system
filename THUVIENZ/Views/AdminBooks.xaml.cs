@@ -1,52 +1,37 @@
-﻿using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
-using THUVIENZ.Views.Components;
+using THUVIENZ.ViewModels;
 using THUVIENZ.Views.Popups;
 
 namespace THUVIENZ.Views
 {
     public partial class AdminBooks : UserControl
     {
-        // Sử dụng ObservableCollection để UI tự động cập nhật khi có thêm/xóa sách
-        private ObservableCollection<BookModel> _mockBooks;
+        private readonly BookManagementViewModel _viewModel;
 
         public AdminBooks()
         {
             InitializeComponent();
-            LoadMockData();
+            
+            // Khởi tạo ViewModel và gán DataContext để Binding hoạt động
+            _viewModel = new BookManagementViewModel();
+            this.DataContext = _viewModel;
 
-            // Đăng ký lắng nghe sự kiện từ AddPopup
+            // Đăng ký lắng nghe sự kiện từ AddPopup (Nếu cần tích hợp logic thêm sách)
             AddPopup.OnBookAdded += AddPopup_OnBookAdded;
         }
 
-        private void LoadMockData()
-        {
-            _mockBooks = new ObservableCollection<BookModel>
-            {
-                new BookModel { BookID = "DNT-101", Title = "Đắc Nhân Tâm", Author = "Dale Carnegie", Category = "Tâm lý kỹ năng", Status = "Sẵn sàng" },
-                new BookModel { BookID = "IT-404", Title = "Clean Code", Author = "Robert C. Martin", Category = "Công nghệ", Status = "Đang mượn" },
-                new BookModel { BookID = "NGK-999", Title = "Nhà Giả Kim", Author = "Paulo Coelho", Category = "Tiểu thuyết", Status = "Sẵn sàng" },
-                new BookModel { BookID = "ECO-200", Title = "Tâm lý học tội phạm", Author = "Stanton E. Samenow", Category = "Tâm lý học", Status = "Sẵn sàng" }
-            };
-
-            // Nạp dữ liệu vào bảng DataGrid
-            dgBooks.ItemsSource = _mockBooks;
-        }
-
-        // Sự kiện hiển thị Popup
         private void BtnShowAddPopup_Click(object sender, RoutedEventArgs e)
         {
             AddPopup.Visibility = Visibility.Visible;
         }
 
-        // Bắt lấy dữ liệu sách mới từ Popup ném ra
         private void AddPopup_OnBookAdded(object sender, BookModel newBook)
         {
-            // Thêm sách vào danh sách. ObservableCollection sẽ tự động vẽ thêm 1 dòng trên DataGrid!
-            _mockBooks.Add(newBook);
-
-            MessageBox.Show($"Đã thêm sách '{newBook.Title}' thành công!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+            // Tạm thời giữ lại để không lỗi UI, nhưng thực tế nên gọi ViewModel.AddCommand
+            // Trong bản nâng cấp tiếp theo, AddPopup sẽ binding trực tiếp vào ViewModel
+            AddPopup.Visibility = Visibility.Collapsed;
+            _viewModel.LoadBooksCommand.Execute(null);
         }
     }
 }

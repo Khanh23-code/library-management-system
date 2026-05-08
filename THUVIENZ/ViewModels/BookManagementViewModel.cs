@@ -57,11 +57,11 @@ namespace THUVIENZ.ViewModels
             LoadAllBooks();
         }
 
-        private void LoadAllBooks()
+        private async void LoadAllBooks()
         {
             try
             {
-                var books = _bookService.GetAllBooks();
+                var books = await _bookService.GetAllAsync();
                 BooksList = new ObservableCollection<Sach>(books);
             }
             catch (Exception ex)
@@ -70,9 +70,8 @@ namespace THUVIENZ.ViewModels
             }
         }
 
-        private void ExecuteAdd()
+        private async void ExecuteAdd()
         {
-            // Giả định SelectedBook đang chứa thông tin sách mới từ Form nhập liệu
             if (SelectedBook == null || string.IsNullOrWhiteSpace(SelectedBook.TenSach))
             {
                 MessageBox.Show("Vui lòng nhập đầy đủ thông tin sách mới.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -81,11 +80,9 @@ namespace THUVIENZ.ViewModels
 
             try
             {
-                if (_bookService.AddBook(SelectedBook))
-                {
-                    MessageBox.Show("Thêm sách thành công!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
-                    LoadAllBooks();
-                }
+                await _bookService.AddBookAsync(SelectedBook);
+                MessageBox.Show("Thêm sách thành công!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                LoadAllBooks();
             }
             catch (Exception ex)
             {
@@ -93,7 +90,7 @@ namespace THUVIENZ.ViewModels
             }
         }
 
-        private void ExecuteUpdate()
+        private async void ExecuteUpdate()
         {
             if (SelectedBook == null)
             {
@@ -103,11 +100,9 @@ namespace THUVIENZ.ViewModels
 
             try
             {
-                if (_bookService.UpdateBook(SelectedBook))
-                {
-                    MessageBox.Show("Cập nhật thông tin sách thành công!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
-                    LoadAllBooks();
-                }
+                await _bookService.UpdateAsync(SelectedBook);
+                MessageBox.Show("Cập nhật thông tin sách thành công!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                LoadAllBooks();
             }
             catch (Exception ex)
             {
@@ -115,7 +110,7 @@ namespace THUVIENZ.ViewModels
             }
         }
 
-        private void ExecuteDelete()
+        private async void ExecuteDelete()
         {
             if (SelectedBook == null)
             {
@@ -130,15 +125,12 @@ namespace THUVIENZ.ViewModels
 
             try
             {
-                if (_bookService.DeleteBook(SelectedBook.MaSach))
-                {
-                    MessageBox.Show("Xóa sách thành công!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
-                    LoadAllBooks();
-                }
+                await _bookService.DeleteBookAsync(SelectedBook.MaSach);
+                MessageBox.Show("Xóa sách thành công!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                LoadAllBooks();
             }
             catch (Exception ex)
             {
-                // Hiển thị lỗi nghiệp vụ (ví dụ: Sách đang được mượn)
                 MessageBox.Show(ex.Message, "Không thể xóa", MessageBoxButton.OK, MessageBoxImage.Stop);
             }
         }

@@ -36,5 +36,7 @@ namespace THUVIENZ.Models
                 OnPropertyChanged();
             }
         }
+
+        public virtual PhieuMuon? MaPhieuMuonNavigation { get; set; }
     }
 }

@@ -67,36 +67,40 @@ namespace THUVIENZ.ViewModels
         /// <summary>
         /// Tìm sách theo mã và thêm vào danh sách chờ mượn.
         /// </summary>
-        private void ExecuteAddToCart()
+        private async void ExecuteAddToCart()
         {
             if (int.TryParse(BookIdInput, out int bookId))
             {
-                // Kiểm tra xem sách đã có trong giỏ hàng chưa
                 if (Cart.Any(s => s.MaSach == bookId))
                 {
                     MessageBox.Show("Cuốn sách này đã được thêm vào giỏ hàng mượn.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                // Tìm kiếm sách trong CSDL
-                var results = _sachRepository.SearchBooks(bookId.ToString());
-                var book = results.FirstOrDefault(s => s.MaSach == bookId);
-
-                if (book != null)
+                try
                 {
-                    if (book.TinhTrang == "Sẵn sàng")
+                    var book = await _sachRepository.GetByIdAsync(bookId);
+
+                    if (book != null)
                     {
-                        Cart.Add(book);
-                        BookIdInput = string.Empty; // Xóa input sau khi thêm thành công
+                        if (book.TinhTrang == "Sẵn sàng")
+                        {
+                            Cart.Add(book);
+                            BookIdInput = string.Empty;
+                        }
+                        else
+                        {
+                            MessageBox.Show($"Cuốn sách '{book.TenSach}' hiện đang ở trạng thái '{book.TinhTrang}', không thể mượn.", "Không khả dụng", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        }
                     }
                     else
                     {
-                        MessageBox.Show($"Cuốn sách '{book.TenSach}' hiện đang ở trạng thái '{book.TinhTrang}', không thể mượn.", "Không khả dụng", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        MessageBox.Show("Không tìm thấy sách với mã số vừa nhập.", "Lỗi nạp sách", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    MessageBox.Show("Không tìm thấy sách với mã số vừa nhập.", "Lỗi nạp sách", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show($"Lỗi truy xuất dữ liệu: {ex.Message}", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             else
@@ -105,10 +109,7 @@ namespace THUVIENZ.ViewModels
             }
         }
 
-        /// <summary>
-        /// Thực hiện lưu thông mượn sách thông qua Service.
-        /// </summary>
-        private void ExecuteCheckout()
+        private async void ExecuteCheckout()
         {
             if (ReaderId <= 0)
             {
@@ -122,20 +123,16 @@ namespace THUVIENZ.ViewModels
                 return;
             }
 
-            // Gọi service thực hiện mượn sách
-            var result = _circulationService.BorrowBooks(ReaderId, Cart.Select(s => s.MaSach).ToList());
-
-            if (result.Success)
+            try
             {
-                MessageBox.Show(result.Message, "Mượn sách thành công", MessageBoxButton.OK, MessageBoxImage.Information);
-                
-                // Reset form
+                await _circulationService.BorrowBooksAsync(ReaderId, Cart.Select(s => s.MaSach).ToList());
+                MessageBox.Show("Mượn sách thành công!", "Hoàn tất", MessageBoxButton.OK, MessageBoxImage.Information);
                 Cart.Clear();
                 ReaderId = 0;
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show(result.Message, "Lỗi mượn sách", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(ex.Message, "Lỗi mượn sách", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }
