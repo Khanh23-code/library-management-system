@@ -47,14 +47,12 @@ namespace THUVIENZ.Views
         {
             var requestPage = new AdminReaderRequests();
 
-            // Thiết lập logic quay lại: Khi trang Request báo "GoBack", 
-            // ta yêu cầu MainWindow hiện lại chính trang AdminReaders này.
             requestPage.GoBackRequested += () =>
             {
-                OnSubNavigate?.Invoke(this);
+                // Khởi tạo trang mới để làm mới UI và Data
+                OnSubNavigate?.Invoke(new AdminReaders());
             };
 
-            // Báo cho MainWindow nạp trang AdminReaderRequests vào khung hình
             OnSubNavigate?.Invoke(requestPage);
         }
     }

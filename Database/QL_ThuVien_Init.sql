@@ -108,3 +108,8 @@ CREATE TABLE PHIEUTHUTIENPHAT (
     NgayThu DATETIME DEFAULT GETDATE(),
     FOREIGN KEY (MaDocGia) REFERENCES DOCGIA(MaDocGia)
 );
+
+select * from TAIKHOAN
+
+insert into TAIKHOAN
+values ('RD_01', '123456', 'Reader', 'Active')
