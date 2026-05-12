@@ -34,8 +34,12 @@ namespace THUVIENZ.DAL
         /// </summary>
         public async Task<IEnumerable<Sach>> SearchBooksAsync(string keyword)
         {
+            bool isId = int.TryParse(keyword, out int id);
             return await _context.Sachs
-                .Where(s => s.TenSach.Contains(keyword) || s.TacGia.Contains(keyword))
+                .Where(s => s.TenSach.Contains(keyword) || 
+                            (s.TacGia != null && s.TacGia.Contains(keyword)) || 
+                            (isId && s.MaSach == id) ||
+                            s.MaSach.ToString().Contains(keyword))
                 .ToListAsync();
         }
     }

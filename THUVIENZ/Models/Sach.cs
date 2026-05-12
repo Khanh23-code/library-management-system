@@ -125,5 +125,29 @@ namespace THUVIENZ.Models
                 OnPropertyChanged();
             }
         }
+
+        private string? _moTa;
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public string? MoTa
+        {
+            get => _moTa;
+            set
+            {
+                _moTa = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private int _soLuong = 1;
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public int SoLuong
+        {
+            get => _soLuong;
+            set
+            {
+                _soLuong = value;
+                OnPropertyChanged();
+            }
+        }
     }
 }

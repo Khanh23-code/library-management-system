@@ -50,7 +50,7 @@
                     </Button>
                 </Grid>
 
-                <comp:SearchBar Grid.Row="1" Margin="0,0,0,20"/>
+                <comp:SearchBar Grid.Row="1" SearchText="{Binding SearchKeyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,20"/>
 
                 <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" BorderThickness="0" Margin="0,0,0,20" Padding="0,5,10,5">
                     <ItemsControl ItemsSource="{Binding Readers}">
@@ -62,8 +62,8 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <comp:ReaderCard ReaderName="{Binding HoTen}" ReaderId="{Binding MaDocGia}" 
-                                                  Address="{Binding DiaChi}" Gender="{Binding GioiTinh}" 
-                                                  Email="{Binding Email}" Phone="{Binding SoDienThoai}" 
+                                                  Address="{Binding DiaChi}" Gender="Không xác định" 
+                                                  Email="{Binding Email}" Phone="Chưa cập nhật" 
                                                   AvatarSource="/Assets/phai.png" 
                                                   DeleteCommand="{Binding DataContext.DeleteReaderCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                   DeleteCommandParameter="{Binding}"/>

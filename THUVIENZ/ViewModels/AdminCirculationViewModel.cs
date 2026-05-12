@@ -17,6 +17,19 @@ namespace THUVIENZ.ViewModels
         private readonly LmsDbContext _context;
         private readonly CirculationService _circulationService;
 
+        private bool _isHistoryTab;
+        public bool IsHistoryTab
+        {
+            get => _isHistoryTab;
+            set
+            {
+                _isHistoryTab = value;
+                OnPropertyChanged();
+                _ = LoadReadersAsync();
+                BorrowedBooks.Clear();
+            }
+        }
+
         private ObservableCollection<DocGiaWithBorrowCount> _readersList = new ObservableCollection<DocGiaWithBorrowCount>();
         public ObservableCollection<DocGiaWithBorrowCount> ReadersList
         {
@@ -57,8 +70,10 @@ namespace THUVIENZ.ViewModels
             _ = LoadReadersAsync();
         }
 
-        private async Task LoadReadersAsync()
+        public async Task LoadReadersAsync()
         {
+            string statusFilter = IsHistoryTab ? "Đã trả" : "Đang mượn";
+
             var readers = await _context.DocGias
                 .Select(d => new DocGiaWithBorrowCount
                 {
@@ -66,7 +81,7 @@ namespace THUVIENZ.ViewModels
                     HoTen = d.HoTen,
                     BorrowCount = _context.ChiTietPhieuMuons
                         .Join(_context.PhieuMuons, ct => ct.MaPhieuMuon, pm => pm.MaPhieuMuon, (ct, pm) => new { ct, pm })
-                        .Count(x => x.pm.MaDocGia == d.MaDocGia && x.ct.TrangThai == "Đang mượn")
+                        .Count(x => x.pm.MaDocGia == d.MaDocGia && x.ct.TrangThai == statusFilter)
                 })
                 .Where(x => x.BorrowCount > 0)
                 .ToListAsync();
@@ -74,18 +89,20 @@ namespace THUVIENZ.ViewModels
             ReadersList = new ObservableCollection<DocGiaWithBorrowCount>(readers);
         }
 
-        private async Task LoadBorrowedBooksAsync(int readerId)
+        public async Task LoadBorrowedBooksAsync(int readerId)
         {
+            string statusFilter = IsHistoryTab ? "Đã trả" : "Đang mượn";
+
             var books = await _context.ChiTietPhieuMuons
                 .Join(_context.PhieuMuons, ct => ct.MaPhieuMuon, pm => pm.MaPhieuMuon, (ct, pm) => new { ct, pm })
                 .Join(_context.Sachs, x => x.ct.MaSach, s => s.MaSach, (x, s) => new { x.ct, x.pm, s })
-                .Where(x => x.pm.MaDocGia == readerId && x.ct.TrangThai == "Đang mượn")
+                .Where(x => x.pm.MaDocGia == readerId && x.ct.TrangThai == statusFilter)
                 .Select(x => new BorrowedBookInfo
                 {
                     MaSach = x.s.MaSach,
                     TenSach = x.s.TenSach,
                     NgayMuon = x.pm.NgayMuon,
-                    HanTra = x.pm.NgayMuon.AddDays(30) // Giả định 30 ngày, thực tế lấy từ tham số
+                    HanTra = x.pm.NgayMuon.AddDays(30)
                 })
                 .ToListAsync();
 
@@ -94,6 +111,12 @@ namespace THUVIENZ.ViewModels
 
         private async Task ExecuteReturnAsync(object? param)
         {
+            if (IsHistoryTab)
+            {
+                System.Windows.MessageBox.Show("Sách này đã được hoàn trả xong.", "Thông báo", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                return;
+            }
+
             if (param is BorrowedBookInfo book && SelectedReader != null)
             {
                 try
@@ -107,7 +130,7 @@ namespace THUVIENZ.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    // Log error
+                    System.Windows.MessageBox.Show($"Lỗi trả sách: {ex.Message}", "Lỗi", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
                 }
             }
         }
