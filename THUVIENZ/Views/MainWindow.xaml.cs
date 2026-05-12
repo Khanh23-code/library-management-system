@@ -59,14 +59,6 @@ namespace THUVIENZ
                 adminNav.ActivePage = pageName;
             else if (navBar is NavigationBar readerNav)
                 readerNav.ActivePage = pageName;
-
-            // Xử lý đặc biệt cho AdminReaders để hỗ trợ trang "Yêu cầu đăng ký"
-            if (newPage is AdminReaders readersPage)
-            {
-                readersPage.OnSubNavigate += (subPage) => {
-                    MainContent.Content = subPage;
-                };
-            }
         }
     }
 }

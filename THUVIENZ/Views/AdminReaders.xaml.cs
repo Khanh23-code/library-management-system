@@ -20,7 +20,11 @@ namespace THUVIENZ.Views
         private void BtnViewRequests_Click(object sender, RoutedEventArgs e)
         {
             var requestPage = new AdminReaderRequests();
-            // Điều hướng sang trang yêu cầu (nếu MainWindow hỗ trợ OnSubNavigate)
+            requestPage.GoBackRequested += () =>
+            {
+                // Khởi tạo trang mới để làm mới UI và Data
+                OnSubNavigate?.Invoke(new AdminReaders());
+            };
             OnSubNavigate?.Invoke(requestPage);
         }
 

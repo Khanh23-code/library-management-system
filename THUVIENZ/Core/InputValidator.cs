@@ -31,7 +31,8 @@ namespace THUVIENZ.Core
         public static bool IsValidPassword(string password)
         {
             if (string.IsNullOrWhiteSpace(password)) return false;
-            return password.Length >= 6 && !password.Contains(" ");
+            //return password.Length >= 6 && !password.Contains(" ");
+            return !password.Contains(" ");
         }
 
         /// <summary>

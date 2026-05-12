@@ -12,6 +12,8 @@ namespace THUVIENZ.ViewModels
     /// </summary>
     public class LoginViewModel : ObservableObject
     {
+        public event Action OnLoginSuccess;
+
         private string _idError = string.Empty;
         public string IdError
         {
@@ -57,7 +59,7 @@ namespace THUVIENZ.ViewModels
                 if (string.IsNullOrEmpty(_password))
                     PasswordError = "Mật khẩu không được để trống.";
                 else if (!InputValidator.IsValidPassword(_password))
-                    PasswordError = "Mật khẩu phải từ 6 ký tự và không có khoảng trắng.";
+                    PasswordError = "Mật khẩu không có khoảng trắng.";
                 else
                     PasswordError = string.Empty;
 
@@ -99,11 +101,18 @@ namespace THUVIENZ.ViewModels
                 }
                 else if (result != null)
                 {
-                    // Lưu thông tin vào Session và mở MainWindow (Logic UI xử lý)
+                    // Lưu thông tin vào Session
                     UserSession.UserID = Id;
                     UserSession.Role = result;
 
-                    MessageBox.Show($"{result} đăng nhập thành công!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                    // Thông báo thành công
+                    MessageBox.Show(
+                        $"{result} đăng nhập thành công! Chào mừng bạn quay trở lại.", 
+                        "Thành công", 
+                        MessageBoxButton.OK, 
+                        MessageBoxImage.Information);
+
+                    OnLoginSuccess?.Invoke();
                 }
                 else
                 {
