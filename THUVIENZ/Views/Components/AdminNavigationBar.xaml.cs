@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using THUVIENZ.Views; // Chứa AdminBooks, AdminReaders, v.v.
@@ -31,12 +31,22 @@ namespace THUVIENZ.Views.Components
 
         private void BtnReaders_Click(object sender, RoutedEventArgs e)
         {
-            var readersPage = new AdminReaders();
-            // Lắng nghe thêm sự kiện Sub-Navigate (Xem yêu cầu) nếu có
+            NavigateToReadersPage(new AdminReaders());
+        }
+
+        private void NavigateToReadersPage(AdminReaders readersPage)
+        {
             readersPage.OnSubNavigate += (subPage) => {
-                // Khi trang con báo chuyển, ta báo thẳng ra MainWindow
-                // nhưng không đổi ActivePage trên Nav
-                OnNavigate?.Invoke(subPage, "Readers");
+                if (subPage is AdminReaders newReadersPage)
+                {
+                    // Khi trang con (AdminReaderRequests) yêu cầu quay lại AdminReaders mới,
+                    // ta cần đăng ký lại sự kiện OnSubNavigate cho trang mới này.
+                    NavigateToReadersPage(newReadersPage);
+                }
+                else
+                {
+                    OnNavigate?.Invoke(subPage, "Readers");
+                }
             };
             OnNavigate?.Invoke(readersPage, "Readers");
         }

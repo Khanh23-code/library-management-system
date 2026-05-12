@@ -7,6 +7,7 @@ namespace THUVIENZ.Views
     public partial class AdminReaderRequests : UserControl
     {
         private readonly AccountApprovalViewModel _viewModel;
+        public event System.Action? GoBackRequested;
 
         public AdminReaderRequests()
         {
@@ -17,6 +18,7 @@ namespace THUVIENZ.Views
 
         private void BtnBack_Click(object sender, RoutedEventArgs e)
         {
+            GoBackRequested?.Invoke();
             // Logic quay lại dashboard (nếu dùng Navigation)
             this.Visibility = Visibility.Collapsed;
         }
