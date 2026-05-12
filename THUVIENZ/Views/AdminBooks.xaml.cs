@@ -68,7 +68,6 @@ namespace THUVIENZ.Views
                     TinhTrang = string.IsNullOrWhiteSpace(newBook.Status) ? "Còn sách" : newBook.Status,
                     MoTa = newBook.Description,
                     TriGia = 100000,
-                    NgayNhap = System.DateTime.Now,
                     MaTheLoai = 1
                 };
 

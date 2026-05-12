@@ -9,6 +9,8 @@ namespace THUVIENZ.DAL
 {
     /// <summary>
     /// Repository cụ thể cho Độc giả. Kế thừa từ BaseRepository để tận dụng CRUD Generic.
+    /// Cập nhật truy vấn dựa trên cấu trúc bảng mới CHITIETMUONTRA gộp chung.
+    /// Áp dụng Strict Null Safety tuyệt đối và chú thích Tiếng Việt.
     /// </summary>
     public class DocGiaRepository : BaseRepository<DocGia>
     {
@@ -18,7 +20,6 @@ namespace THUVIENZ.DAL
 
         /// <summary>
         /// Lấy danh sách độc giả kèm theo số lượng sách đang mượn.
-        /// Sử dụng Compiled Queries hoặc LINQ tối ưu của EF Core 8.
         /// </summary>
         public async Task<IEnumerable<object>> GetReadersWithBorrowedCountAsync()
         {
@@ -27,10 +28,9 @@ namespace THUVIENZ.DAL
                 {
                     ReaderID = d.MaDocGia,
                     ReaderName = d.HoTen,
-                    TotalBorrowed = _context.ChiTietPhieuMuons
-                        .Count(ct => ct.MaPhieuMuon != null && 
-                                     _context.PhieuMuons.Any(pm => pm.MaPhieuMuon == ct.MaPhieuMuon && pm.MaDocGia == d.MaDocGia) &&
-                                     ct.TrangThai == "Đang mượn")
+                    TotalBorrowed = _context.ChiTietMuonTras
+                        .Include(c => c.PhieuMuon)
+                        .Count(c => c.PhieuMuon!.MaDocGia == d.MaDocGia && c.NgayTraThucTe == null)
                 })
                 .ToListAsync();
         }
@@ -40,14 +40,23 @@ namespace THUVIENZ.DAL
             return await _context.DocGias.FirstOrDefaultAsync(d => d.TenDangNhap == username);
         }
 
+        /// <summary>
+        /// Lấy danh sách các Đầu Sách mà độc giả đang mượn chưa trả.
+        /// </summary>
         public async Task<IEnumerable<Sach>> GetBorrowedBooksAsync(int maDocGia)
         {
-            return await _context.ChiTietPhieuMuons
-                .Where(ct => ct.MaPhieuMuon != null && 
-                             _context.PhieuMuons.Any(pm => pm.MaPhieuMuon == ct.MaPhieuMuon && pm.MaDocGia == maDocGia) &&
-                             ct.TrangThai == "Đang mượn")
-                .Join(_context.Sachs, ct => ct.MaSach, s => s.MaSach, (ct, s) => s)
+            var items = await _context.ChiTietMuonTras
+                .Include(c => c.PhieuMuon)
+                .Include(c => c.CuonSach)
+                .ThenInclude(cs => cs!.Sach)
+                .Where(c => c.PhieuMuon!.MaDocGia == maDocGia && c.NgayTraThucTe == null)
                 .ToListAsync();
+
+            return items
+                .Where(c => c.CuonSach?.Sach != null)
+                .Select(c => c.CuonSach!.Sach!)
+                .Distinct()
+                .ToList();
         }
 
         public async Task<decimal> GetReaderDebtAsync(int maDocGia)

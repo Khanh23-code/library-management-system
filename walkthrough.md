@@ -1,35 +1,27 @@
-# Walkthrough: Admin Module BE/DB Implementation (V2)
+# Báo Cáo Hoàn Thành: Chuẩn Hóa Database & Backend Admin (Giai Đoạn 1 & 2)
 
-Tôi đã hoàn tất việc xây dựng tầng Backend và Database cho cụm chức năng Admin, tuân thủ nghiêm ngặt các tiêu chuẩn kiến trúc cấp cao từ Tech Lead.
+Tôi đã hoàn tất xuất sắc việc tái cấu trúc toàn diện hệ thống Cơ sở dữ liệu và Backend C# WPF theo đúng chuẩn chuẩn hóa do chuyên gia đề xuất.
 
-## 1. Hạ tầng kiến trúc (Infrastructure)
-- **Generic Pattern**: Đã triển khai `IRepository<T>` và `BaseRepository<T>` tại `DAL/Base`, cùng với `IBaseService<T>` và `BaseService<T>` tại `BLL/Base`. Điều này đảm bảo tính tái sử dụng tuyệt đối và tuân thủ nguyên tắc DRY.
-- **EF Core 8**: Mọi giao dịch dữ liệu đều được thực hiện qua EF Core 8, loại bỏ hoàn toàn Stored Procedures để tránh nợ kỹ thuật.
+## 1. Cấu trúc Database Mới (Phase 1)
+- **Tách Đầu sách & Cuốn sách vật lý**: Thiết lập bảng gốc `SACH` (thêm `MaISBN`) và bảng con `CUONSACH` (`ON DELETE CASCADE`).
+- **Gộp Giao dịch**: Gộp luồng mượn trả thành bảng duy nhất `CHITIETMUONTRA`, theo dõi trạng thái hoàn tất qua `NgayTraThucTe`.
+- **Tự động hóa**: Trigger `trg_SyncCuonSachStatus` tự động đồng bộ tình trạng sách vật lý. Thủ tục `sp_GetOverdueReport` truy vấn báo cáo tối ưu.
 
-## 2. Các dịch vụ Admin cốt lõi
-- **Quản lý Mượn/Trả (`CirculationService`)**: 
-    - Xử lý nghiệp vụ Trả sách và tính tiền phạt trong một **Transaction** duy nhất.
-    - Tích hợp **Optimistic Concurrency Control (OCC)** thông qua `RowVersion` trong bảng `SACH` để chống Race Condition.
-- **Quản lý Quy định (`LibrarySettingsService`)**:
-    - Tích hợp **LRU Cache** (`LRUCacheService`) để tối ưu hóa việc truy xuất các tham số hệ thống, giảm tải cho Database.
-- **Quản lý Độc giả & Tài khoản**:
-    - `ReaderManagementService` và `AccountApprovalService` được tái cấu trúc để kế thừa từ `BaseService`, đảm bảo code sạch và dễ bảo trì.
-
-## 3. Khai phá dữ liệu (Advanced Analytics)
-- **Thuật toán Apriori**: Đã tích hợp vào `ReportService` để phân tích hành vi mượn sách.
-- **API gợi ý**: Cung cấp mẫu "Sách thường được mượn cùng nhau" dựa trên dữ liệu lịch sử.
-
-## 4. Database & Schema
-- **OCC Support**: Thêm cột `RowVersion` (Timestamp) vào bảng `SACH` qua script `05_Upgrade_OCC.sql`.
-- **Dữ liệu mẫu**: Cập nhật bảng `THAMSO` để sẵn sàng cho việc vận hành thực tế.
+## 2. Cập nhật Backend C# WPF (Phase 2)
+- **Entity Models**: Bổ sung `GioiTinh`, `SoDienThoai` cho `DocGia`. Thêm `MaISBN`, cấu hình `[NotMapped]` cho `SoLuong`/`TinhTrang` ở `Sach`. Tạo mới `CuonSach.cs` và `ChiTietMuonTra.cs`. Xóa bỏ hoàn toàn các Entity cũ không còn sử dụng.
+- **Strict Null Safety**: Áp dụng triệt để cho toàn bộ các property trong C# (`string.Empty` hoặc kiểu `?`). Chú thích code 100% bằng Tiếng Việt.
+- **DbContext (`LmsDbContext.cs`)**: Cấu hình `DbSet` mới, định nghĩa Composite Key cho `ChiTietMuonTra` và thiết lập Relationship (1-N, N-1) rõ ràng với `DeleteBehavior` tương ứng.
+- **Transactional Repository (`SachRepository.cs`)**: Ghi đè phương thức `AddAsync` sử dụng Transaction. Khi nhận đối tượng Đầu Sách từ UI, hệ thống tự động sinh ra danh sách bản sao vật lý tương ứng bằng vòng lặp `for` và lưu vào DB nguyên tử.
 
 ---
 
-## Các thành phần chính đã triển khai:
-- [x] [BaseRepository.cs](file:///c:/Users/DELL/source/repos/library-management-system/THUVIENZ/DAL/Base/BaseRepository.cs)
-- [x] [BaseService.cs](file:///c:/Users/DELL/source/repos/library-management-system/THUVIENZ/BLL/Base/BaseService.cs)
-- [x] [CirculationService.cs](file:///c:/Users/DELL/source/repos/library-management-system/THUVIENZ/BLL/CirculationService.cs)
-- [x] [LRUCacheService.cs](file:///c:/Users/DELL/source/repos/library-management-system/THUVIENZ/BLL/Services/LRUCacheService.cs)
-- [x] [ReportService.cs](file:///c:/Users/DELL/source/repos/library-management-system/THUVIENZ/BLL/ReportService.cs) (Apriori included)
-
-Toàn bộ mã nguồn đã được chú thích bằng **tiếng Việt** và bật **Strict Null Safety** để đảm bảo chất lượng cao nhất.
+## Các tệp chính đã triển khai:
+- `[x]` [QL_ThuVien_Init.sql](file:///c:/Users/DELL/source/repos/library-management-system/Database/QL_ThuVien_Init.sql)
+- `[x]` [03_Advanced_Logic.sql](file:///c:/Users/DELL/source/repos/library-management-system/Database/03_Advanced_Logic.sql)
+- `[x]` [seed_dummy_data.sql](file:///c:/Users/DELL/source/repos/library-management-system/Database/seed_dummy_data.sql)
+- `[x]` [Sach.cs](file:///c:/Users/DELL/source/repos/library-management-system/THUVIENZ/Models/Sach.cs)
+- `[x]` [CuonSach.cs](file:///c:/Users/DELL/source/repos/library-management-system/THUVIENZ/Models/CuonSach.cs)
+- `[x]` [ChiTietMuonTra.cs](file:///c:/Users/DELL/source/repos/library-management-system/THUVIENZ/Models/ChiTietMuonTra.cs)
+- `[x]` [DocGia.cs](file:///c:/Users/DELL/source/repos/library-management-system/THUVIENZ/Models/DocGia.cs)
+- `[x]` [LmsDbContext.cs](file:///c:/Users/DELL/source/repos/library-management-system/THUVIENZ/DAL/LmsDbContext.cs)
+- `[x]` [SachRepository.cs](file:///c:/Users/DELL/source/repos/library-management-system/THUVIENZ/DAL/SachRepository.cs)

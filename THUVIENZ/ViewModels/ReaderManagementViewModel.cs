@@ -12,6 +12,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace THUVIENZ.ViewModels
 {
+    /// <summary>
+    /// ViewModel quản lý danh sách Độc giả trên giao diện Admin.
+    /// Áp dụng Strict Null Safety tuyệt đối và chú thích Tiếng Việt.
+    /// </summary>
     public class ReaderManagementViewModel : ObservableObject
     {
         private readonly LmsDbContext _context;
@@ -57,6 +61,9 @@ namespace THUVIENZ.ViewModels
             _ = LoadDataAsync();
         }
 
+        /// <summary>
+        /// Nạp toàn bộ danh sách độc giả và đếm số lượng yêu cầu tài khoản mới.
+        /// </summary>
         public async Task LoadDataAsync()
         {
             try
@@ -72,6 +79,9 @@ namespace THUVIENZ.ViewModels
             }
         }
 
+        /// <summary>
+        /// Tìm kiếm độc giả theo Họ tên hoặc Email.
+        /// </summary>
         private async Task ExecuteSearchAsync()
         {
             try
@@ -83,10 +93,10 @@ namespace THUVIENZ.ViewModels
                 else
                 {
                     var keyword = SearchKeyword.ToLower();
-                    // SoDienThoai không tồn tại trong DB model của ứng dụng, ta tìm theo HoTen và Email
                     var filtered = await _context.DocGias
                         .Where(d => d.HoTen.ToLower().Contains(keyword) || 
-                                    (d.Email != null && d.Email.ToLower().Contains(keyword)))
+                                    (d.Email != null && d.Email.ToLower().Contains(keyword)) ||
+                                    (d.SoDienThoai != null && d.SoDienThoai.Contains(keyword))) // Tìm thêm theo SĐT mới
                         .ToListAsync();
                     Readers = new ObservableCollection<DocGia>(filtered);
                 }
@@ -97,6 +107,9 @@ namespace THUVIENZ.ViewModels
             }
         }
 
+        /// <summary>
+        /// Thực hiện thủ tục xóa tài khoản độc giả và kiểm tra các ràng buộc liên quan.
+        /// </summary>
         private async Task ExecuteDeleteAsync(object? param)
         {
             if (param is DocGia reader)
@@ -107,10 +120,10 @@ namespace THUVIENZ.ViewModels
 
                 try
                 {
-                    // Kiểm tra xem độc giả có phiếu mượn chưa trả không
-                    bool hasActiveLoans = await _context.PhieuMuons
-                        .Join(_context.ChiTietPhieuMuons, pm => pm.MaPhieuMuon, ct => ct.MaPhieuMuon, (pm, ct) => new { pm, ct })
-                        .AnyAsync(x => x.pm.MaDocGia == reader.MaDocGia && x.ct.TrangThai == "Đang mượn");
+                    // Kiểm tra xem độc giả có cuốn sách vật lý nào đang mượn chưa trả không (dựa trên DB mới)
+                    bool hasActiveLoans = await _context.ChiTietMuonTras
+                        .Include(c => c.PhieuMuon)
+                        .AnyAsync(c => c.PhieuMuon!.MaDocGia == reader.MaDocGia && c.NgayTraThucTe == null);
 
                     if (hasActiveLoans)
                     {
