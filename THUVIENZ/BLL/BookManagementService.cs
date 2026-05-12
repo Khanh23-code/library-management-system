@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.IO;
 using System.Security;
@@ -56,10 +57,11 @@ namespace THUVIENZ.BLL
         /// <param name="maSach">Mã cuốn sách cần cập nhật ảnh.</param>
         /// <param name="imageStream">Luồng dữ liệu ảnh từ Frontend.</param>
         /// <param name="extension">Đuôi file (ví dụ: .jpg, .png).</param>
-        public async Task<string> UploadBookCoverAsync(int maSach, Stream imageStream, string extension)
+        public async Task<string> UploadBookCoverAsync(int maSach, Stream imageStream, string extension, bool updateDatabase = true)
         {
             // --- LỚP BẢO MẬT 1: KIỂM TRA TỒN TẠI VÀ DUNG LƯỢNG ---
-            var book = await GetByIdAsync(maSach);
+            using var context = new DAL.LmsDbContext();
+            var book = await context.Sachs.FindAsync(maSach);
             if (book == null) throw new KeyNotFoundException("Không tìm thấy sách để cập nhật ảnh.");
 
             if (imageStream == null || imageStream.Length == 0)
@@ -107,8 +109,11 @@ namespace THUVIENZ.BLL
                 await imageStream.CopyToAsync(fileStream);
             }
 
-            book.HinhAnh = fileName;
-            await UpdateAsync(book);
+            if (updateDatabase)
+            {
+                // Cập nhật trực tiếp cột HinhAnh bằng SQL thuần để tránh lỗi xung đột phiên bản (Concurrency OCC)
+                await context.Database.ExecuteSqlRawAsync("UPDATE SACH SET HinhAnh = {0} WHERE MaSach = {1}", fileName, maSach);
+            }
 
             return fileName;
         }

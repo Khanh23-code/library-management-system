@@ -2,6 +2,16 @@
 -- DATABASE: QL_THU_VIEN (MASTER VERSION FOR 3-DAY MVP)
 -- Tối ưu cho mô hình Local-First C# & Kiosk tự phục vụ
 -- ======================================================================
+USE master;
+GO
+
+IF EXISTS (SELECT * FROM sys.databases WHERE name = 'QL_ThuVien')
+BEGIN
+    ALTER DATABASE QL_ThuVien SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE QL_ThuVien;
+END;
+GO
+
 CREATE DATABASE QL_ThuVien;
 GO
 USE QL_ThuVien;

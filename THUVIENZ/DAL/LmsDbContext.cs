@@ -57,7 +57,7 @@ namespace THUVIENZ.DAL
             modelBuilder.Entity<TheLoaiSach>().ToTable("THELOAISACH");
             modelBuilder.Entity<LoaiDocGia>().ToTable("LOAIDOCGIA");
             modelBuilder.Entity<PhieuMuon>().ToTable("PHIEUMUON");
-            modelBuilder.Entity<ChiTietMuonTra>().ToTable("CHITIETMUONTRA");
+            modelBuilder.Entity<ChiTietMuonTra>().ToTable("CHITIETMUONTRA", tb => tb.HasTrigger("trg_SyncCuonSachStatus"));
             modelBuilder.Entity<ThamSo>().ToTable("THAMSO");
             modelBuilder.Entity<PhieuThuTienPhat>().ToTable("PHIEUTHUTIENPHAT");
 

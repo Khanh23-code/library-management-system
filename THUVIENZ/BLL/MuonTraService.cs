@@ -82,21 +82,18 @@ namespace THUVIENZ.BLL
 
                 chiTiet.TienPhat = tienPhat;
 
-                // 4. Cập nhật lại tình trạng của cuốn sách vật lý thành 'Sẵn sàng'
-                if (chiTiet.CuonSach != null)
-                {
-                    chiTiet.CuonSach.TinhTrang = "Sẵn sàng";
-                    _context.CuonSachs.Update(chiTiet.CuonSach);
-                }
+                // 4. Cập nhật lại tình trạng của cuốn sách vật lý thành 'Sẵn sàng' (Do Trigger trg_SyncCuonSachStatus tự động đảm nhiệm dưới DB)
+                // if (chiTiet.CuonSach != null)
+                // {
+                //     chiTiet.CuonSach.TinhTrang = "Sẵn sàng";
+                //     _context.CuonSachs.Update(chiTiet.CuonSach);
+                // }
 
-                // Cập nhật chi tiết mượn trả
-                _context.ChiTietMuonTras.Update(chiTiet);
-
+                // Không gọi Update tường minh do EF Core tự động theo dõi (Tracking) các thay đổi thuộc tính
                 // 5. Nếu phát sinh tiền phạt, cộng dồn vào Tổng nợ của Độc giả
                 if (tienPhat > 0 && chiTiet.PhieuMuon?.DocGia != null)
                 {
                     chiTiet.PhieuMuon.DocGia.TongNo += tienPhat;
-                    _context.DocGias.Update(chiTiet.PhieuMuon.DocGia);
                 }
 
                 // Lưu toàn bộ thay đổi xuống DB
@@ -185,9 +182,9 @@ namespace THUVIENZ.BLL
 
                     await _context.ChiTietMuonTras.AddAsync(chiTiet);
 
-                    // Cập nhật trạng thái cuốn sách thành Đang mượn
-                    cuonSach.TinhTrang = "Đang mượn";
-                    _context.CuonSachs.Update(cuonSach);
+                    // Cập nhật trạng thái cuốn sách thành Đang mượn (Trigger DB tự động lo)
+                    // cuonSach.TinhTrang = "Đang mượn";
+                    // _context.CuonSachs.Update(cuonSach);
                 }
 
                 await _context.SaveChangesAsync();

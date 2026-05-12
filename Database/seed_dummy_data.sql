@@ -23,10 +23,8 @@ SET IDENTITY_INSERT LOAIDOCGIA OFF;
 GO
 
 -- 2B. THAM SỐ HỆ THỐNG
-INSERT INTO THAMSO (TenThamSo, GiaTri) VALUES
-('SoSachMuonToiDa', 5),
-('SoNgayMuonToiDa', 14),
-('TienPhatMoiNgay', 2000);
+IF NOT EXISTS (SELECT 1 FROM THAMSO WHERE TenThamSo = 'SoSachMuonToiDa')
+    INSERT INTO THAMSO (TenThamSo, GiaTri) VALUES ('SoSachMuonToiDa', 5);
 GO
 
 -- 3. TÀI KHOẢN

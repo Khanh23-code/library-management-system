@@ -68,10 +68,11 @@ namespace THUVIENZ.ViewModels
         {
             try
             {
-                var readers = await _context.DocGias.ToListAsync();
+                using var context = new LmsDbContext();
+                var readers = await context.DocGias.ToListAsync();
                 Readers = new ObservableCollection<DocGia>(readers);
 
-                PendingRequestCount = await _context.TaiKhoans.CountAsync(t => t.TrangThai == "Pending");
+                PendingRequestCount = await context.TaiKhoans.CountAsync(t => t.TrangThai == "Pending");
             }
             catch (Exception ex)
             {
@@ -92,8 +93,9 @@ namespace THUVIENZ.ViewModels
                 }
                 else
                 {
+                    using var context = new LmsDbContext();
                     var keyword = SearchKeyword.ToLower();
-                    var filtered = await _context.DocGias
+                    var filtered = await context.DocGias
                         .Where(d => d.HoTen.ToLower().Contains(keyword) || 
                                     (d.Email != null && d.Email.ToLower().Contains(keyword)) ||
                                     (d.SoDienThoai != null && d.SoDienThoai.Contains(keyword))) // Tìm thêm theo SĐT mới
@@ -120,8 +122,9 @@ namespace THUVIENZ.ViewModels
 
                 try
                 {
+                    using var context = new LmsDbContext();
                     // Kiểm tra xem độc giả có cuốn sách vật lý nào đang mượn chưa trả không (dựa trên DB mới)
-                    bool hasActiveLoans = await _context.ChiTietMuonTras
+                    bool hasActiveLoans = await context.ChiTietMuonTras
                         .Include(c => c.PhieuMuon)
                         .AnyAsync(c => c.PhieuMuon!.MaDocGia == reader.MaDocGia && c.NgayTraThucTe == null);
 
@@ -134,11 +137,11 @@ namespace THUVIENZ.ViewModels
                     // Nếu độc giả có tài khoản đăng nhập liên kết, gỡ bỏ tài khoản trước để tránh lỗi Foreign Key
                     if (!string.IsNullOrEmpty(reader.TenDangNhap))
                     {
-                        var taiKhoan = await _context.TaiKhoans.FindAsync(reader.TenDangNhap);
+                        var taiKhoan = await context.TaiKhoans.FindAsync(reader.TenDangNhap);
                         if (taiKhoan != null)
                         {
-                            _context.TaiKhoans.Remove(taiKhoan);
-                            await _context.SaveChangesAsync();
+                            context.TaiKhoans.Remove(taiKhoan);
+                            await context.SaveChangesAsync();
                         }
                     }
 

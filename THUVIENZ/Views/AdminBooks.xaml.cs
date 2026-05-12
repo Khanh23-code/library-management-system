@@ -60,14 +60,16 @@ namespace THUVIENZ.Views
                 int.TryParse(newBook.PageNumber, out int year);
                 var sach = new THUVIENZ.Models.Sach
                 {
+                    MaISBN = $"ISBN-{System.Guid.NewGuid().ToString().Substring(0, 8)}",
                     TenSach = newBook.Title,
                     TacGia = newBook.Author,
                     NhaXuatBan = newBook.Language,
+                    NgonNgu = newBook.RealLanguage,
                     NamXuatBan = year > 0 ? year : System.DateTime.Now.Year,
                     SoLuong = newBook.Quantity > 0 ? newBook.Quantity : 1,
                     TinhTrang = string.IsNullOrWhiteSpace(newBook.Status) ? "Còn sách" : newBook.Status,
                     MoTa = newBook.Description,
-                    TriGia = 100000,
+                    TriGia = newBook.Price > 0 ? newBook.Price : 100000,
                     MaTheLoai = 1
                 };
 

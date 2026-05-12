@@ -131,7 +131,7 @@
                             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                                 <DataGrid x:Name="dgBooks" ItemsSource="{Binding BorrowedBooks}" Style="{StaticResource ModernDataGrid}">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Mã Sách" Binding="{Binding MaSach}" Width="90"/>
+                                        <DataGridTextColumn Header="Mã RFID" Binding="{Binding MaSach}" Width="90"/>
                                         <DataGridTextColumn Header="Tên Sách" Binding="{Binding TenSach}" Width="*"/>
                                         <DataGridTextColumn Header="Ngày mượn" Binding="{Binding NgayMuon, StringFormat=dd/MM/yyyy}" Width="110"/>
                                         <DataGridTextColumn Header="Hạn trả" Binding="{Binding HanTra, StringFormat=dd/MM/yyyy}" Width="110"/>

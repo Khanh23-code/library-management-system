@@ -5,20 +5,20 @@
 
     <Grid>
 
-        <Border Background="White" CornerRadius="30" Width="850" Height="580" 
+        <Border Background="White" CornerRadius="30" Width="850" Height="730" 
                 VerticalAlignment="Center" HorizontalAlignment="Center">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="40" Opacity="0.3" ShadowDepth="0" Color="Black"/>
             </Border.Effect>
 
-            <Grid Margin="40,30,40,30">
+            <Grid Margin="40,25,40,25">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <Grid Grid.Row="0" Margin="0,0,0,20">
+                <Grid Grid.Row="0" Margin="0,0,0,15">
                     <TextBlock x:Name="lblPopupTitle" Text="Thêm Sách Mới" FontSize="28" FontWeight="Bold" Foreground="#111827"/>
                     <Button Content="✕" HorizontalAlignment="Right" VerticalAlignment="Center" 
                             FontSize="22" Background="Transparent" BorderThickness="0" 
@@ -51,6 +51,7 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
@@ -61,59 +62,72 @@
 
                         <StackPanel Grid.Row="0" Grid.Column="0">
                             <TextBlock Text="Tên sách" FontSize="14" FontWeight="SemiBold" Margin="5,0,0,5"/>
-                            <Border Background="#F9FAFB" CornerRadius="10" Height="45" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <Border Background="#F9FAFB" CornerRadius="10" Height="38" BorderBrush="#E5E7EB" BorderThickness="1">
                                 <TextBox x:Name="txtTitle" Background="Transparent" BorderThickness="0" VerticalContentAlignment="Center" Padding="10,0"/>
                             </Border>
                         </StackPanel>
                         <StackPanel Grid.Row="0" Grid.Column="2">
                             <TextBlock Text="Mã ID Sách" FontSize="14" FontWeight="SemiBold" Margin="5,0,0,5"/>
-                            <Border Background="#F9FAFB" CornerRadius="10" Height="45" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <Border Background="#F9FAFB" CornerRadius="10" Height="38" BorderBrush="#E5E7EB" BorderThickness="1">
                                 <TextBox x:Name="txtBookID" IsEnabled="False" Background="Transparent" BorderThickness="0" VerticalContentAlignment="Center" Padding="10,0"/>
                             </Border>
                         </StackPanel>
 
-                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,15,0,0">
+                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,8,0,0">
                             <TextBlock Text="Tên tác giả" FontSize="14" FontWeight="SemiBold" Margin="5,0,0,5"/>
-                            <Border Background="#F9FAFB" CornerRadius="10" Height="45" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <Border Background="#F9FAFB" CornerRadius="10" Height="38" BorderBrush="#E5E7EB" BorderThickness="1">
                                 <TextBox x:Name="txtAuthor" Background="Transparent" BorderThickness="0" VerticalContentAlignment="Center" Padding="10,0"/>
                             </Border>
                         </StackPanel>
-                        <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,15,0,0">
+                        <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,8,0,0">
                             <TextBlock Text="Thể loại" FontSize="14" FontWeight="SemiBold" Margin="5,0,0,5"/>
-                            <Border Background="#F9FAFB" CornerRadius="10" Height="45" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <Border Background="#F9FAFB" CornerRadius="10" Height="38" BorderBrush="#E5E7EB" BorderThickness="1">
                                 <TextBox x:Name="txtCategory" Background="Transparent" BorderThickness="0" VerticalContentAlignment="Center" Padding="10,0"/>
                             </Border>
                         </StackPanel>
 
-                        <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,15,0,0">
-                            <TextBlock Text="Ngôn ngữ (NXB)" FontSize="14" FontWeight="SemiBold" Margin="5,0,0,5"/>
-                            <Border Background="#F9FAFB" CornerRadius="10" Height="45" BorderBrush="#E5E7EB" BorderThickness="1">
+                        <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,8,0,0">
+                            <TextBlock Text="Nhà xuất bản" FontSize="14" FontWeight="SemiBold" Margin="5,0,0,5"/>
+                            <Border Background="#F9FAFB" CornerRadius="10" Height="38" BorderBrush="#E5E7EB" BorderThickness="1">
                                 <TextBox x:Name="txtLang" Background="Transparent" BorderThickness="0" VerticalContentAlignment="Center" Padding="10,0"/>
                             </Border>
                         </StackPanel>
-                        <StackPanel Grid.Row="2" Grid.Column="2" Margin="0,15,0,0">
+                        <StackPanel Grid.Row="2" Grid.Column="2" Margin="0,8,0,0">
                             <TextBlock Text="Năm xuất bản" FontSize="14" FontWeight="SemiBold" Margin="5,0,0,5"/>
-                            <Border Background="#F9FAFB" CornerRadius="10" Height="45" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <Border Background="#F9FAFB" CornerRadius="10" Height="38" BorderBrush="#E5E7EB" BorderThickness="1">
                                 <TextBox x:Name="txtPageNumber" Background="Transparent" BorderThickness="0" VerticalContentAlignment="Center" Padding="10,0"/>
                             </Border>
                         </StackPanel>
 
-                        <StackPanel Grid.Row="3" Grid.Column="0" Margin="0,15,0,0">
+                        <StackPanel Grid.Row="3" Grid.Column="0" Margin="0,8,0,0">
                             <TextBlock Text="Số lượng" FontSize="14" FontWeight="SemiBold" Margin="5,0,0,5"/>
-                            <Border Background="#F9FAFB" CornerRadius="10" Height="45" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <Border Background="#F9FAFB" CornerRadius="10" Height="38" BorderBrush="#E5E7EB" BorderThickness="1">
                                 <TextBox x:Name="txtQuantity" Background="Transparent" BorderThickness="0" VerticalContentAlignment="Center" Padding="10,0"/>
                             </Border>
                         </StackPanel>
-                        <StackPanel Grid.Row="3" Grid.Column="2" Margin="0,15,0,0">
+                        <StackPanel x:Name="spStatus" Grid.Row="3" Grid.Column="2" Margin="0,8,0,0">
                             <TextBlock Text="Trạng thái" FontSize="14" FontWeight="SemiBold" Margin="5,0,0,5"/>
-                            <Border Background="#F9FAFB" CornerRadius="10" Height="45" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <Border Background="#F9FAFB" CornerRadius="10" Height="38" BorderBrush="#E5E7EB" BorderThickness="1">
                                 <TextBox x:Name="txtStatus" Background="Transparent" BorderThickness="0" VerticalContentAlignment="Center" Padding="10,0"/>
                             </Border>
                         </StackPanel>
 
-                        <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,15,0,0">
+                        <StackPanel Grid.Row="4" Grid.Column="0" Margin="0,8,0,0">
+                            <TextBlock Text="Ngôn ngữ" FontSize="14" FontWeight="SemiBold" Margin="5,0,0,5"/>
+                            <Border Background="#F9FAFB" CornerRadius="10" Height="38" BorderBrush="#E5E7EB" BorderThickness="1">
+                                <TextBox x:Name="txtRealLang" Background="Transparent" BorderThickness="0" VerticalContentAlignment="Center" Padding="10,0"/>
+                            </Border>
+                        </StackPanel>
+                        <StackPanel Grid.Row="4" Grid.Column="2" Margin="0,8,0,0">
+                            <TextBlock Text="Trị giá (VNĐ)" FontSize="14" FontWeight="SemiBold" Margin="5,0,0,5"/>
+                            <Border Background="#F9FAFB" CornerRadius="10" Height="38" BorderBrush="#E5E7EB" BorderThickness="1">
+                                <TextBox x:Name="txtPrice" Background="Transparent" BorderThickness="0" VerticalContentAlignment="Center" Padding="10,0"/>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,8,0,0">
                             <TextBlock Text="Mô tả nội dung" FontSize="14" FontWeight="SemiBold" Margin="5,0,0,5"/>
-                            <Border Background="#F9FAFB" CornerRadius="10" Height="90" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <Border Background="#F9FAFB" CornerRadius="10" Height="65" BorderBrush="#E5E7EB" BorderThickness="1">
                                 <TextBox x:Name="txtDescription" Background="Transparent" BorderThickness="0" Padding="10,8" 
                                          TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"/>
                             </Border>

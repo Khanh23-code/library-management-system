@@ -106,6 +106,14 @@
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
+                                <DataGridTextColumn Header="Số Lượng" Binding="{Binding SoLuong}" Width="100">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
                                 <DataGridTextColumn Header="Trạng Thái" Binding="{Binding TinhTrang}" Width="120">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">

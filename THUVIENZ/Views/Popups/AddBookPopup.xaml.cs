@@ -39,6 +39,9 @@ namespace THUVIENZ.Views.Popups
             txtPageNumber.Text = "";
             txtQuantity.Text = "1";
             txtStatus.Text = "Còn sách";
+            spStatus.Visibility = Visibility.Collapsed;
+            txtRealLang.Text = "Tiếng Việt";
+            txtPrice.Text = "100000";
             txtDescription.Text = "";
 
             _selectedImagePath = null;
@@ -65,6 +68,9 @@ namespace THUVIENZ.Views.Popups
             txtPageNumber.Text = book.NamXuatBan.ToString();
             txtQuantity.Text = book.SoLuong.ToString();
             txtStatus.Text = book.TinhTrang ?? "Còn sách";
+            spStatus.Visibility = Visibility.Visible;
+            txtRealLang.Text = book.NgonNgu ?? "Tiếng Việt";
+            txtPrice.Text = book.TriGia?.ToString("N0") ?? "100000";
             txtDescription.Text = book.MoTa ?? "";
 
             _selectedImagePath = null;
@@ -152,7 +158,7 @@ namespace THUVIENZ.Views.Popups
             }
         }
 
-        private void BtnSave_Click(object sender, RoutedEventArgs e)
+        private async void BtnSave_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(txtTitle.Text))
             {
@@ -194,11 +200,12 @@ namespace THUVIENZ.Views.Popups
                     _editTargetBook.SoLuong = qty;
 
                 _editTargetBook.TinhTrang = string.IsNullOrWhiteSpace(txtStatus.Text) ? "Còn sách" : txtStatus.Text.Trim();
+                _editTargetBook.NgonNgu = string.IsNullOrWhiteSpace(txtRealLang.Text) ? "Tiếng Việt" : txtRealLang.Text.Trim();
+                if (decimal.TryParse(txtPrice.Text.Trim(), out decimal pEdit))
+                    _editTargetBook.TriGia = pEdit;
                 _editTargetBook.MoTa = txtDescription.Text.Trim();
 
-                OnBookUpdated?.Invoke(this, _editTargetBook);
-                
-                // Nếu có file ảnh bìa được chọn/đổi
+                // Nếu có file ảnh bìa được chọn/đổi, thực hiện upload trước
                 if (!string.IsNullOrEmpty(_selectedImagePath) && File.Exists(_selectedImagePath))
                 {
                     // Nếu đường dẫn file khác với hình ảnh hiện tại
@@ -210,12 +217,15 @@ namespace THUVIENZ.Views.Popups
                             using (var stream = new FileStream(_selectedImagePath, FileMode.Open, FileAccess.Read))
                             {
                                 string ext = Path.GetExtension(_selectedImagePath);
-                                _ = service.UploadBookCoverAsync(_editTargetBook.MaSach, stream, ext);
+                                string newFileName = await service.UploadBookCoverAsync(_editTargetBook.MaSach, stream, ext, false);
+                                _editTargetBook.HinhAnh = newFileName;
                             }
                         }
                         catch { }
                     }
                 }
+
+                OnBookUpdated?.Invoke(this, _editTargetBook);
             }
             else
             {
@@ -227,6 +237,8 @@ namespace THUVIENZ.Views.Popups
                     Author = txtAuthor.Text.Trim(),
                     Category = txtCategory.Text.Trim(),
                     Language = string.IsNullOrWhiteSpace(txtLang.Text) ? "Tiếng Việt" : txtLang.Text.Trim(),
+                    RealLanguage = string.IsNullOrWhiteSpace(txtRealLang.Text) ? "Tiếng Việt" : txtRealLang.Text.Trim(),
+                    Price = decimal.TryParse(txtPrice.Text.Trim(), out decimal pAdd) ? pAdd : 100000,
                     PageNumber = string.IsNullOrWhiteSpace(txtPageNumber.Text) ? "2026" : txtPageNumber.Text.Trim(),
                     Quantity = qty > 0 ? qty : 1,
                     Status = string.IsNullOrWhiteSpace(txtStatus.Text) ? "Còn sách" : txtStatus.Text.Trim(),
@@ -252,6 +264,8 @@ namespace THUVIENZ.Views.Popups
         public int Quantity { get; set; } = 1;
         public string Status { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
+        public string RealLanguage { get; set; } = "Tiếng Việt";
+        public decimal Price { get; set; } = 100000;
         public string? ImagePath { get; set; }
     }
 }
