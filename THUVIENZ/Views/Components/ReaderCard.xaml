@@ -112,7 +112,8 @@
                 <Button Content="XÓA" Background="#EF4444" Foreground="White" 
                         FontWeight="Bold" FontSize="11" Cursor="Hand"
                         Width="60" Height="25"
-                        Click="BtnDelete_Click">
+                        Click="BtnDelete_Click"
+                        Visibility="{Binding DeleteButtonVisibility, RelativeSource={RelativeSource AncestorType=UserControl}}">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Template">

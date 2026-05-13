@@ -168,9 +168,10 @@
                                                   SuspendButtonVisibility="{Binding DataContext.IsActiveTabVisibility, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                   SuspendCommand="{Binding OpenSuspendPopupCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                   SuspendCommandParameter="{Binding}"
-                                                  UnsuspendButtonVisibility="{Binding DataContext.IsLockedTabVisibility, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  UnsuspendButtonVisibility="{Binding DataContext.IsUnlockableTabVisibility, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                   UnsuspendCommand="{Binding DataContext.UnsuspendReaderCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                   UnsuspendCommandParameter="{Binding}"
+                                                  DeleteButtonVisibility="{Binding DataContext.IsDeletableTabVisibility, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                   DeleteCommand="{Binding OpenDeletePopupCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                   DeleteCommandParameter="{Binding}"/>
                             </DataTemplate>

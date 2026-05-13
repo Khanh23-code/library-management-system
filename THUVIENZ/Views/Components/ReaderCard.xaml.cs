@@ -68,6 +68,10 @@ namespace THUVIENZ.Views.Components
             DependencyProperty.Register("UnsuspendButtonVisibility", typeof(Visibility), typeof(ReaderCard), new PropertyMetadata(Visibility.Collapsed));
         public Visibility UnsuspendButtonVisibility { get { return (Visibility)GetValue(UnsuspendButtonVisibilityProperty); } set { SetValue(UnsuspendButtonVisibilityProperty, value); } }
 
+        public static readonly DependencyProperty DeleteButtonVisibilityProperty =
+            DependencyProperty.Register("DeleteButtonVisibility", typeof(Visibility), typeof(ReaderCard), new PropertyMetadata(Visibility.Visible));
+        public Visibility DeleteButtonVisibility { get { return (Visibility)GetValue(DeleteButtonVisibilityProperty); } set { SetValue(DeleteButtonVisibilityProperty, value); } }
+
         public ReaderCard()
         {
             InitializeComponent();

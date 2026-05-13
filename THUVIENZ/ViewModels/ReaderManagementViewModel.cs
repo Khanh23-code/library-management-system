@@ -57,12 +57,16 @@ namespace THUVIENZ.ViewModels
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(IsActiveTabVisibility));
                 OnPropertyChanged(nameof(IsLockedTabVisibility));
+                OnPropertyChanged(nameof(IsUnlockableTabVisibility));
+                OnPropertyChanged(nameof(IsDeletableTabVisibility));
                 _ = LoadDataAsync(); // Nạp lại ngay lập tức khi thay đổi trạng thái Tab
             }
         }
 
         public Visibility IsActiveTabVisibility => CurrentTabStatus == "Active" ? Visibility.Visible : Visibility.Collapsed;
         public Visibility IsLockedTabVisibility => CurrentTabStatus == "Locked" ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility IsUnlockableTabVisibility => (CurrentTabStatus == "Locked" || CurrentTabStatus == "DisActive") ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility IsDeletableTabVisibility => CurrentTabStatus != "DisActive" ? Visibility.Visible : Visibility.Collapsed;
 
         private int _activeCount;
         public int ActiveCount
@@ -229,14 +233,18 @@ namespace THUVIENZ.ViewModels
         }
 
         /// <summary>
-        /// Thực hiện thủ tục khôi phục/hủy đình chỉ trước thời hạn cho tài khoản độc giả.
+        /// Thực hiện thủ tục khôi phục/hủy đình chỉ trước thời hạn hoặc tái kích hoạt tài khoản độc giả bị vô hiệu hóa.
         /// </summary>
         private async Task ExecuteUnsuspendAsync(object? param)
         {
             if (param is DocGia reader)
             {
-                var confirm = MessageBox.Show($"Bạn có chắc chắn muốn hủy đình chỉ trước thời hạn cho tài khoản độc giả '{reader.HoTen}' và khôi phục hoạt động bình thường?", 
-                                              "Xác nhận hủy đình chỉ", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                string title = CurrentTabStatus == "DisActive" ? "Xác nhận khôi phục tài khoản" : "Xác nhận hủy đình chỉ";
+                string msg = CurrentTabStatus == "DisActive"
+                    ? $"Tài khoản độc giả '{reader.HoTen}' hiện đang bị vô hiệu hóa. Bạn có chắc chắn muốn khôi phục toàn bộ quyền hạn và kích hoạt lại tài khoản?"
+                    : $"Bạn có chắc chắn muốn hủy đình chỉ trước thời hạn cho tài khoản độc giả '{reader.HoTen}' và khôi phục hoạt động bình thường?";
+
+                var confirm = MessageBox.Show(msg, title, MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (confirm == MessageBoxResult.No) return;
 
                 try
@@ -248,16 +256,34 @@ namespace THUVIENZ.ViewModels
                         if (taiKhoan != null)
                         {
                             taiKhoan.TrangThai = "Active";
-                            await context.SaveChangesAsync();
                         }
                     }
+                    else
+                    {
+                        // Nếu tài khoản trước đó bị xóa hoàn toàn hoặc chưa tồn tại, tự động sinh lại tài khoản chuẩn hệ thống
+                        var newTaiKhoan = new TaiKhoan
+                        {
+                            TenDangNhap = $"acc_{reader.MaDocGia}_{DateTime.Now:yyMMddHHmmss}",
+                            MatKhau = "active_reloaded",
+                            Quyen = "Reader",
+                            TrangThai = "Active"
+                        };
+                        context.TaiKhoans.Add(newTaiKhoan);
+                        var targetReader = await context.DocGias.FindAsync(reader.MaDocGia);
+                        if (targetReader != null) targetReader.TenDangNhap = newTaiKhoan.TenDangNhap;
+                    }
 
-                    MessageBox.Show("Đã khôi phục hoạt động tài khoản độc giả thành công!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                    await context.SaveChangesAsync();
+
+                    string successMsg = CurrentTabStatus == "DisActive" 
+                        ? "Đã khôi phục và tái kích hoạt tài khoản độc giả thành công!" 
+                        : "Đã khôi phục hoạt động tài khoản độc giả thành công!";
+                    MessageBox.Show(successMsg, "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
                     await LoadDataAsync();
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Lỗi xử lý hủy đình chỉ từ CSDL: {ex.Message}", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show($"Lỗi xử lý khôi phục từ CSDL: {ex.Message}", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
