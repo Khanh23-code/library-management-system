@@ -33,5 +33,20 @@ namespace THUVIENZ.Views
         {
             DeletePopup.Visibility = Visibility.Collapsed;
         }
+
+        private void TabActive_Click(object sender, RoutedEventArgs e)
+        {
+            // Frontend UI branch: stub for Active tab switching
+        }
+
+        private void TabLocked_Click(object sender, RoutedEventArgs e)
+        {
+            // Frontend UI branch: stub for Locked tab switching
+        }
+
+        private void TabDisActive_Click(object sender, RoutedEventArgs e)
+        {
+            // Frontend UI branch: stub for DisActive tab switching
+        }
     }
 }
