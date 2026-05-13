@@ -34,13 +34,26 @@
 
                     <StackPanel Grid.Column="0" Margin="0,0,30,0">
                         <TextBlock Text="Ảnh bìa sách" FontSize="16" FontWeight="SemiBold" Foreground="#555" Margin="0,0,0,10"/>
-                        <Border Background="#F3F4F6" CornerRadius="20" Height="320" BorderBrush="#E5E7EB" BorderThickness="2" ClipToBounds="True">
+                        <Border Background="#F3F4F6" CornerRadius="20" Height="320" BorderBrush="#E5E7EB" BorderThickness="2">
                             <Grid>
-                                <StackPanel x:Name="spPlaceholder" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                    <TextBlock Text="📷" FontSize="48" HorizontalAlignment="Center" Opacity="0.3"/>
-                                    <TextBlock x:Name="tbImageName" Text="Chọn ảnh..." FontSize="14" Foreground="#9CA3AF" Margin="0,10,0,0" TextTrimming="CharacterEllipsis" MaxWidth="240" HorizontalAlignment="Center"/>
-                                </StackPanel>
-                                <Image x:Name="imgPreview" Stretch="UniformToFill" IsHitTestVisible="False"/>
+                                <Border CornerRadius="18">
+                                    <Grid>
+                                        <StackPanel x:Name="spPlaceholder" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                            <TextBlock Text="📷" FontSize="48" HorizontalAlignment="Center" Opacity="0.3"/>
+                                            <TextBlock x:Name="tbImageName" Text="Chọn ảnh..." FontSize="14" Foreground="#9CA3AF" Margin="0,10,0,0" TextTrimming="CharacterEllipsis" MaxWidth="240" HorizontalAlignment="Center"/>
+                                        </StackPanel>
+                                        
+                                        <!-- Border bo góc hiển thị ảnh nền bằng ImageBrush trỏ tới Source của imgPreview -->
+                                        <Border CornerRadius="18">
+                                            <Border.Background>
+                                                <ImageBrush ImageSource="{Binding Source, ElementName=imgPreview}" Stretch="UniformToFill"/>
+                                            </Border.Background>
+                                        </Border>
+                                        
+                                        <!-- imgPreview gốc để ẩn, duy trì toàn bộ logic code-behind -->
+                                        <Image x:Name="imgPreview" Visibility="Collapsed"/>
+                                    </Grid>
+                                </Border>
                                 <Button x:Name="btnSelectImage" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="BtnSelectImage_Click"/>
                             </Grid>
                         </Border>
