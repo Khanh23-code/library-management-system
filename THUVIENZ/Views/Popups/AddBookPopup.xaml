@@ -36,7 +36,7 @@
                         <TextBlock Text="Ảnh bìa sách" FontSize="16" FontWeight="SemiBold" Foreground="#555" Margin="0,0,0,10"/>
                         <Border Background="#F3F4F6" CornerRadius="20" Height="320" BorderBrush="#E5E7EB" BorderThickness="2">
                             <Grid>
-                                <Border CornerRadius="18">
+                                <Border CornerRadius="18" ClipToBounds="True">
                                     <Grid>
                                         <StackPanel x:Name="spPlaceholder" VerticalAlignment="Center" HorizontalAlignment="Center">
                                             <TextBlock Text="📷" FontSize="48" HorizontalAlignment="Center" Opacity="0.3"/>
@@ -54,7 +54,20 @@
                                         <Image x:Name="imgPreview" Visibility="Collapsed"/>
                                     </Grid>
                                 </Border>
-                                <Button x:Name="btnSelectImage" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="BtnSelectImage_Click"/>
+                                
+                                <!-- Nút bấm chọn ảnh với ControlTemplate bo tròn trong suốt hoàn toàn loại bỏ lớp phủ vuông mặc định -->
+                                <Button x:Name="btnSelectImage" Cursor="Hand" Click="BtnSelectImage_Click">
+                                    <Button.Template>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border x:Name="hoverBorder" Background="Transparent" CornerRadius="18"/>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="hoverBorder" Property="Background" Value="#1A000000"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Button.Template>
+                                </Button>
                             </Grid>
                         </Border>
                     </StackPanel>
