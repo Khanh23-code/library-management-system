@@ -156,7 +156,7 @@ namespace THUVIENZ.ViewModels
                         // Nếu độc giả chưa có tài khoản, tự sinh một tài khoản ảo trạng thái DisActive để lưu vết
                         var newTaiKhoan = new TaiKhoan
                         {
-                            TenDangNhap = $"disactive_{reader.MaDocGia}_{System.DateTime.Now.Ticks}",
+                            TenDangNhap = $"dis_{reader.MaDocGia}_{System.DateTime.Now:yyMMddHHmmss}",
                             MatKhau = "disactive",
                             Quyen = "Reader",
                             TrangThai = "DisActive"
@@ -173,7 +173,8 @@ namespace THUVIENZ.ViewModels
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Lỗi xử lý vô hiệu hóa: {ex.Message}", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
+                    string errorMsg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                    MessageBox.Show($"Lỗi xử lý vô hiệu hóa từ CSDL: {errorMsg}\n\n(Gợi ý: Vui lòng kiểm tra lại ràng buộc CHECK constraint của bảng TAIKHOAN trong Database vật lý)", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
