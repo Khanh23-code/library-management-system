@@ -33,7 +33,7 @@ namespace THUVIENZ.BLL
             
             return await _context.Sachs
                 .AsNoTracking()
-                .Where(s => s.TenSach.Contains(cleanKeyword) || s.TacGia.Contains(cleanKeyword))
+                .Where(s => s.TenSach.Contains(cleanKeyword) || (s.TacGia != null && s.TacGia.Contains(cleanKeyword)))
                 .ToListAsync();
         }
 
@@ -48,13 +48,13 @@ namespace THUVIENZ.BLL
 
             return await _context.Sachs
                 .AsNoTracking()
-                .Where(s => s.TenSach.Contains(cleanQuery) || s.TacGia.Contains(cleanQuery))
+                .Where(s => s.TenSach.Contains(cleanQuery) || (s.TacGia != null && s.TacGia.Contains(cleanQuery)))
                 .Take(10) // Giới hạn Top 10 theo yêu cầu của Lead
                 .Select(s => new SuggestionDto
                 {
                     MaSach = s.MaSach,
                     DisplayText = s.TenSach,
-                    SecondaryText = s.TacGia,
+                    SecondaryText = s.TacGia ?? string.Empty,
                     // Nếu từ khóa khớp với tên sách thì để loại là Title, ngược lại là Author
                     Loai = s.TenSach.Contains(cleanQuery) ? "Title" : "Author"
                 })

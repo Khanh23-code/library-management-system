@@ -48,8 +48,8 @@ namespace THUVIENZ.ViewModels
             
             // Khởi tạo các Commands
             LoadPendingCommand = new RelayCommand(_ => LoadData());
-            ApproveCommand = new RelayCommand(_ => ExecuteApprove());
-            RejectCommand = new RelayCommand(_ => ExecuteReject());
+            ApproveCommand = new RelayCommand(param => ExecuteApprove(param));
+            RejectCommand = new RelayCommand(param => ExecuteReject(param));
 
             // Tải dữ liệu ban đầu
             LoadData();
@@ -71,9 +71,10 @@ namespace THUVIENZ.ViewModels
             }
         }
 
-        private async void ExecuteApprove()
+        private async void ExecuteApprove(object? param)
         {
-            if (SelectedAccount == null)
+            var targetAccount = param as TaiKhoan ?? SelectedAccount;
+            if (targetAccount == null)
             {
                 MessageBox.Show("Vui lòng chọn một tài khoản từ danh sách.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
@@ -81,8 +82,8 @@ namespace THUVIENZ.ViewModels
 
             try
             {
-                await _approvalService.ApproveAccountAsync(SelectedAccount.TenDangNhap);
-                MessageBox.Show($"Tài khoản '{SelectedAccount.TenDangNhap}' đã được kích hoạt thành công.", "Hoàn tất", MessageBoxButton.OK, MessageBoxImage.Information);
+                await _approvalService.ApproveAccountAsync(targetAccount.TenDangNhap);
+                MessageBox.Show($"Tài khoản '{targetAccount.TenDangNhap}' đã được kích hoạt thành công.", "Hoàn tất", MessageBoxButton.OK, MessageBoxImage.Information);
                 LoadData();
             }
             catch (Exception ex)
@@ -91,22 +92,23 @@ namespace THUVIENZ.ViewModels
             }
         }
 
-        private async void ExecuteReject()
+        private async void ExecuteReject(object? param)
         {
-            if (SelectedAccount == null)
+            var targetAccount = param as TaiKhoan ?? SelectedAccount;
+            if (targetAccount == null)
             {
                 MessageBox.Show("Vui lòng chọn một tài khoản từ danh sách.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            var confirm = MessageBox.Show($"Bạn có chắc chắn muốn TỪ CHỐI tài khoản '{SelectedAccount.TenDangNhap}'? Toàn bộ thông tin độc giả liên quan sẽ bị xóa khỏi hệ thống.", 
+            var confirm = MessageBox.Show($"Bạn có chắc chắn muốn TỪ CHỐI tài khoản '{targetAccount.TenDangNhap}'? Toàn bộ thông tin độc giả liên quan sẽ bị xóa khỏi hệ thống.", 
                                         "Xác nhận từ chối", MessageBoxButton.YesNo, MessageBoxImage.Warning);
             
             if (confirm == MessageBoxResult.No) return;
 
             try
             {
-                await _approvalService.RejectAccountAsync(SelectedAccount.TenDangNhap);
+                await _approvalService.RejectAccountAsync(targetAccount.TenDangNhap);
                 MessageBox.Show("Đã từ chối và xóa bỏ thông tin tài khoản thành công.", "Hoàn tất", MessageBoxButton.OK, MessageBoxImage.Information);
                 LoadData();
             }

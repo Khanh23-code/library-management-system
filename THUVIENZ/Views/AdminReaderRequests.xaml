@@ -35,9 +35,9 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <comp:RequestCard ReaderName="{Binding HoTen}" Gender="{Binding GioiTinh}" 
-                                                  Email="{Binding Email}" Address="{Binding DiaChi}" 
-                                                  Phone="{Binding SoDienThoai}" 
+                                <comp:RequestCard ReaderName="{Binding DocGia.HoTen}" Gender="{Binding DocGia.GioiTinh}" 
+                                                  Email="{Binding DocGia.Email}" Address="{Binding DocGia.DiaChi}" 
+                                                  Phone="{Binding DocGia.SoDienThoai}" 
                                                   AcceptCommand="{Binding DataContext.ApproveCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                   AcceptCommandParameter="{Binding}"
                                                   RejectCommand="{Binding DataContext.RejectCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"

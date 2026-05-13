@@ -79,12 +79,9 @@ namespace THUVIENZ.DAL
                 .HasKey(c => new { c.MaPhieuMuon, c.MaCuonSach });
 
             // Cấu hình trường RowVersion hỗ trợ Optimistic Concurrency Control (OCC)
-            if (Database.ProviderName?.Contains("SqlServer") == true)
-            {
-                modelBuilder.Entity<Sach>()
-                    .Property(s => s.RowVersion)
-                    .IsRowVersion();
-            }
+            modelBuilder.Entity<Sach>()
+                .Property(s => s.RowVersion)
+                .IsRowVersion();
 
             // ====================================================================
             // 3. CẤU HÌNH CÁC MỐI QUAN HỆ (RELATIONSHIPS & FOREIGN KEYS)

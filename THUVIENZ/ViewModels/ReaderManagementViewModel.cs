@@ -69,7 +69,12 @@ namespace THUVIENZ.ViewModels
             try
             {
                 using var context = new LmsDbContext();
-                var readers = await context.DocGias.ToListAsync();
+                // Lọc bỏ những độc giả đã chuyển sang trạng thái Soft Delete (DisActive)
+                var readers = await context.DocGias
+                    .Include(d => d.TaiKhoan)
+                    .Where(d => d.TaiKhoan == null || d.TaiKhoan.TrangThai != "DisActive")
+                    .ToListAsync();
+
                 Readers = new ObservableCollection<DocGia>(readers);
 
                 PendingRequestCount = await context.TaiKhoans.CountAsync(t => t.TrangThai == "Pending");
@@ -96,10 +101,13 @@ namespace THUVIENZ.ViewModels
                     using var context = new LmsDbContext();
                     var keyword = SearchKeyword.ToLower();
                     var filtered = await context.DocGias
-                        .Where(d => d.HoTen.ToLower().Contains(keyword) || 
-                                    (d.Email != null && d.Email.ToLower().Contains(keyword)) ||
-                                    (d.SoDienThoai != null && d.SoDienThoai.Contains(keyword))) // Tìm thêm theo SĐT mới
+                        .Include(d => d.TaiKhoan)
+                        .Where(d => (d.TaiKhoan == null || d.TaiKhoan.TrangThai != "DisActive") &&
+                                    (d.HoTen.ToLower().Contains(keyword) || 
+                                     (d.Email != null && d.Email.ToLower().Contains(keyword)) ||
+                                     (d.SoDienThoai != null && d.SoDienThoai.Contains(keyword)))) // Tìm thêm theo SĐT mới
                         .ToListAsync();
+
                     Readers = new ObservableCollection<DocGia>(filtered);
                 }
             }
@@ -110,48 +118,62 @@ namespace THUVIENZ.ViewModels
         }
 
         /// <summary>
-        /// Thực hiện thủ tục xóa tài khoản độc giả và kiểm tra các ràng buộc liên quan.
+        /// Thực hiện thủ tục vô hiệu hóa tài khoản độc giả (Soft Delete) để bảo toàn lịch sử mượn trả.
         /// </summary>
         private async Task ExecuteDeleteAsync(object? param)
         {
             if (param is DocGia reader)
             {
-                var confirm = MessageBox.Show($"Bạn có chắc chắn muốn xóa tài khoản độc giả '{reader.HoTen}' không?", 
-                                              "Xác nhận xóa", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                var confirm = MessageBox.Show($"Bạn có chắc chắn muốn vô hiệu hóa độc giả '{reader.HoTen}' (Soft Delete)? Toàn bộ lịch sử mượn trả sẽ được giữ lại cho mục đích thống kê.", 
+                                              "Xác nhận vô hiệu hóa", MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (confirm == MessageBoxResult.No) return;
 
                 try
                 {
                     using var context = new LmsDbContext();
-                    // Kiểm tra xem độc giả có cuốn sách vật lý nào đang mượn chưa trả không (dựa trên DB mới)
+                    // Kiểm tra xem độc giả có cuốn sách vật lý nào đang mượn chưa trả không
                     bool hasActiveLoans = await context.ChiTietMuonTras
                         .Include(c => c.PhieuMuon)
                         .AnyAsync(c => c.PhieuMuon!.MaDocGia == reader.MaDocGia && c.NgayTraThucTe == null);
 
                     if (hasActiveLoans)
                     {
-                        MessageBox.Show("Không thể xóa: Độc giả này vẫn còn sách đang mượn chưa hoàn trả.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        MessageBox.Show("Không thể vô hiệu hóa: Độc giả này vẫn còn sách đang mượn chưa hoàn trả.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
                         return;
                     }
 
-                    // Nếu độc giả có tài khoản đăng nhập liên kết, gỡ bỏ tài khoản trước để tránh lỗi Foreign Key
+                    // Thực hiện Soft Delete: Không xóa vật lý để bảo toàn dữ liệu, chỉ đổi trạng thái tài khoản sang "DisActive"
                     if (!string.IsNullOrEmpty(reader.TenDangNhap))
                     {
                         var taiKhoan = await context.TaiKhoans.FindAsync(reader.TenDangNhap);
                         if (taiKhoan != null)
                         {
-                            context.TaiKhoans.Remove(taiKhoan);
-                            await context.SaveChangesAsync();
+                            taiKhoan.TrangThai = "DisActive";
                         }
                     }
+                    else
+                    {
+                        // Nếu độc giả chưa có tài khoản, tự sinh một tài khoản ảo trạng thái DisActive để lưu vết
+                        var newTaiKhoan = new TaiKhoan
+                        {
+                            TenDangNhap = $"disactive_{reader.MaDocGia}_{System.DateTime.Now.Ticks}",
+                            MatKhau = "disactive",
+                            Quyen = "Reader",
+                            TrangThai = "DisActive"
+                        };
+                        context.TaiKhoans.Add(newTaiKhoan);
+                        var targetReader = await context.DocGias.FindAsync(reader.MaDocGia);
+                        if (targetReader != null) targetReader.TenDangNhap = newTaiKhoan.TenDangNhap;
+                    }
 
-                    await _readerService.DeleteReaderAsync(reader.MaDocGia);
-                    MessageBox.Show("Xóa độc giả thành công!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                    await context.SaveChangesAsync();
+
+                    MessageBox.Show("Đã vô hiệu hóa độc giả thành công (Soft Delete)! Toàn bộ lịch sử giao dịch được bảo toàn nguyên vẹn.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
                     await LoadDataAsync();
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Không thể xóa độc giả do dữ liệu ràng buộc lịch sử: {ex.Message}", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show($"Lỗi xử lý vô hiệu hóa: {ex.Message}", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }

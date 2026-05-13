@@ -128,23 +128,53 @@
                                 </StackPanel>
                             </Grid>
 
-                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                                 <DataGrid x:Name="dgBooks" ItemsSource="{Binding BorrowedBooks}" Style="{StaticResource ModernDataGrid}">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Mã RFID" Binding="{Binding MaSach}" Width="90"/>
-                                        <DataGridTextColumn Header="Tên Sách" Binding="{Binding TenSach}" Width="*"/>
-                                        <DataGridTextColumn Header="Ngày mượn" Binding="{Binding NgayMuon, StringFormat=dd/MM/yyyy}" Width="110"/>
-                                        <DataGridTextColumn Header="Hạn trả" Binding="{Binding HanTra, StringFormat=dd/MM/yyyy}" Width="110"/>
+                                        <DataGridTextColumn Header="Mã RFID" Binding="{Binding MaSach}" Width="80"/>
+                                        <DataGridTextColumn Header="Tên Sách" Binding="{Binding TenSach}" Width="160">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="TextWrapping" Value="Wrap"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                        <DataGridTextColumn Header="Ngày mượn" Binding="{Binding NgayMuon, StringFormat=dd/MM/yyyy}" Width="100"/>
+                                        <DataGridTextColumn Header="Hạn trả" Binding="{Binding HanTra, StringFormat=dd/MM/yyyy}" Width="100"/>
+                                        <DataGridTextColumn Header="Ngày trả" Binding="{Binding NgayTra, StringFormat=dd/MM/yyyy, TargetNullValue='Chưa trả'}" Width="100"/>
+                                        <DataGridTextColumn Header="Tiền phạt" Binding="{Binding TienPhat, StringFormat='{}{0:N0} đ'}" Width="90"/>
 
-                                        <DataGridTemplateColumn Header="Thao tác" Width="110">
+                                        <DataGridTemplateColumn Header="Thao tác" Width="100">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <Button Content="Nhận trả" Command="{Binding DataContext.ReturnBookCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}" Background="#10B981" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Padding="10,5">
-                                                        <Button.Resources>
-                                                            <Style TargetType="Border">
-                                                                <Setter Property="CornerRadius" Value="8"/>
+                                                    <Button Content="{Binding ActionText}" IsEnabled="{Binding IsActionEnabled}" 
+                                                            Command="{Binding DataContext.ReturnBookCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                            CommandParameter="{Binding}" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Padding="10,5">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button">
+                                                                <Setter Property="Background" Value="#10B981"/>
+                                                                <Setter Property="Foreground" Value="White"/>
+                                                                <Setter Property="Template">
+                                                                    <Setter.Value>
+                                                                        <ControlTemplate TargetType="Button">
+                                                                            <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                                                                            </Border>
+                                                                        </ControlTemplate>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                                <Style.Triggers>
+                                                                    <Trigger Property="IsEnabled" Value="False">
+                                                                        <Setter Property="Background" Value="#E5E7EB"/>
+                                                                        <Setter Property="Foreground" Value="#9CA3AF"/>
+                                                                    </Trigger>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter Property="Background" Value="#059669"/>
+                                                                    </Trigger>
+                                                                </Style.Triggers>
                                                             </Style>
-                                                        </Button.Resources>
+                                                        </Button.Style>
                                                     </Button>
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>

@@ -31,6 +31,7 @@ namespace THUVIENZ.DAL
         public async Task<IEnumerable<TaiKhoan>> GetPendingAccountsAsync()
         {
             return await _context.TaiKhoans
+                .Include(t => t.DocGia)
                 .Where(t => t.TrangThai == "Pending")
                 .ToListAsync();
         }

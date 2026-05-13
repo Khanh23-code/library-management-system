@@ -77,6 +77,26 @@ namespace THUVIENZ.DAL
             return _context.CuonSachs.Any(cs => cs.MaSach == maSach && cs.TinhTrang == "Đang mượn");
         }
 
+        public override async Task<Sach?> GetByIdAsync(object id)
+        {
+            if (id is int maSach)
+            {
+                return await _context.Sachs
+                    .Include(s => s.CuonSachs)
+                    .Include(s => s.TheLoaiSach)
+                    .FirstOrDefaultAsync(s => s.MaSach == maSach);
+            }
+            return await base.GetByIdAsync(id);
+        }
+
+        public override async Task<IEnumerable<Sach>> GetAllAsync()
+        {
+            return await _context.Sachs
+                .Include(s => s.CuonSachs)
+                .Include(s => s.TheLoaiSach)
+                .ToListAsync();
+        }
+
         /// <summary>
         /// Tìm kiếm sách theo Tên sách, Mã ISBN, Tác giả hoặc Mã sách.
         /// </summary>
@@ -89,6 +109,8 @@ namespace THUVIENZ.DAL
             bool isId = int.TryParse(trimmedKeyword, out int id);
 
             return await _context.Sachs
+                .Include(s => s.CuonSachs)
+                .Include(s => s.TheLoaiSach)
                 .Where(s => s.TenSach.Contains(trimmedKeyword) || 
                             (s.MaISBN != null && s.MaISBN.Contains(trimmedKeyword)) ||
                             (s.TacGia != null && s.TacGia.Contains(trimmedKeyword)) || 

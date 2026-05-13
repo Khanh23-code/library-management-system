@@ -54,7 +54,7 @@ namespace THUVIENZ.Models
 
         private string _trangThai = "Pending";
         /// <summary>
-        /// Trạng thái tài khoản: 'Pending', 'Active' hoặc 'Locked'.
+        /// Trạng thái tài khoản: 'Pending', 'Active', 'Locked' hoặc 'DisActive'.
         /// </summary>
         public string TrangThai
         {

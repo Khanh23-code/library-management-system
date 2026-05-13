@@ -17,7 +17,7 @@ namespace THUVIENZ.Views.Components
         }
 
         // Sự kiện dùng chung để MainWindow bắt được
-        public event Action<UserControl, string> OnNavigate;
+        public event Action<UserControl, string>? OnNavigate;
 
         public AdminNavigationBar()
         {

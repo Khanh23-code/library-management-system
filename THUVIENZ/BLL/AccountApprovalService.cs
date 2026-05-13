@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using THUVIENZ.BLL.Base;
@@ -37,11 +38,33 @@ namespace THUVIENZ.BLL
         /// </summary>
         public async Task ApproveAccountAsync(string username)
         {
-            var account = await _repository.GetByIdAsync(username);
+            using var context = new LmsDbContext();
+            var account = await context.TaiKhoans
+                .Include(t => t.DocGia)
+                .FirstOrDefaultAsync(t => t.TenDangNhap == username);
+
             if (account != null)
             {
                 account.TrangThai = "Active";
-                await _repository.SaveChangesAsync();
+
+                // Nếu tài khoản chưa có thông tin Độc giả tương ứng, tự động sinh bản ghi Độc giả
+                if (account.DocGia == null)
+                {
+                    var newDocGia = new DocGia
+                    {
+                        TenDangNhap = account.TenDangNhap,
+                        HoTen = account.TenDangNhap, // Lấy tạm tên đăng nhập làm Họ tên
+                        MaLoaiDocGia = 1,
+                        GioiTinh = "Khác",
+                        SoDienThoai = "Chưa cập nhật",
+                        Email = $"{account.TenDangNhap}@gmail.com",
+                        DiaChi = "Chưa cập nhật",
+                        NgayLapThe = System.DateTime.Now
+                    };
+                    context.DocGias.Add(newDocGia);
+                }
+
+                await context.SaveChangesAsync();
             }
         }
 

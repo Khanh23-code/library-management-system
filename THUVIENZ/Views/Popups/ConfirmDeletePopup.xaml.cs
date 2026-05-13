@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -27,7 +27,7 @@ namespace THUVIENZ.Views.Popups
         }
 
         // 3. Sự kiện báo ra ngoài khi user bấm nút "Xóa vĩnh viễn"
-        public event EventHandler OnConfirm;
+        public event EventHandler? OnConfirm;
 
         public ConfirmDeletePopup()
         {

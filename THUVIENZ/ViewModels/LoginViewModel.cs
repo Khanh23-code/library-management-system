@@ -12,7 +12,7 @@ namespace THUVIENZ.ViewModels
     /// </summary>
     public class LoginViewModel : ObservableObject
     {
-        public event Action OnLoginSuccess;
+        public event Action? OnLoginSuccess;
 
         private string _idError = string.Empty;
         public string IdError

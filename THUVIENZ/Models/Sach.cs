@@ -171,6 +171,7 @@ namespace THUVIENZ.Models
         /// <summary>
         /// RowVersion hỗ trợ cơ chế Optimistic Concurrency Control (OCC).
         /// </summary>
+        [System.ComponentModel.DataAnnotations.Timestamp]
         public byte[] RowVersion
         {
             get => _rowVersion;

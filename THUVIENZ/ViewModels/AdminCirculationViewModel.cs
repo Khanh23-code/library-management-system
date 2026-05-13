@@ -114,7 +114,11 @@ namespace THUVIENZ.ViewModels
                     MaCuonSach = c.MaCuonSach,
                     TenSach = c.CuonSach!.Sach != null ? c.CuonSach.Sach.TenSach : "Không xác định",
                     NgayMuon = c.PhieuMuon!.NgayMuon,
-                    HanTra = c.HanTra
+                    HanTra = c.HanTra,
+                    NgayTra = c.NgayTraThucTe,
+                    TienPhat = c.TienPhat,
+                    IsActionEnabled = c.NgayTraThucTe == null,
+                    ActionText = c.NgayTraThucTe == null ? "Nhận trả" : "Đã trả"
                 })
                 .ToListAsync();
 
@@ -166,5 +170,9 @@ namespace THUVIENZ.ViewModels
         public string TenSach { get; set; } = string.Empty;
         public DateTime NgayMuon { get; set; }
         public DateTime HanTra { get; set; }
+        public DateTime? NgayTra { get; set; }
+        public decimal TienPhat { get; set; }
+        public bool IsActionEnabled { get; set; } = true;
+        public string ActionText { get; set; } = "Nhận trả";
     }
 }

@@ -22,7 +22,7 @@ CREATE TABLE TAIKHOAN (
     TenDangNhap VARCHAR(50) PRIMARY KEY,
     MatKhau VARCHAR(255) NOT NULL, 
     Quyen NVARCHAR(20) NOT NULL CHECK (Quyen IN ('Admin', 'Reader')), 
-    TrangThai NVARCHAR(20) DEFAULT 'Pending' CHECK (TrangThai IN ('Pending', 'Active', 'Locked'))
+    TrangThai NVARCHAR(20) DEFAULT 'Pending' CHECK (TrangThai IN ('Pending', 'Active', 'Locked', 'DisActive'))
 );
 
 -- 2. THAM SỐ (Cấu hình rule hệ thống linh hoạt)
@@ -92,7 +92,7 @@ CREATE TABLE PHIEUMUON (
     MaPhieuMuon INT PRIMARY KEY IDENTITY(1,1),
     MaDocGia INT NOT NULL,
     NgayMuon DATETIME DEFAULT GETDATE(),
-    FOREIGN KEY (MaDocGia) REFERENCES DOCGIA(MaDocGia)
+    FOREIGN KEY (MaDocGia) REFERENCES DOCGIA(MaDocGia) ON DELETE CASCADE
 );
 
 -- 9. CHI TIẾT MƯỢN TRẢ (Đã GỘP logic Mượn và Trả làm một)
@@ -116,7 +116,7 @@ CREATE TABLE PHIEUTHUTIENPHAT (
     SoTienThu MONEY NOT NULL,
     NgayThu DATETIME DEFAULT GETDATE(),
     GhiChu NVARCHAR(200),
-    FOREIGN KEY (MaDocGia) REFERENCES DOCGIA(MaDocGia)
+    FOREIGN KEY (MaDocGia) REFERENCES DOCGIA(MaDocGia) ON DELETE CASCADE
 );
 GO
 
@@ -126,4 +126,20 @@ GO
 INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, Quyen, TrangThai) VALUES ('admin', 'admin123', 'Admin', 'Active');
 INSERT INTO THAMSO (TenThamSo, GiaTri) VALUES ('SoNgayMuonToiDa', 14);
 INSERT INTO THAMSO (TenThamSo, GiaTri) VALUES ('TienPhatMoiNgay', 2000);
+INSERT INTO THAMSO (TenThamSo, GiaTri) VALUES ('SoSachMuonToiDa', 5);
+GO
+
+-- Khởi tạo danh mục Thể loại sách mặc định
+SET IDENTITY_INSERT THELOAISACH ON;
+INSERT INTO THELOAISACH (MaTheLoai, TenTheLoai) VALUES (1, N'Khoa học Công nghệ');
+INSERT INTO THELOAISACH (MaTheLoai, TenTheLoai) VALUES (2, N'Văn học Nghệ thuật');
+INSERT INTO THELOAISACH (MaTheLoai, TenTheLoai) VALUES (3, N'Kinh tế & Quản trị');
+SET IDENTITY_INSERT THELOAISACH OFF;
+GO
+
+-- Khởi tạo danh mục Loại độc giả mặc định
+SET IDENTITY_INSERT LOAIDOCGIA ON;
+INSERT INTO LOAIDOCGIA (MaLoaiDocGia, TenLoaiDocGia) VALUES (1, N'Sinh viên');
+INSERT INTO LOAIDOCGIA (MaLoaiDocGia, TenLoaiDocGia) VALUES (2, N'Giảng viên');
+SET IDENTITY_INSERT LOAIDOCGIA OFF;
 GO
