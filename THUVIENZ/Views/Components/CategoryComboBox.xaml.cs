@@ -12,6 +12,9 @@ namespace THUVIENZ.Views.Components
 {
     public partial class CategoryComboBox : UserControl
     {
+        private List<TheLoaiSach> _allCategories = new();
+        private bool _isSyncingText = false;
+
         public static readonly DependencyProperty SelectedCategoryIdProperty =
             DependencyProperty.Register("SelectedCategoryId", typeof(int), typeof(CategoryComboBox), 
                 new FrameworkPropertyMetadata(1, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnSelectedCategoryIdChanged));
@@ -46,76 +49,109 @@ namespace THUVIENZ.Views.Components
             try
             {
                 using var context = new LmsDbContext();
-                var list = context.TheLoaiSachs.OrderBy(t => t.TenTheLoai).ToList();
-                cboCategories.ItemsSource = list;
-
+                _allCategories = context.TheLoaiSachs.OrderBy(t => t.TenTheLoai).ToList();
+                
                 SyncSelection(SelectedCategoryId);
+                FilterSuggestions();
             }
             catch (Exception)
             {
-                // Bỏ qua lỗi kết nối DB khi Designer preview
+                // Bỏ qua lỗi khi hiển thị trên Designer preview
             }
         }
 
-        private void SyncSelection(int categoryId)
+        public void SyncSelection(int categoryId)
         {
-            if (cboCategories.ItemsSource is List<TheLoaiSach> list)
+            var target = _allCategories.FirstOrDefault(t => t.MaTheLoai == categoryId);
+            if (target != null)
             {
-                var target = list.FirstOrDefault(t => t.MaTheLoai == categoryId);
-                if (target != null)
-                {
-                    cboCategories.SelectedItem = target;
-                }
-                else if (list.Any())
-                {
-                    cboCategories.SelectedItem = list.First();
-                    SelectedCategoryId = list.First().MaTheLoai;
-                }
+                _isSyncingText = true;
+                txtSearch.Text = target.TenTheLoai;
+                _isSyncingText = false;
+            }
+            else if (_allCategories.Any())
+            {
+                var first = _allCategories.First();
+                SelectedCategoryId = first.MaTheLoai;
+                _isSyncingText = true;
+                txtSearch.Text = first.TenTheLoai;
+                _isSyncingText = false;
             }
         }
 
-        private void CboCategories_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void FilterSuggestions()
         {
-            if (cboCategories.SelectedItem is TheLoaiSach selected)
+            string query = txtSearch.Text.Trim().ToLower();
+            if (string.IsNullOrEmpty(query))
             {
-                SelectedCategoryId = selected.MaTheLoai;
+                icCategories.ItemsSource = _allCategories;
+            }
+            else
+            {
+                icCategories.ItemsSource = _allCategories
+                    .Where(t => t.TenTheLoai.ToLower().Contains(query))
+                    .ToList();
+            }
+        }
+
+        private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_isSyncingText) return;
+
+            FilterSuggestions();
+            if (!PopupSuggestions.IsOpen)
+            {
+                PopupSuggestions.IsOpen = true;
+            }
+        }
+
+        private void TxtSearch_GotFocus(object sender, RoutedEventArgs e)
+        {
+            FilterSuggestions();
+            PopupSuggestions.IsOpen = true;
+        }
+
+        private void TxtSearch_LostFocus(object sender, RoutedEventArgs e)
+        {
+            // Popup tự đóng nhờ thuộc tính StaysOpen="False"
+        }
+
+        private void BtnSelectCategory_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.DataContext is TheLoaiSach target)
+            {
+                SelectedCategoryId = target.MaTheLoai;
+                _isSyncingText = true;
+                txtSearch.Text = target.TenTheLoai;
+                _isSyncingText = false;
+                
+                PopupSuggestions.IsOpen = false;
             }
         }
 
         private async void BtnAdd_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new CategoryInputDialog
+            string input = txtSearch.Text.Trim();
+            if (string.IsNullOrWhiteSpace(input))
             {
-                Owner = Window.GetWindow(this),
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
-            };
-
-            if (dialog.ShowDialog() == true)
-            {
-                string newName = dialog.CategoryName.Trim();
-                if (!string.IsNullOrEmpty(newName))
-                {
-                    await CreateCategoryAsync(newName);
-                }
+                MessageBox.Show("Vui lòng gõ tên thể loại cần thêm vào ô tìm kiếm trước.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                txtSearch.Focus();
+                return;
             }
-        }
 
-        private async Task CreateCategoryAsync(string name)
-        {
             try
             {
                 using var context = new LmsDbContext();
-                // Chuẩn hóa: Viết hoa chữ cái đầu
-                string normalized = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(name.ToLower());
+                string normalized = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(input.ToLower());
                 
-                // Kiểm tra trùng lặp
                 var existing = await context.TheLoaiSachs
-                    .FirstOrDefaultAsync(t => t.TenTheLoai.ToLower() == name.ToLower());
+                    .FirstOrDefaultAsync(t => t.TenTheLoai.ToLower() == input.ToLower());
 
                 if (existing != null)
                 {
                     SelectedCategoryId = existing.MaTheLoai;
                     SyncSelection(existing.MaTheLoai);
+                    PopupSuggestions.IsOpen = false;
                     MessageBox.Show($"Thể loại '{existing.TenTheLoai}' đã tồn tại và tự động được chọn.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
@@ -124,164 +160,64 @@ namespace THUVIENZ.Views.Components
                 await context.TheLoaiSachs.AddAsync(newCat);
                 await context.SaveChangesAsync();
 
-                LoadCategories();
+                // Nạp lại danh sách từ DB
+                _allCategories = context.TheLoaiSachs.OrderBy(t => t.TenTheLoai).ToList();
                 SelectedCategoryId = newCat.MaTheLoai;
                 SyncSelection(newCat.MaTheLoai);
                 
+                PopupSuggestions.IsOpen = false;
                 MessageBox.Show($"Thêm thể loại '{normalized}' thành công!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi tạo thể loại: {ex.Message}", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Lỗi thêm thể loại: {ex.Message}", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        private async void BtnDelete_Click(object sender, RoutedEventArgs e)
+        private async void BtnDeleteCategory_Click(object sender, RoutedEventArgs e)
         {
-            if (cboCategories.SelectedItem is not TheLoaiSach selected)
+            if (sender is Button btn && btn.DataContext is TheLoaiSach target)
             {
-                MessageBox.Show("Vui lòng chọn một thể loại để xóa.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+                e.Handled = true;
 
-            try
-            {
-                using var context = new LmsDbContext();
-                // Kiểm tra ràng buộc khóa ngoại (Referential Integrity)
-                int booksCount = await context.Sachs.CountAsync(s => s.MaTheLoai == selected.MaTheLoai);
-                if (booksCount > 0)
+                try
                 {
-                    MessageBox.Show($"Thể loại '{selected.TenTheLoai}' đang được liên kết với {booksCount} đầu sách.\n\nVui lòng chuyển các đầu sách này sang thể loại khác trước khi xóa để bảo đảm toàn vẹn dữ liệu.", 
-                        "Không thể xóa", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                var confirm = MessageBox.Show($"Bạn có chắc chắn muốn xóa vĩnh viễn thể loại '{selected.TenTheLoai}' không?", 
-                    "Xác nhận xóa", MessageBoxButton.YesNo, MessageBoxImage.Question);
-
-                if (confirm == MessageBoxResult.Yes)
-                {
-                    var target = await context.TheLoaiSachs.FindAsync(selected.MaTheLoai);
-                    if (target != null)
+                    using var context = new LmsDbContext();
+                    int booksCount = await context.Sachs.CountAsync(s => s.MaTheLoai == target.MaTheLoai);
+                    if (booksCount > 0)
                     {
-                        context.TheLoaiSachs.Remove(target);
-                        await context.SaveChangesAsync();
+                        MessageBox.Show($"Thể loại '{target.TenTheLoai}' đang được liên kết với {booksCount} đầu sách.\n\nVui lòng chuyển các đầu sách này sang thể loại khác trước khi xóa.", 
+                            "Không thể xóa", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
 
-                        MessageBox.Show("Xóa thể loại thành công!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
-                        LoadCategories();
+                    var confirm = MessageBox.Show($"Bạn có chắc chắn muốn xóa thể loại '{target.TenTheLoai}' không?", 
+                        "Xác nhận xóa", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+                    if (confirm == MessageBoxResult.Yes)
+                    {
+                        var itemDb = await context.TheLoaiSachs.FindAsync(target.MaTheLoai);
+                        if (itemDb != null)
+                        {
+                            context.TheLoaiSachs.Remove(itemDb);
+                            await context.SaveChangesAsync();
+
+                            _allCategories = context.TheLoaiSachs.OrderBy(t => t.TenTheLoai).ToList();
+                            FilterSuggestions();
+
+                            if (SelectedCategoryId == target.MaTheLoai && _allCategories.Any())
+                            {
+                                SelectedCategoryId = _allCategories.First().MaTheLoai;
+                                SyncSelection(SelectedCategoryId);
+                            }
+                        }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Lỗi xóa thể loại: {ex.Message}", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-    }
-
-    public class CategoryInputDialog : Window
-    {
-        private TextBox _txtInput;
-        public string CategoryName => _txtInput.Text;
-
-        public CategoryInputDialog()
-        {
-            Title = "Thêm Thể Loại Mới";
-            Width = 400;
-            Height = 200;
-            WindowStyle = WindowStyle.ToolWindow;
-            ResizeMode = ResizeMode.NoResize;
-            Background = System.Windows.Media.Brushes.White;
-
-            var grid = new Grid { Margin = new Thickness(20) };
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-
-            var lbl = new TextBlock 
-            { 
-                Text = "Nhập tên thể loại sách mới:", 
-                FontSize = 14, 
-                FontWeight = FontWeights.SemiBold,
-                Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#374151")),
-                Margin = new Thickness(0, 0, 0, 10) 
-            };
-            Grid.SetRow(lbl, 0);
-            grid.Children.Add(lbl);
-
-            var border = new Border
-            {
-                Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#F9FAFB")),
-                CornerRadius = new CornerRadius(8),
-                BorderBrush = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#E5E7EB")),
-                BorderThickness = new Thickness(1),
-                Height = 38
-            };
-            Grid.SetRow(border, 1);
-
-            _txtInput = new TextBox
-            {
-                Background = System.Windows.Media.Brushes.Transparent,
-                BorderThickness = new Thickness(0),
-                VerticalContentAlignment = VerticalAlignment.Center,
-                Padding = new Thickness(10, 0, 10, 0),
-                FontSize = 14
-            };
-            border.Child = _txtInput;
-            grid.Children.Add(border);
-
-            var panel = new StackPanel 
-            { 
-                Orientation = Orientation.Horizontal, 
-                HorizontalAlignment = HorizontalAlignment.Right,
-                Margin = new Thickness(0, 15, 0, 0)
-            };
-            Grid.SetRow(panel, 3);
-
-            var btnCancel = new Button
-            {
-                Content = "Hủy",
-                Width = 80,
-                Height = 35,
-                Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#F3F4F6")),
-                Foreground = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#4B5563")),
-                BorderThickness = new Thickness(0),
-                Margin = new Thickness(0, 0, 10, 0),
-                Cursor = System.Windows.Input.Cursors.Hand
-            };
-            btnCancel.Resources.Add(typeof(Border), new Style(typeof(Border)) { Setters = { new Setter(Border.CornerRadiusProperty, new CornerRadius(6)) } });
-            btnCancel.Click += (s, e) => DialogResult = false;
-
-            var btnOk = new Button
-            {
-                Content = "Xác nhận",
-                Width = 100,
-                Height = 35,
-                Background = new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#10B981")),
-                Foreground = System.Windows.Media.Brushes.White,
-                BorderThickness = new Thickness(0),
-                FontWeight = FontWeights.Bold,
-                Cursor = System.Windows.Input.Cursors.Hand,
-                IsDefault = true
-            };
-            btnOk.Resources.Add(typeof(Border), new Style(typeof(Border)) { Setters = { new Setter(Border.CornerRadiusProperty, new CornerRadius(6)) } });
-            btnOk.Click += (s, e) =>
-            {
-                if (string.IsNullOrWhiteSpace(_txtInput.Text))
+                catch (Exception ex)
                 {
-                    MessageBox.Show("Tên thể loại không được để trống.", "Cảnh báo", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
+                    MessageBox.Show($"Lỗi xóa thể loại: {ex.Message}", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
-                DialogResult = true;
-            };
-
-            panel.Children.Add(btnCancel);
-            panel.Children.Add(btnOk);
-            grid.Children.Add(panel);
-
-            Content = grid;
-            Loaded += (s, e) => _txtInput.Focus();
+            }
         }
     }
 }
