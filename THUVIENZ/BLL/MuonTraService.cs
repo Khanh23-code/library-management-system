@@ -90,10 +90,26 @@ namespace THUVIENZ.BLL
                 // }
 
                 // Không gọi Update tường minh do EF Core tự động theo dõi (Tracking) các thay đổi thuộc tính
-                // 5. Nếu phát sinh tiền phạt, cộng dồn vào Tổng nợ của Độc giả
+                // 5. Nếu phát sinh tiền phạt, cộng dồn vào Tổng nợ của Độc giả và tự động kiểm tra ngưỡng đình chỉ
+                bool biDinhChi = false;
                 if (tienPhat > 0 && chiTiet.PhieuMuon?.DocGia != null)
                 {
-                    chiTiet.PhieuMuon.DocGia.TongNo += tienPhat;
+                    var docGia = chiTiet.PhieuMuon.DocGia;
+                    docGia.TongNo += tienPhat;
+
+                    // Lấy ra ngưỡng nợ đọng tối đa từ bảng THAMSO
+                    decimal tongNoToiDa = (decimal)await _settingsService.GetValueAsync("TongNoToiDa");
+                    
+                    // Tự động kiểm tra nếu Tổng nợ vượt ngưỡng thì đình chỉ (Khóa) tài khoản
+                    if (docGia.TongNo > tongNoToiDa)
+                    {
+                        var taiKhoan = await _context.TaiKhoans.FirstOrDefaultAsync(t => t.TenDangNhap == docGia.TenDangNhap);
+                        if (taiKhoan != null && taiKhoan.TrangThai == "Active")
+                        {
+                            taiKhoan.TrangThai = "Locked";
+                            biDinhChi = true;
+                        }
+                    }
                 }
 
                 // Lưu toàn bộ thay đổi xuống DB
@@ -106,7 +122,9 @@ namespace THUVIENZ.BLL
                 {
                     ThanhCong = true,
                     ThongBao = tienPhat > 0 
-                        ? $"Trả sách thành công! Trễ hạn {soNgayTre} ngày, phát sinh phạt: {tienPhat:N0} VNĐ."
+                        ? (biDinhChi 
+                            ? $"Trả sách thành công! Trễ hạn {soNgayTre} ngày, phạt: {tienPhat:N0} VNĐ.\n⚠️ CẢNH BÁO: Tổng nợ vượt ngưỡng cho phép, tài khoản độc giả tự động bị đình chỉ (Khóa)!"
+                            : $"Trả sách thành công! Trễ hạn {soNgayTre} ngày, phát sinh phạt: {tienPhat:N0} VNĐ.")
                         : "Trả sách thành công đúng hạn!",
                     TienPhat = tienPhat,
                     SoNgayTre = soNgayTre

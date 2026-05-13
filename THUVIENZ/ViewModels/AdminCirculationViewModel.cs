@@ -200,6 +200,9 @@ namespace THUVIENZ.ViewModels
             bool isReturnedFilter = IsHistoryTab;
             string keyword = SearchKeyword?.Trim().ToLower() ?? "";
 
+            // Lưu lại ID độc giả đang được chọn trước khi nạp lại danh sách
+            int? currentSelectedId = _selectedReader?.MaDocGia;
+
             var query = _context.DocGias.AsQueryable();
 
             if (!string.IsNullOrEmpty(keyword))
@@ -220,6 +223,21 @@ namespace THUVIENZ.ViewModels
                 .ToListAsync();
 
             ReadersList = new ObservableCollection<DocGiaWithBorrowCount>(readers);
+
+            // Tự động phục hồi lại chọn lựa độc giả hiện tại để người dùng có thể nhấp trả liên tiếp các cuốn sách
+            if (currentSelectedId.HasValue)
+            {
+                var matchedReader = ReadersList.FirstOrDefault(r => r.MaDocGia == currentSelectedId.Value);
+                if (matchedReader != null)
+                {
+                    SelectedReader = matchedReader;
+                }
+                else
+                {
+                    SelectedReader = null;
+                    BorrowedBooks.Clear();
+                }
+            }
         }
 
         /// <summary>
@@ -264,14 +282,22 @@ namespace THUVIENZ.ViewModels
 
             if (param is BorrowedBookInfo book && SelectedReader != null)
             {
+                int currentReaderId = SelectedReader.MaDocGia;
                 try
                 {
                     var ketQua = await _muonTraService.ThucHienTraSachAsync(book.MaCuonSach);
                     if (ketQua.ThanhCong)
                     {
                         MessageBox.Show(ketQua.ThongBao, "Hoàn tất trả sách", MessageBoxButton.OK, MessageBoxImage.Information);
-                        await LoadBorrowedBooksAsync(SelectedReader.MaDocGia);
+                        
+                        // Tải lại danh sách readers đảm bảo phục hồi binding liền mạch
                         await LoadReadersAsync();
+                        
+                        // Nếu tài khoản vẫn còn sách đang mượn, tải tiếp chi tiết các cuốn còn lại
+                        if (SelectedReader != null && SelectedReader.MaDocGia == currentReaderId)
+                        {
+                            await LoadBorrowedBooksAsync(currentReaderId);
+                        }
                     }
                 }
                 catch (Exception ex)

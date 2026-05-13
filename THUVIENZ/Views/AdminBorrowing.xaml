@@ -163,10 +163,10 @@
                                         <DataGridTemplateColumn Header="Sách &amp; Mã" Width="*">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <StackPanel VerticalAlignment="Center" Margin="3,5">
-                                                        <TextBlock Text="{Binding TenSach}" FontSize="12" FontWeight="SemiBold" Foreground="#111827" TextWrapping="Wrap" Margin="0,0,0,2"/>
-                                                        <Border Background="#F3F4F6" CornerRadius="4" Padding="4,2" HorizontalAlignment="Left">
-                                                            <TextBlock Text="{Binding MaCuonSach, StringFormat='Mã vật lý: CS-{0}'}" FontSize="10" FontWeight="Medium" Foreground="#6B7280"/>
+                                                    <StackPanel VerticalAlignment="Center" Margin="5,8">
+                                                        <TextBlock Text="{Binding TenSach}" FontSize="14" FontWeight="SemiBold" Foreground="#111827" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                                                        <Border Background="#F3F4F6" CornerRadius="6" Padding="6,3" HorizontalAlignment="Left">
+                                                            <TextBlock Text="{Binding MaCuonSach, StringFormat='Mã vật lý: CS-{0}'}" FontSize="12" FontWeight="Medium" Foreground="#4B5563"/>
                                                         </Border>
                                                     </StackPanel>
                                                 </DataTemplate>
@@ -174,15 +174,15 @@
                                         </DataGridTemplateColumn>
 
                                         <!-- Cột 2: Thời hạn Mượn và Hạn trả được mở rộng tuyệt đối không wrap header/content -->
-                                        <DataGridTemplateColumn Header="Thời Hạn" Width="125">
+                                        <DataGridTemplateColumn Header="Thời Hạn" Width="135">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <StackPanel VerticalAlignment="Center" Margin="3,5">
-                                                        <TextBlock FontSize="10" Foreground="#6B7280" Margin="0,0,0,2">
+                                                    <StackPanel VerticalAlignment="Center" Margin="5,8">
+                                                        <TextBlock FontSize="12" Foreground="#6B7280" Margin="0,0,0,3">
                                                             <Run Text="Mượn: "/>
                                                             <Run Text="{Binding NgayMuon, StringFormat=dd/MM/yyyy}" FontWeight="Medium" Foreground="#374151"/>
                                                         </TextBlock>
-                                                        <TextBlock FontSize="10" Foreground="#D97706" FontWeight="SemiBold">
+                                                        <TextBlock FontSize="12" Foreground="#D97706" FontWeight="SemiBold">
                                                             <Run Text="Hạn: "/>
                                                             <Run Text="{Binding HanTra, StringFormat=dd/MM/yyyy}"/>
                                                         </TextBlock>
@@ -192,17 +192,17 @@
                                         </DataGridTemplateColumn>
 
                                         <!-- Cột 3: Trạng thái thực tế và Tiền phạt -->
-                                        <DataGridTemplateColumn Header="Thực Tế" Width="100">
+                                        <DataGridTemplateColumn Header="Thực Tế" Width="110">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <StackPanel VerticalAlignment="Center" Margin="3,5">
+                                                    <StackPanel VerticalAlignment="Center" Margin="5,8">
                                                         <ContentControl Content="{Binding NgayTra}">
                                                             <ContentControl.Style>
                                                                 <Style TargetType="ContentControl">
                                                                     <Setter Property="ContentTemplate">
                                                                         <Setter.Value>
                                                                             <DataTemplate>
-                                                                                <TextBlock Text="{Binding StringFormat='Trả: {0:dd/MM/yyyy}'}" FontSize="10" FontWeight="SemiBold" Foreground="#10B981" Margin="0,0,0,2"/>
+                                                                                <TextBlock Text="{Binding StringFormat='Trả: {0:dd/MM/yyyy}'}" FontSize="12" FontWeight="SemiBold" Foreground="#10B981" Margin="0,0,0,3"/>
                                                                             </DataTemplate>
                                                                         </Setter.Value>
                                                                     </Setter>
@@ -211,7 +211,7 @@
                                                                             <Setter Property="ContentTemplate">
                                                                                 <Setter.Value>
                                                                                     <DataTemplate>
-                                                                                        <TextBlock Text="⏳ Chưa trả" FontSize="10" FontWeight="SemiBold" Foreground="#EF4444" Margin="0,0,0,2"/>
+                                                                                        <TextBlock Text="⏳ Chưa trả" FontSize="12" FontWeight="SemiBold" Foreground="#EF4444" Margin="0,0,0,3"/>
                                                                                     </DataTemplate>
                                                                                 </Setter.Value>
                                                                             </Setter>
@@ -221,7 +221,7 @@
                                                             </ContentControl.Style>
                                                         </ContentControl>
                                                         
-                                                        <TextBlock Text="{Binding TienPhat, StringFormat='Phạt: {0:N0} đ'}" FontSize="10" FontWeight="Bold">
+                                                        <TextBlock Text="{Binding TienPhat, StringFormat='Phạt: {0:N0} đ'}" FontSize="12" FontWeight="Bold">
                                                             <TextBlock.Style>
                                                                 <Style TargetType="TextBlock">
                                                                     <Setter Property="Foreground" Value="#EF4444"/>
@@ -240,13 +240,13 @@
                                         </DataGridTemplateColumn>
 
                                         <!-- Cột 4: Thao tác nhận trả đồng bộ hoàn hảo style project -->
-                                        <DataGridTemplateColumn Header="Thao Tác" Width="100">
+                                        <DataGridTemplateColumn Header="Thao Tác" Width="110">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <Button Content="{Binding ActionText}" IsEnabled="{Binding IsActionEnabled}" 
                                                             Command="{Binding DataContext.ReturnBookCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                                            CommandParameter="{Binding}" FontWeight="Bold" FontSize="11" BorderThickness="0" Cursor="Hand"
-                                                            Width="75" Height="28" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                            CommandParameter="{Binding}" FontWeight="Bold" FontSize="12" BorderThickness="0" Cursor="Hand"
+                                                            Width="85" Height="32" HorizontalAlignment="Center" VerticalAlignment="Center">
                                                         <Button.Style>
                                                             <Style TargetType="Button">
                                                                 <Setter Property="Background" Value="#10B981"/>
@@ -297,81 +297,81 @@
                             </Grid.RowDefinitions>
 
                             <StackPanel Grid.Row="0" Margin="0,0,0,20">
-                                <TextBlock Text="Cấu hình Quy định &amp; Hạn mức Xử phạt" FontSize="18" FontWeight="Bold" Foreground="#111827"/>
-                                <TextBlock Text="Thiết lập các tham số tự động áp dụng khi chốt mượn trả và xử lý nợ đọng" FontSize="13" Foreground="#6B7280" Margin="0,2,0,0"/>
+                                <TextBlock Text="Cấu hình Quy định &amp; Hạn mức Xử phạt" FontSize="20" FontWeight="Bold" Foreground="#111827"/>
+                                <TextBlock Text="Thiết lập các tham số tự động áp dụng khi chốt mượn trả và xử lý nợ đọng" FontSize="14" Foreground="#4B5563" Margin="0,3,0,0"/>
                             </StackPanel>
 
                             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                <StackPanel MaxWidth="600" HorizontalAlignment="Left">
+                                <StackPanel MaxWidth="620" HorizontalAlignment="Left">
                                     <!-- Thẻ 1: Tiền phạt mỗi ngày -->
-                                    <Border Background="#F9FAFB" CornerRadius="12" BorderBrush="#E5E7EB" BorderThickness="1" Padding="16" Margin="0,0,0,12">
+                                    <Border Background="#F9FAFB" CornerRadius="12" BorderBrush="#E5E7EB" BorderThickness="1" Padding="18" Margin="0,0,0,14">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="200"/>
                                             </Grid.ColumnDefinitions>
                                             <StackPanel VerticalAlignment="Center">
-                                                <TextBlock Text="Mức phạt trễ hạn mỗi ngày" FontSize="14" FontWeight="SemiBold" Foreground="#374151"/>
-                                                <TextBlock Text="Số tiền phạt tự động nhân với số ngày trả trễ (VNĐ/ngày)" FontSize="12" Foreground="#9CA3AF" Margin="0,2,0,0"/>
+                                                <TextBlock Text="Mức phạt trễ hạn mỗi ngày" FontSize="15" FontWeight="Bold" Foreground="#111827"/>
+                                                <TextBlock Text="Số tiền phạt tự động nhân với số ngày trả trễ (VNĐ/ngày)" FontSize="13" Foreground="#6B7280" Margin="0,3,0,0"/>
                                             </StackPanel>
                                             <TextBox Grid.Column="1" Text="{Binding TienPhatMoiNgay, UpdateSourceTrigger=PropertyChanged}" 
                                                      PreviewTextInput="NumberOnly_PreviewTextInput"
-                                                     Height="36" FontSize="14" FontWeight="Bold" Foreground="#111827" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" 
-                                                     Padding="10,0" Background="White" BorderBrush="#D1D5DB" BorderThickness="1"/>
+                                                     Height="38" FontSize="15" FontWeight="Bold" Foreground="#111827" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" 
+                                                     Padding="12,0" Background="White" BorderBrush="#D1D5DB" BorderThickness="1"/>
                                         </Grid>
                                     </Border>
 
                                     <!-- Thẻ 2: Hạn mức nợ tối đa -->
-                                    <Border Background="#F9FAFB" CornerRadius="12" BorderBrush="#E5E7EB" BorderThickness="1" Padding="16" Margin="0,0,0,12">
+                                    <Border Background="#F9FAFB" CornerRadius="12" BorderBrush="#E5E7EB" BorderThickness="1" Padding="18" Margin="0,0,0,14">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="200"/>
                                             </Grid.ColumnDefinitions>
                                             <StackPanel VerticalAlignment="Center">
-                                                <TextBlock Text="Ngưỡng nợ đọng tối đa" FontSize="14" FontWeight="SemiBold" Foreground="#374151"/>
-                                                <TextBlock Text="Tổng nợ tích lũy vượt mức này sẽ tự động đình chỉ (Khóa) tài khoản" FontSize="12" Foreground="#9CA3AF" Margin="0,2,0,0"/>
+                                                <TextBlock Text="Ngưỡng nợ đọng tối đa" FontSize="15" FontWeight="Bold" Foreground="#111827"/>
+                                                <TextBlock Text="Tổng nợ tích lũy vượt mức này sẽ tự động đình chỉ (Khóa) tài khoản" FontSize="13" Foreground="#6B7280" Margin="0,3,0,0"/>
                                             </StackPanel>
                                             <TextBox Grid.Column="1" Text="{Binding TongNoToiDa, UpdateSourceTrigger=PropertyChanged}" 
                                                      PreviewTextInput="NumberOnly_PreviewTextInput"
-                                                     Height="36" FontSize="14" FontWeight="Bold" Foreground="#111827" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" 
-                                                     Padding="10,0" Background="White" BorderBrush="#D1D5DB" BorderThickness="1"/>
+                                                     Height="38" FontSize="15" FontWeight="Bold" Foreground="#111827" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" 
+                                                     Padding="12,0" Background="White" BorderBrush="#D1D5DB" BorderThickness="1"/>
                                         </Grid>
                                     </Border>
 
                                     <!-- Thẻ 3: Số ngày mượn tối đa -->
-                                    <Border Background="#F9FAFB" CornerRadius="12" BorderBrush="#E5E7EB" BorderThickness="1" Padding="16" Margin="0,0,0,12">
+                                    <Border Background="#F9FAFB" CornerRadius="12" BorderBrush="#E5E7EB" BorderThickness="1" Padding="18" Margin="0,0,0,14">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="200"/>
                                             </Grid.ColumnDefinitions>
                                             <StackPanel VerticalAlignment="Center">
-                                                <TextBlock Text="Thời hạn mượn sách tối đa" FontSize="14" FontWeight="SemiBold" Foreground="#374151"/>
-                                                <TextBlock Text="Số ngày mặc định từ lúc mượn đến hạn trả (Ngày)" FontSize="12" Foreground="#9CA3AF" Margin="0,2,0,0"/>
+                                                <TextBlock Text="Thời hạn mượn sách tối đa" FontSize="15" FontWeight="Bold" Foreground="#111827"/>
+                                                <TextBlock Text="Số ngày mặc định từ lúc mượn đến hạn trả (Ngày)" FontSize="13" Foreground="#6B7280" Margin="0,3,0,0"/>
                                             </StackPanel>
                                             <TextBox Grid.Column="1" Text="{Binding SoNgayMuonToiDa, UpdateSourceTrigger=PropertyChanged}" 
                                                      PreviewTextInput="NumberOnly_PreviewTextInput"
-                                                     Height="36" FontSize="14" FontWeight="Bold" Foreground="#111827" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" 
-                                                     Padding="10,0" Background="White" BorderBrush="#D1D5DB" BorderThickness="1"/>
+                                                     Height="38" FontSize="15" FontWeight="Bold" Foreground="#111827" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" 
+                                                     Padding="12,0" Background="White" BorderBrush="#D1D5DB" BorderThickness="1"/>
                                         </Grid>
                                     </Border>
 
                                     <!-- Thẻ 4: Số sách tối đa -->
-                                    <Border Background="#F9FAFB" CornerRadius="12" BorderBrush="#E5E7EB" BorderThickness="1" Padding="16" Margin="0,0,0,12">
+                                    <Border Background="#F9FAFB" CornerRadius="12" BorderBrush="#E5E7EB" BorderThickness="1" Padding="18" Margin="0,0,0,14">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="200"/>
                                             </Grid.ColumnDefinitions>
                                             <StackPanel VerticalAlignment="Center">
-                                                <TextBlock Text="Số lượng sách mượn tối đa" FontSize="14" FontWeight="SemiBold" Foreground="#374151"/>
-                                                <TextBlock Text="Hạn mức số cuốn sách vật lý tối đa được giữ cùng lúc (Cuốn)" FontSize="12" Foreground="#9CA3AF" Margin="0,2,0,0"/>
+                                                <TextBlock Text="Số lượng sách mượn tối đa" FontSize="15" FontWeight="Bold" Foreground="#111827"/>
+                                                <TextBlock Text="Hạn mức số cuốn sách vật lý tối đa được giữ cùng lúc (Cuốn)" FontSize="13" Foreground="#6B7280" Margin="0,3,0,0"/>
                                             </StackPanel>
                                             <TextBox Grid.Column="1" Text="{Binding SoSachMuonToiDa, UpdateSourceTrigger=PropertyChanged}" 
                                                      PreviewTextInput="NumberOnly_PreviewTextInput"
-                                                     Height="36" FontSize="14" FontWeight="Bold" Foreground="#111827" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" 
-                                                     Padding="10,0" Background="White" BorderBrush="#D1D5DB" BorderThickness="1"/>
+                                                     Height="38" FontSize="15" FontWeight="Bold" Foreground="#111827" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" 
+                                                     Padding="12,0" Background="White" BorderBrush="#D1D5DB" BorderThickness="1"/>
                                         </Grid>
                                     </Border>
                                 </StackPanel>
