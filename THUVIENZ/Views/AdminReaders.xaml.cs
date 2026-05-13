@@ -36,17 +36,17 @@ namespace THUVIENZ.Views
 
         private void TabActive_Click(object sender, RoutedEventArgs e)
         {
-            // Frontend UI branch: stub for Active tab switching
+            _viewModel?.SetTabStatus("Active");
         }
 
         private void TabLocked_Click(object sender, RoutedEventArgs e)
         {
-            // Frontend UI branch: stub for Locked tab switching
+            _viewModel?.SetTabStatus("Locked");
         }
 
         private void TabDisActive_Click(object sender, RoutedEventArgs e)
         {
-            // Frontend UI branch: stub for DisActive tab switching
+            _viewModel?.SetTabStatus("DisActive");
         }
     }
 }
