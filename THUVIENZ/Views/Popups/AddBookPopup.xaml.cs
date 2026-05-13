@@ -42,7 +42,7 @@ namespace THUVIENZ.Views.Popups
             txtStatus.Text = "Còn sách";
             spStatus.Visibility = Visibility.Collapsed;
             txtRealLang.Text = "Tiếng Việt";
-            txtPrice.Text = "100000";
+            txtPrice.Text = "100.000";
             txtDescription.Text = "";
 
             _selectedImagePath = null;
@@ -72,7 +72,7 @@ namespace THUVIENZ.Views.Popups
             txtStatus.Text = book.TinhTrang ?? "Còn sách";
             spStatus.Visibility = Visibility.Visible;
             txtRealLang.Text = book.NgonNgu ?? "Tiếng Việt";
-            txtPrice.Text = book.TriGia?.ToString("N0") ?? "100000";
+            txtPrice.Text = book.TriGia?.ToString("N0", new System.Globalization.CultureInfo("vi-VN")) ?? "100.000";
             txtDescription.Text = book.MoTa ?? "";
 
             _selectedImagePath = null;
@@ -199,7 +199,8 @@ namespace THUVIENZ.Views.Popups
 
                 _editTargetBook.TinhTrang = string.IsNullOrWhiteSpace(txtStatus.Text) ? "Còn sách" : txtStatus.Text.Trim();
                 _editTargetBook.NgonNgu = string.IsNullOrWhiteSpace(txtRealLang.Text) ? "Tiếng Việt" : txtRealLang.Text.Trim();
-                if (decimal.TryParse(txtPrice.Text.Trim(), out decimal pEdit))
+                string cleanPrice = txtPrice.Text.Replace(".", "").Replace(",", "").Trim();
+                if (decimal.TryParse(cleanPrice, out decimal pEdit))
                     _editTargetBook.TriGia = pEdit;
                 _editTargetBook.MoTa = txtDescription.Text.Trim();
 
@@ -236,7 +237,7 @@ namespace THUVIENZ.Views.Popups
                     Category = cboCategory.SelectedCategoryId.ToString(),
                     Language = string.IsNullOrWhiteSpace(txtLang.Text) ? "Tiếng Việt" : txtLang.Text.Trim(),
                     RealLanguage = string.IsNullOrWhiteSpace(txtRealLang.Text) ? "Tiếng Việt" : txtRealLang.Text.Trim(),
-                    Price = decimal.TryParse(txtPrice.Text.Trim(), out decimal pAdd) ? pAdd : 100000,
+                    Price = decimal.TryParse(txtPrice.Text.Replace(".", "").Replace(",", "").Trim(), out decimal pAdd) ? pAdd : 100000,
                     PageNumber = string.IsNullOrWhiteSpace(txtPageNumber.Text) ? "2026" : txtPageNumber.Text.Trim(),
                     Quantity = qty > 0 ? qty : 1,
                     Status = string.IsNullOrWhiteSpace(txtStatus.Text) ? "Còn sách" : txtStatus.Text.Trim(),
@@ -248,6 +249,28 @@ namespace THUVIENZ.Views.Popups
             }
 
             this.Visibility = Visibility.Collapsed;
+        }
+
+        private bool _isFormattingPrice = false;
+        private void TxtPrice_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (_isFormattingPrice) return;
+
+            string raw = txtPrice.Text.Replace(".", "").Replace(",", "").Trim();
+            if (decimal.TryParse(raw, out decimal val))
+            {
+                _isFormattingPrice = true;
+                int caret = txtPrice.CaretIndex;
+                int origLen = txtPrice.Text.Length;
+
+                txtPrice.Text = val.ToString("N0", new System.Globalization.CultureInfo("vi-VN"));
+
+                int newLen = txtPrice.Text.Length;
+                caret += (newLen - origLen);
+                txtPrice.CaretIndex = Math.Max(0, Math.Min(newLen, caret));
+
+                _isFormattingPrice = false;
+            }
         }
     }
 

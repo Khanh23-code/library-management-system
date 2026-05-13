@@ -120,7 +120,7 @@
                         <StackPanel Grid.Row="4" Grid.Column="2" Margin="0,8,0,0">
                             <TextBlock Text="Trị giá (VNĐ)" FontSize="14" FontWeight="SemiBold" Margin="5,0,0,5"/>
                             <Border Background="#F9FAFB" CornerRadius="10" Height="38" BorderBrush="#E5E7EB" BorderThickness="1">
-                                <TextBox x:Name="txtPrice" Background="Transparent" BorderThickness="0" VerticalContentAlignment="Center" Padding="10,0"/>
+                                <TextBox x:Name="txtPrice" Background="Transparent" BorderThickness="0" VerticalContentAlignment="Center" Padding="10,0" TextChanged="TxtPrice_TextChanged"/>
                             </Border>
                         </StackPanel>
 
