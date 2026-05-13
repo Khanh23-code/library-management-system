@@ -56,7 +56,7 @@
     <Grid>
         <Border Background="White" CornerRadius="35"
                 HorizontalAlignment="Center" VerticalAlignment="Center" 
-                MinWidth="1050" MaxWidth="1200" Height="680">
+                Width="1250" Height="700">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="30" Opacity="0.2" ShadowDepth="10" Color="Black"/>
             </Border.Effect>
@@ -84,9 +84,9 @@
 
                 <Grid Grid.Row="2">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="4*"/>
+                        <ColumnDefinition Width="3.5*"/>
                         <ColumnDefinition Width="20"/>
-                        <ColumnDefinition Width="6*"/>
+                        <ColumnDefinition Width="6.5*"/>
                     </Grid.ColumnDefinitions>
 
                     <Border Grid.Column="0" Background="#F9FAFB" CornerRadius="20" BorderBrush="#E5E7EB" BorderThickness="1">
@@ -123,7 +123,7 @@
 
                             <Grid Grid.Row="0" Margin="0,0,0,20">
                                 <StackPanel>
-                                    <TextBlock Text="Chi tiết mượn sách" FontSize="20" FontWeight="Bold" Foreground="#111827"/>
+                                    <TextBlock Text="Chi tiết Giao dịch Mượn / Trả" FontSize="20" FontWeight="Bold" Foreground="#111827"/>
                                     <TextBlock x:Name="txtSelectedReader" Text="{Binding SelectedReader.HoTen, TargetNullValue='Vui lòng chọn một độc giả...'}" FontSize="16" Foreground="#4285F4" FontWeight="SemiBold" Margin="0,5,0,0"/>
                                 </StackPanel>
                             </Grid>
@@ -131,25 +131,94 @@
                             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                                 <DataGrid x:Name="dgBooks" ItemsSource="{Binding BorrowedBooks}" Style="{StaticResource ModernDataGrid}">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Tên Sách" Binding="{Binding TenSach}" Width="*">
-                                            <DataGridTextColumn.ElementStyle>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="TextWrapping" Value="Wrap"/>
-                                                    <Setter Property="VerticalAlignment" Value="Center"/>
-                                                </Style>
-                                            </DataGridTextColumn.ElementStyle>
-                                        </DataGridTextColumn>
-                                        <DataGridTextColumn Header="Ngày mượn" Binding="{Binding NgayMuon, StringFormat=dd/MM/yyyy}" Width="80"/>
-                                        <DataGridTextColumn Header="Hạn trả" Binding="{Binding HanTra, StringFormat=dd/MM/yyyy}" Width="80"/>
-                                        <DataGridTextColumn Header="Ngày trả" Binding="{Binding NgayTra, StringFormat=dd/MM/yyyy, TargetNullValue='Chưa trả'}" Width="80"/>
-                                        <DataGridTextColumn Header="Tiền phạt" Binding="{Binding TienPhat, StringFormat='{}{0:N0} đ'}" Width="75"/>
+                                        <!-- Cột 1: Thông tin sách và mã vật lý -->
+                                        <DataGridTemplateColumn Header="Sách &amp; Mã" Width="*">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel VerticalAlignment="Center" Margin="5,8">
+                                                        <TextBlock Text="{Binding TenSach}" FontSize="14" FontWeight="SemiBold" Foreground="#111827" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                                                        <Border Background="#F3F4F6" CornerRadius="6" Padding="6,2" HorizontalAlignment="Left">
+                                                            <TextBlock Text="{Binding MaCuonSach, StringFormat='Mã vật lý: CS-{0}'}" FontSize="11" FontWeight="Medium" Foreground="#6B7280"/>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
 
-                                        <DataGridTemplateColumn Header="Trạng thái" Width="95">
+                                        <!-- Cột 2: Thời hạn Mượn và Hạn trả -->
+                                        <DataGridTemplateColumn Header="Thời Hạn" Width="150">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel VerticalAlignment="Center" Margin="5,8">
+                                                        <TextBlock FontSize="12" Foreground="#6B7280" Margin="0,0,0,4">
+                                                            <Run Text="Mượn: "/>
+                                                            <Run Text="{Binding NgayMuon, StringFormat=dd/MM/yyyy}" FontWeight="Medium" Foreground="#374151"/>
+                                                        </TextBlock>
+                                                        <TextBlock FontSize="12" Foreground="#D97706" FontWeight="SemiBold">
+                                                            <Run Text="Hạn trả: "/>
+                                                            <Run Text="{Binding HanTra, StringFormat=dd/MM/yyyy}"/>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+
+                                        <!-- Cột 3: Trạng thái thực tế và Tiền phạt -->
+                                        <DataGridTemplateColumn Header="Thực Tế &amp; Phạt" Width="150">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel VerticalAlignment="Center" Margin="5,8">
+                                                        <ContentControl Content="{Binding NgayTra}">
+                                                            <ContentControl.Style>
+                                                                <Style TargetType="ContentControl">
+                                                                    <Setter Property="ContentTemplate">
+                                                                        <Setter.Value>
+                                                                            <DataTemplate>
+                                                                                <TextBlock Text="{Binding StringFormat='Đã trả: {0:dd/MM/yyyy}'}" FontSize="12" FontWeight="SemiBold" Foreground="#10B981" Margin="0,0,0,4"/>
+                                                                            </DataTemplate>
+                                                                        </Setter.Value>
+                                                                    </Setter>
+                                                                    <Style.Triggers>
+                                                                        <Trigger Property="Content" Value="{x:Null}">
+                                                                            <Setter Property="ContentTemplate">
+                                                                                <Setter.Value>
+                                                                                    <DataTemplate>
+                                                                                        <TextBlock Text="⏳ Chưa hoàn trả" FontSize="12" FontWeight="SemiBold" Foreground="#EF4444" Margin="0,0,0,4"/>
+                                                                                    </DataTemplate>
+                                                                                </Setter.Value>
+                                                                            </Setter>
+                                                                        </Trigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </ContentControl.Style>
+                                                        </ContentControl>
+                                                        
+                                                        <TextBlock Text="{Binding TienPhat, StringFormat='Phạt: {0:N0} đ'}" FontSize="12" FontWeight="Bold">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="#EF4444"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding TienPhat}" Value="0">
+                                                                            <Setter Property="Foreground" Value="#9CA3AF"/>
+                                                                            <Setter Property="FontWeight" Value="Normal"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+
+                                        <!-- Cột 4: Thao tác nhận trả tuyệt đối không khuyết -->
+                                        <DataGridTemplateColumn Header="Thao Tác" Width="115">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
                                                     <Button Content="{Binding ActionText}" IsEnabled="{Binding IsActionEnabled}" 
                                                             Command="{Binding DataContext.ReturnBookCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                                            CommandParameter="{Binding}" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Padding="10,5">
+                                                            CommandParameter="{Binding}" FontWeight="Bold" FontSize="13" BorderThickness="0" Cursor="Hand"
+                                                            Width="85" Height="32" HorizontalAlignment="Center" VerticalAlignment="Center">
                                                         <Button.Style>
                                                             <Style TargetType="Button">
                                                                 <Setter Property="Background" Value="#10B981"/>
@@ -158,7 +227,7 @@
                                                                     <Setter.Value>
                                                                         <ControlTemplate TargetType="Button">
                                                                             <Border Background="{TemplateBinding Background}" CornerRadius="8">
-                                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                                             </Border>
                                                                         </ControlTemplate>
                                                                     </Setter.Value>
