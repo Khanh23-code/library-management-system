@@ -34,7 +34,8 @@ namespace THUVIENZ.Views.Popups
             txtBookID.Text = "";
             txtTitle.Text = "";
             txtAuthor.Text = "";
-            txtCategory.Text = "";
+            cboCategory.SelectedCategoryId = 1;
+            cboCategory.LoadCategories();
             txtLang.Text = "";
             txtPageNumber.Text = "";
             txtQuantity.Text = "1";
@@ -63,7 +64,8 @@ namespace THUVIENZ.Views.Popups
             txtTitle.Text = book.TenSach ?? "";
             txtAuthor.Text = book.TacGia ?? "";
             
-            txtCategory.Text = book.MaTheLoai.ToString();
+            cboCategory.SelectedCategoryId = book.MaTheLoai ?? 1;
+            cboCategory.LoadCategories();
             txtLang.Text = book.NhaXuatBan ?? "";
             txtPageNumber.Text = book.NamXuatBan.ToString();
             txtQuantity.Text = book.SoLuong.ToString();
@@ -174,10 +176,9 @@ namespace THUVIENZ.Views.Popups
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(txtCategory.Text))
+            if (cboCategory.SelectedCategoryId <= 0)
             {
-                MessageBox.Show("Vui lòng nhập Thể loại sách.", "Thiếu thông tin", MessageBoxButton.OK, MessageBoxImage.Warning);
-                txtCategory.Focus();
+                MessageBox.Show("Vui lòng chọn Thể loại sách.", "Thiếu thông tin", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -186,10 +187,7 @@ namespace THUVIENZ.Views.Popups
                 _editTargetBook.TenSach = txtTitle.Text.Trim();
                 _editTargetBook.TacGia = txtAuthor.Text.Trim();
                 
-                if (int.TryParse(txtCategory.Text.Trim(), out int catId))
-                    _editTargetBook.MaTheLoai = catId;
-                else
-                    _editTargetBook.MaTheLoai = 1;
+                _editTargetBook.MaTheLoai = cboCategory.SelectedCategoryId;
 
                 _editTargetBook.NhaXuatBan = txtLang.Text.Trim();
                 
@@ -235,7 +233,7 @@ namespace THUVIENZ.Views.Popups
                     BookID = "NEW",
                     Title = txtTitle.Text.Trim(),
                     Author = txtAuthor.Text.Trim(),
-                    Category = txtCategory.Text.Trim(),
+                    Category = cboCategory.SelectedCategoryId.ToString(),
                     Language = string.IsNullOrWhiteSpace(txtLang.Text) ? "Tiếng Việt" : txtLang.Text.Trim(),
                     RealLanguage = string.IsNullOrWhiteSpace(txtRealLang.Text) ? "Tiếng Việt" : txtRealLang.Text.Trim(),
                     Price = decimal.TryParse(txtPrice.Text.Trim(), out decimal pAdd) ? pAdd : 100000,
