@@ -84,135 +84,169 @@
                         <DropShadowEffect BlurRadius="10" Opacity="0.05" ShadowDepth="2"/>
                     </Border.Effect>
 
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                        <DataGrid x:Name="dgBooks" ItemsSource="{Binding BooksList}" SelectedItem="{Binding SelectedBook}" Style="{StaticResource ModernDataGrid}" Margin="10">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Mã" Binding="{Binding MaSach}" Width="50"/>
-                                
-                                <DataGridTextColumn Header="Mã ISBN" Binding="{Binding MaISBN}" Width="90">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="VerticalAlignment" Value="Center"/>
-                                            <Setter Property="Margin" Value="5"/>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
 
-                                <DataGridTextColumn Header="Tên Sách" Binding="{Binding TenSach}" Width="220">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="TextWrapping" Value="Wrap"/>
-                                            <Setter Property="VerticalAlignment" Value="Center"/>
-                                            <Setter Property="Margin" Value="5"/>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
+                            <!-- Phần bảng chính cuộn ngang tự do -->
+                            <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="0,0,0,5">
+                                <DataGrid x:Name="dgBooks" ItemsSource="{Binding BooksList}" SelectedItem="{Binding SelectedBook}" Style="{StaticResource ModernDataGrid}" Margin="10,10,0,10" VerticalScrollBarVisibility="Disabled">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Mã" Binding="{Binding MaSach}" Width="50"/>
+                                        
+                                        <DataGridTextColumn Header="Mã ISBN" Binding="{Binding MaISBN}" Width="90">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    <Setter Property="Margin" Value="5"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
 
-                                <DataGridTextColumn Header="Thể Loại" Binding="{Binding TheLoaiSach.TenTheLoai}" Width="130">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="TextWrapping" Value="Wrap"/>
-                                            <Setter Property="VerticalAlignment" Value="Center"/>
-                                            <Setter Property="Margin" Value="5"/>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
+                                        <DataGridTextColumn Header="Tên Sách" Binding="{Binding TenSach}" Width="220">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="TextWrapping" Value="Wrap"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    <Setter Property="Margin" Value="5"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
 
-                                <DataGridTextColumn Header="Tác Giả" Binding="{Binding TacGia}" Width="140">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="TextWrapping" Value="Wrap"/>
-                                            <Setter Property="VerticalAlignment" Value="Center"/>
-                                            <Setter Property="Margin" Value="5"/>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
+                                        <DataGridTextColumn Header="Thể Loại" Binding="{Binding TheLoaiSach.TenTheLoai}" Width="130">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="TextWrapping" Value="Wrap"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    <Setter Property="Margin" Value="5"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
 
-                                <DataGridTextColumn Header="Nhà XB" Binding="{Binding NhaXuatBan}" Width="120">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="TextWrapping" Value="Wrap"/>
-                                            <Setter Property="VerticalAlignment" Value="Center"/>
-                                            <Setter Property="Margin" Value="5"/>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
+                                        <DataGridTextColumn Header="Tác Giả" Binding="{Binding TacGia}" Width="140">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="TextWrapping" Value="Wrap"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    <Setter Property="Margin" Value="5"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
 
-                                <DataGridTextColumn Header="Năm XB" Binding="{Binding NamXuatBan}" Width="75">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="VerticalAlignment" Value="Center"/>
-                                            <Setter Property="HorizontalAlignment" Value="Center"/>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
+                                        <DataGridTextColumn Header="Nhà XB" Binding="{Binding NhaXuatBan}" Width="120">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="TextWrapping" Value="Wrap"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    <Setter Property="Margin" Value="5"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
 
-                                <DataGridTextColumn Header="Ngôn Ngữ" Binding="{Binding NgonNgu}" Width="90">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="VerticalAlignment" Value="Center"/>
-                                            <Setter Property="Margin" Value="5"/>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
+                                        <DataGridTextColumn Header="Năm XB" Binding="{Binding NamXuatBan}" Width="75">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
 
-                                <DataGridTextColumn Header="Trị Giá (VNĐ)" Binding="{Binding TriGia, ConverterCulture='vi-VN', StringFormat=\{0:N0\}}" Width="110">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="VerticalAlignment" Value="Center"/>
-                                            <Setter Property="HorizontalAlignment" Value="Right"/>
-                                            <Setter Property="Margin" Value="5"/>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
+                                        <DataGridTextColumn Header="Ngôn Ngữ" Binding="{Binding NgonNgu}" Width="90">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    <Setter Property="Margin" Value="5"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
 
-                                <DataGridTextColumn Header="S.Lượng" Binding="{Binding SoLuong}" Width="70">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="VerticalAlignment" Value="Center"/>
-                                            <Setter Property="HorizontalAlignment" Value="Center"/>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
+                                        <DataGridTextColumn Header="Trị Giá (VNĐ)" Binding="{Binding TriGia, ConverterCulture='vi-VN', StringFormat=\{0:N0\}}" Width="110">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                                                    <Setter Property="Margin" Value="5"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
 
-                                <DataGridTextColumn Header="Trạng Thái" Binding="{Binding TinhTrang}" Width="110">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="TextWrapping" Value="Wrap"/>
-                                            <Setter Property="VerticalAlignment" Value="Center"/>
-                                            <Setter Property="Margin" Value="5"/>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
+                                        <DataGridTextColumn Header="S.Lượng" Binding="{Binding SoLuong}" Width="70">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
 
-                                <DataGridTemplateColumn Header="Hành Động" Width="145">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <Button Content="Sửa" Background="#EFF6FF" Foreground="#2563EB" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" Padding="15,6" Margin="0,0,8,0"
-                                                        Click="BtnEditRow_Click">
-                                                    <Button.Resources>
-                                                        <Style TargetType="Border">
-                                                            <Setter Property="CornerRadius" Value="8"/>
-                                                        </Style>
-                                                    </Button.Resources>
-                                                </Button>
+                                        <DataGridTextColumn Header="Trạng Thái" Binding="{Binding TinhTrang}" Width="110">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="TextWrapping" Value="Wrap"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    <Setter Property="Margin" Value="5"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </ScrollViewer>
 
-                                                <Button Content="Xóa" Background="#FEF2F2" Foreground="#DC2626" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" Padding="15,6"
-                                                        Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                        CommandParameter="{Binding}">
-                                                    <Button.Resources>
-                                                        <Style TargetType="Border">
-                                                            <Setter Property="CornerRadius" Value="8"/>
-                                                        </Style>
-                                                    </Button.Resources>
-                                                </Button>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
+                            <!-- Cột nổi Hành Động dính cố định bên phải -->
+                            <Border Grid.Column="1" Margin="0,10,10,15" BorderThickness="1,0,0,0" BorderBrush="#E5E7EB" Background="White">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="12" ShadowDepth="-4" Opacity="0.1" Color="Black"/>
+                                </Border.Effect>
+                                <DataGrid x:Name="dgActions" ItemsSource="{Binding BooksList}" Style="{StaticResource ModernDataGrid}" Margin="0" 
+                                          VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled" HeadersVisibility="Column">
+                                    <DataGrid.Columns>
+                                        <DataGridTemplateColumn Header="Hành Động" Width="145">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                        <Button Content="Sửa" Cursor="Hand" Width="55" Height="30" Margin="0,0,8,0" Click="BtnEditRow_Click">
+                                                            <Button.Template>
+                                                                <ControlTemplate TargetType="Button">
+                                                                    <Border x:Name="btnBorder" Background="#EFF6FF" CornerRadius="8">
+                                                                        <TextBlock Text="Sửa" Foreground="#2563EB" FontWeight="SemiBold" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                    </Border>
+                                                                    <ControlTemplate.Triggers>
+                                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                                            <Setter TargetName="btnBorder" Property="Background" Value="#DBEAFE"/>
+                                                                        </Trigger>
+                                                                    </ControlTemplate.Triggers>
+                                                                </ControlTemplate>
+                                                            </Button.Template>
+                                                        </Button>
+
+                                                        <Button Content="Xóa" Cursor="Hand" Width="55" Height="30"
+                                                                Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                CommandParameter="{Binding}">
+                                                            <Button.Template>
+                                                                <ControlTemplate TargetType="Button">
+                                                                    <Border x:Name="btnBorder" Background="#FEF2F2" CornerRadius="8">
+                                                                        <TextBlock Text="Xóa" Foreground="#DC2626" FontWeight="SemiBold" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                    </Border>
+                                                                    <ControlTemplate.Triggers>
+                                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                                            <Setter TargetName="btnBorder" Property="Background" Value="#FEE2E2"/>
+                                                                        </Trigger>
+                                                                    </ControlTemplate.Triggers>
+                                                                </ControlTemplate>
+                                                            </Button.Template>
+                                                        </Button>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Border>
+                        </Grid>
                     </ScrollViewer>
                 </Border>
 

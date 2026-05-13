@@ -109,6 +109,15 @@ namespace THUVIENZ.Views.Components
             PopupSuggestions.IsOpen = true;
         }
 
+        private void TxtSearch_PreviewMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            FilterSuggestions();
+            if (!PopupSuggestions.IsOpen)
+            {
+                PopupSuggestions.IsOpen = true;
+            }
+        }
+
         private void TxtSearch_LostFocus(object sender, RoutedEventArgs e)
         {
             // Popup tự đóng nhờ thuộc tính StaysOpen="False"
