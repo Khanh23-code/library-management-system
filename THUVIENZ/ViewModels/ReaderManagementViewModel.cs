@@ -47,6 +47,23 @@ namespace THUVIENZ.ViewModels
             }
         }
 
+        private string _currentTabStatus = "Active";
+        public string CurrentTabStatus
+        {
+            get => _currentTabStatus;
+            set
+            {
+                _currentTabStatus = value;
+                OnPropertyChanged();
+                _ = LoadDataAsync(); // Nạp lại ngay lập tức khi thay đổi trạng thái Tab
+            }
+        }
+
+        public void SetTabStatus(string status)
+        {
+            CurrentTabStatus = status;
+        }
+
         public ICommand LoadReadersCommand { get; }
         public ICommand DeleteReaderCommand { get; }
 
@@ -62,19 +79,39 @@ namespace THUVIENZ.ViewModels
         }
 
         /// <summary>
-        /// Nạp toàn bộ danh sách độc giả và đếm số lượng yêu cầu tài khoản mới.
+        /// Nạp danh sách độc giả động dựa theo Trạng thái Tab hiện tại và Từ khóa tìm kiếm (Đảm bảo quy tắc DRY).
         /// </summary>
         public async Task LoadDataAsync()
         {
             try
             {
                 using var context = new LmsDbContext();
-                // Lọc bỏ những độc giả đã chuyển sang trạng thái Soft Delete (DisActive)
-                var readers = await context.DocGias
-                    .Include(d => d.TaiKhoan)
-                    .Where(d => d.TaiKhoan == null || d.TaiKhoan.TrangThai != "DisActive")
-                    .ToListAsync();
+                var query = context.DocGias.Include(d => d.TaiKhoan).AsQueryable();
 
+                // Lọc theo phân hệ Tab Switcher
+                if (CurrentTabStatus == "Active")
+                {
+                    query = query.Where(d => d.TaiKhoan == null || d.TaiKhoan.TrangThai == "Active");
+                }
+                else if (CurrentTabStatus == "Locked")
+                {
+                    query = query.Where(d => d.TaiKhoan != null && d.TaiKhoan.TrangThai == "Locked");
+                }
+                else if (CurrentTabStatus == "DisActive")
+                {
+                    query = query.Where(d => d.TaiKhoan != null && d.TaiKhoan.TrangThai == "DisActive");
+                }
+
+                // Lọc theo từ khóa tìm kiếm
+                if (!string.IsNullOrWhiteSpace(SearchKeyword))
+                {
+                    var keyword = SearchKeyword.ToLower();
+                    query = query.Where(d => d.HoTen.ToLower().Contains(keyword) || 
+                                             (d.Email != null && d.Email.ToLower().Contains(keyword)) ||
+                                             (d.SoDienThoai != null && d.SoDienThoai.Contains(keyword)));
+                }
+
+                var readers = await query.ToListAsync();
                 Readers = new ObservableCollection<DocGia>(readers);
 
                 PendingRequestCount = await context.TaiKhoans.CountAsync(t => t.TrangThai == "Pending");
@@ -86,35 +123,11 @@ namespace THUVIENZ.ViewModels
         }
 
         /// <summary>
-        /// Tìm kiếm độc giả theo Họ tên hoặc Email.
+        /// Tái sử dụng trọn vẹn logic nạp danh sách động để tuân thủ triệt để nguyên lý DRY.
         /// </summary>
         private async Task ExecuteSearchAsync()
         {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(SearchKeyword))
-                {
-                    await LoadDataAsync();
-                }
-                else
-                {
-                    using var context = new LmsDbContext();
-                    var keyword = SearchKeyword.ToLower();
-                    var filtered = await context.DocGias
-                        .Include(d => d.TaiKhoan)
-                        .Where(d => (d.TaiKhoan == null || d.TaiKhoan.TrangThai != "DisActive") &&
-                                    (d.HoTen.ToLower().Contains(keyword) || 
-                                     (d.Email != null && d.Email.ToLower().Contains(keyword)) ||
-                                     (d.SoDienThoai != null && d.SoDienThoai.Contains(keyword)))) // Tìm thêm theo SĐT mới
-                        .ToListAsync();
-
-                    Readers = new ObservableCollection<DocGia>(filtered);
-                }
-            }
-            catch (Exception)
-            {
-                // Bỏ qua lỗi nhỏ khi gõ nhanh
-            }
+            await LoadDataAsync();
         }
 
         /// <summary>
@@ -124,7 +137,7 @@ namespace THUVIENZ.ViewModels
         {
             if (param is DocGia reader)
             {
-                var confirm = MessageBox.Show($"Bạn có chắc chắn muốn vô hiệu hóa độc giả '{reader.HoTen}' (Soft Delete)? Toàn bộ lịch sử mượn trả sẽ được giữ lại cho mục đích thống kê.", 
+                var confirm = MessageBox.Show($"Bạn có chắc chắn muốn vô hiệu hóa tài khoản độc giả '{reader.HoTen}'?", 
                                               "Xác nhận vô hiệu hóa", MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (confirm == MessageBoxResult.No) return;
 
@@ -156,7 +169,7 @@ namespace THUVIENZ.ViewModels
                         // Nếu độc giả chưa có tài khoản, tự sinh một tài khoản ảo trạng thái DisActive để lưu vết
                         var newTaiKhoan = new TaiKhoan
                         {
-                            TenDangNhap = $"disactive_{reader.MaDocGia}_{System.DateTime.Now.Ticks}",
+                            TenDangNhap = $"dis_{reader.MaDocGia}_{System.DateTime.Now:yyMMddHHmmss}",
                             MatKhau = "disactive",
                             Quyen = "Reader",
                             TrangThai = "DisActive"
@@ -168,12 +181,13 @@ namespace THUVIENZ.ViewModels
 
                     await context.SaveChangesAsync();
 
-                    MessageBox.Show("Đã vô hiệu hóa độc giả thành công (Soft Delete)! Toàn bộ lịch sử giao dịch được bảo toàn nguyên vẹn.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Đã vô hiệu hóa độc giả thành công!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
                     await LoadDataAsync();
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Lỗi xử lý vô hiệu hóa: {ex.Message}", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
+                    string errorMsg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                    MessageBox.Show($"Lỗi xử lý vô hiệu hóa từ CSDL: {errorMsg}\n\n(Gợi ý: Vui lòng kiểm tra lại ràng buộc CHECK constraint của bảng TAIKHOAN trong Database vật lý)", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
