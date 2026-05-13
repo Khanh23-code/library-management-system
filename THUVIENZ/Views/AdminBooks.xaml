@@ -84,12 +84,11 @@
                         <DropShadowEffect BlurRadius="10" Opacity="0.05" ShadowDepth="2"/>
                     </Border.Effect>
 
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                         <DataGrid x:Name="dgBooks" ItemsSource="{Binding BooksList}" SelectedItem="{Binding SelectedBook}" Style="{StaticResource ModernDataGrid}" Margin="10">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Mã Sách" Binding="{Binding MaSach}" Width="80"/>
-                                <DataGridTextColumn Header="Mã ISBN" Binding="{Binding MaISBN}" Width="130"/>
-                                <DataGridTextColumn Header="Tên Sách" Binding="{Binding TenSach}" Width="200">
+                                <DataGridTextColumn Header="Mã" Binding="{Binding MaSach}" Width="50"/>
+                                <DataGridTextColumn Header="Tên Sách" Binding="{Binding TenSach}" Width="*">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="TextWrapping" Value="Wrap"/>
@@ -98,7 +97,7 @@
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
-                                <DataGridTextColumn Header="Thể Loại" Binding="{Binding TheLoaiSach.TenTheLoai}" Width="140">
+                                <DataGridTextColumn Header="Thể Loại" Binding="{Binding TheLoaiSach.TenTheLoai}" Width="110">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="TextWrapping" Value="Wrap"/>
@@ -107,7 +106,7 @@
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
-                                <DataGridTextColumn Header="Tác Giả" Binding="{Binding TacGia}" Width="140">
+                                <DataGridTextColumn Header="Tác Giả" Binding="{Binding TacGia}" Width="120">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="TextWrapping" Value="Wrap"/>
@@ -116,10 +115,7 @@
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
-                                <DataGridTextColumn Header="Nhà XB" Binding="{Binding NhaXuatBan}" Width="120"/>
-                                <DataGridTextColumn Header="Năm XB" Binding="{Binding NamXuatBan}" Width="80"/>
-                                <DataGridTextColumn Header="Trị Giá" Binding="{Binding TriGia, StringFormat='{}{0:N0} đ'}" Width="110"/>
-                                <DataGridTextColumn Header="Số Lượng" Binding="{Binding SoLuong}" Width="90">
+                                <DataGridTextColumn Header="S.Lượng" Binding="{Binding SoLuong}" Width="70">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="VerticalAlignment" Value="Center"/>
@@ -127,7 +123,7 @@
                                         </Style>
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
-                                <DataGridTextColumn Header="Trạng Thái" Binding="{Binding TinhTrang}" Width="110">
+                                <DataGridTextColumn Header="Trạng Thái" Binding="{Binding TinhTrang}" Width="95">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="TextWrapping" Value="Wrap"/>
@@ -137,7 +133,7 @@
                                     </DataGridTextColumn.ElementStyle>
                                 </DataGridTextColumn>
 
-                                <DataGridTemplateColumn Header="Hành Động" Width="140">
+                                <DataGridTemplateColumn Header="Hành Động" Width="130">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
