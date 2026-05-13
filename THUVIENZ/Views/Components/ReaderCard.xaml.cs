@@ -44,6 +44,18 @@ namespace THUVIENZ.Views.Components
             DependencyProperty.Register("DeleteCommandParameter", typeof(object), typeof(ReaderCard), new PropertyMetadata(null));
         public object DeleteCommandParameter { get { return GetValue(DeleteCommandParameterProperty); } set { SetValue(DeleteCommandParameterProperty, value); } }
 
+        public static readonly DependencyProperty SuspendCommandProperty =
+            DependencyProperty.Register("SuspendCommand", typeof(ICommand), typeof(ReaderCard), new PropertyMetadata(null));
+        public ICommand SuspendCommand { get { return (ICommand)GetValue(SuspendCommandProperty); } set { SetValue(SuspendCommandProperty, value); } }
+
+        public static readonly DependencyProperty SuspendCommandParameterProperty =
+            DependencyProperty.Register("SuspendCommandParameter", typeof(object), typeof(ReaderCard), new PropertyMetadata(null));
+        public object SuspendCommandParameter { get { return GetValue(SuspendCommandParameterProperty); } set { SetValue(SuspendCommandParameterProperty, value); } }
+
+        public static readonly DependencyProperty SuspendButtonVisibilityProperty =
+            DependencyProperty.Register("SuspendButtonVisibility", typeof(Visibility), typeof(ReaderCard), new PropertyMetadata(Visibility.Visible));
+        public Visibility SuspendButtonVisibility { get { return (Visibility)GetValue(SuspendButtonVisibilityProperty); } set { SetValue(SuspendButtonVisibilityProperty, value); } }
+
         public ReaderCard()
         {
             InitializeComponent();
@@ -54,6 +66,14 @@ namespace THUVIENZ.Views.Components
             if (DeleteCommand != null && DeleteCommand.CanExecute(DeleteCommandParameter))
             {
                 DeleteCommand.Execute(DeleteCommandParameter);
+            }
+        }
+
+        private void BtnSuspend_Click(object sender, RoutedEventArgs e)
+        {
+            if (SuspendCommand != null && SuspendCommand.CanExecute(SuspendCommandParameter))
+            {
+                SuspendCommand.Execute(SuspendCommandParameter);
             }
         }
     }

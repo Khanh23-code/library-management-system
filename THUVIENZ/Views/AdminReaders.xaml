@@ -5,28 +5,93 @@
              xmlns:pop="clr-namespace:THUVIENZ.Views.Popups">
 
     <UserControl.Resources>
-        <Style x:Key="BaseTabButtonStyle" TargetType="RadioButton">
+        <!-- Chip Hoạt động -->
+        <Style x:Key="ChipActiveStyle" TargetType="RadioButton">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="border" Background="#F3F4F6" CornerRadius="12" Padding="20,10" Margin="0,0,15,0">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border x:Name="border" Background="#F3F4F6" CornerRadius="15" Padding="14,8" Margin="0,0,12,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border x:Name="badge" Width="22" Height="22" CornerRadius="11" Background="#E5E7EB" Margin="0,0,8,0" VerticalAlignment="Center">
+                                    <TextBlock x:Name="txtCount" Text="{Binding DataContext.ActiveCount, RelativeSource={RelativeSource AncestorType=UserControl}}" FontSize="12" FontWeight="Bold" Foreground="#4B5563" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock x:Name="txtLabel" Text="Hoạt động" FontSize="14" FontWeight="SemiBold" Foreground="#4B5563" VerticalAlignment="Center"/>
+                            </StackPanel>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="border" Property="Background" Value="#E5E7EB"/>
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}"/>
-                                <Setter Property="Foreground" Value="White"/>
+                                <Setter TargetName="border" Property="Background" Value="#10B981"/>
+                                <Setter TargetName="badge" Property="Background" Value="White"/>
+                                <Setter TargetName="txtCount" Property="Foreground" Value="#10B981"/>
+                                <Setter TargetName="txtLabel" Property="Foreground" Value="White"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-            <Setter Property="Foreground" Value="#4B5563"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <!-- Chip Đình chỉ -->
+        <Style x:Key="ChipLockedStyle" TargetType="RadioButton">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="border" Background="#F3F4F6" CornerRadius="15" Padding="14,8" Margin="0,0,12,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border x:Name="badge" Width="22" Height="22" CornerRadius="11" Background="#E5E7EB" Margin="0,0,8,0" VerticalAlignment="Center">
+                                    <TextBlock x:Name="txtCount" Text="{Binding DataContext.LockedCount, RelativeSource={RelativeSource AncestorType=UserControl}}" FontSize="12" FontWeight="Bold" Foreground="#4B5563" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock x:Name="txtLabel" Text="Đình chỉ" FontSize="14" FontWeight="SemiBold" Foreground="#4B5563" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#E5E7EB"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#F59E0B"/>
+                                <Setter TargetName="badge" Property="Background" Value="White"/>
+                                <Setter TargetName="txtCount" Property="Foreground" Value="#F59E0B"/>
+                                <Setter TargetName="txtLabel" Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <!-- Chip Vô hiệu hóa -->
+        <Style x:Key="ChipDisActiveStyle" TargetType="RadioButton">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="border" Background="#F3F4F6" CornerRadius="15" Padding="14,8" Margin="0,0,12,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border x:Name="badge" Width="22" Height="22" CornerRadius="11" Background="#E5E7EB" Margin="0,0,8,0" VerticalAlignment="Center">
+                                    <TextBlock x:Name="txtCount" Text="{Binding DataContext.DisActiveCount, RelativeSource={RelativeSource AncestorType=UserControl}}" FontSize="12" FontWeight="Bold" Foreground="#4B5563" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock x:Name="txtLabel" Text="Vô hiệu hóa" FontSize="14" FontWeight="SemiBold" Foreground="#4B5563" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#E5E7EB"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#EF4444"/>
+                                <Setter TargetName="badge" Property="Background" Value="White"/>
+                                <Setter TargetName="txtCount" Property="Foreground" Value="#EF4444"/>
+                                <Setter TargetName="txtLabel" Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
     </UserControl.Resources>
@@ -78,10 +143,11 @@
                     </Button>
                 </Grid>
 
+                <!-- Các Chip hiển thị Thống kê số lượng động tuyệt đẹp -->
                 <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,20">
-                    <RadioButton Content="🟢 Hoạt động" Tag="#10B981" Style="{StaticResource BaseTabButtonStyle}" IsChecked="True" Click="TabActive_Click"/>
-                    <RadioButton Content="🟡 Đình chỉ" Tag="#F59E0B" Style="{StaticResource BaseTabButtonStyle}" Click="TabLocked_Click"/>
-                    <RadioButton Content="🔴 Vô hiệu hóa" Tag="#EF4444" Style="{StaticResource BaseTabButtonStyle}" Click="TabDisActive_Click"/>
+                    <RadioButton Style="{StaticResource ChipActiveStyle}" IsChecked="True" Click="TabActive_Click"/>
+                    <RadioButton Style="{StaticResource ChipLockedStyle}" Click="TabLocked_Click"/>
+                    <RadioButton Style="{StaticResource ChipDisActiveStyle}" Click="TabDisActive_Click"/>
                 </StackPanel>
 
                 <comp:SearchBar Grid.Row="2" SearchText="{Binding SearchKeyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,20"/>
@@ -99,7 +165,10 @@
                                                   Address="{Binding DiaChi}" Gender="{Binding GioiTinh}" 
                                                   Email="{Binding Email}" Phone="{Binding SoDienThoai}" 
                                                   AvatarSource="/Assets/phai.png" 
-                                                  DeleteCommand="{Binding DataContext.DeleteReaderCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  SuspendButtonVisibility="{Binding DataContext.IsActiveTabVisibility, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  SuspendCommand="{Binding OpenSuspendPopupCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  SuspendCommandParameter="{Binding}"
+                                                  DeleteCommand="{Binding OpenDeletePopupCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                   DeleteCommandParameter="{Binding}"/>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -109,7 +178,8 @@
             </Grid>
         </Border>
 
-        <pop:ConfirmDeletePopup x:Name="DeletePopup" Visibility="Collapsed" 
-                         OnConfirm="DeletePopup_OnConfirm" />
+        <!-- Giữ lại popup cũ đề phòng code khác gọi và nạp thêm popup xử lý thủ công mới -->
+        <pop:ConfirmDeletePopup x:Name="DeletePopup" Visibility="Collapsed" OnConfirm="DeletePopup_OnConfirm" />
+        <pop:ReaderActionPopup x:Name="ActionPopup" Visibility="Collapsed" />
     </Grid>
 </UserControl>

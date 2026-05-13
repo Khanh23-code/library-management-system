@@ -55,8 +55,32 @@ namespace THUVIENZ.ViewModels
             {
                 _currentTabStatus = value;
                 OnPropertyChanged();
+                OnPropertyChanged(nameof(IsActiveTabVisibility));
                 _ = LoadDataAsync(); // Nạp lại ngay lập tức khi thay đổi trạng thái Tab
             }
+        }
+
+        public Visibility IsActiveTabVisibility => CurrentTabStatus == "Active" ? Visibility.Visible : Visibility.Collapsed;
+
+        private int _activeCount;
+        public int ActiveCount
+        {
+            get => _activeCount;
+            set { _activeCount = value; OnPropertyChanged(); }
+        }
+
+        private int _lockedCount;
+        public int LockedCount
+        {
+            get => _lockedCount;
+            set { _lockedCount = value; OnPropertyChanged(); }
+        }
+
+        private int _disActiveCount;
+        public int DisActiveCount
+        {
+            get => _disActiveCount;
+            set { _disActiveCount = value; OnPropertyChanged(); }
         }
 
         public void SetTabStatus(string status)
@@ -113,6 +137,11 @@ namespace THUVIENZ.ViewModels
 
                 var readers = await query.ToListAsync();
                 Readers = new ObservableCollection<DocGia>(readers);
+
+                // Cập nhật thống kê số lượng tài khoản theo từng trạng thái
+                ActiveCount = await context.DocGias.CountAsync(d => d.TaiKhoan == null || d.TaiKhoan.TrangThai == "Active");
+                LockedCount = await context.DocGias.CountAsync(d => d.TaiKhoan != null && d.TaiKhoan.TrangThai == "Locked");
+                DisActiveCount = await context.DocGias.CountAsync(d => d.TaiKhoan != null && d.TaiKhoan.TrangThai == "DisActive");
 
                 PendingRequestCount = await context.TaiKhoans.CountAsync(t => t.TrangThai == "Pending");
             }
