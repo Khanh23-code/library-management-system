@@ -34,6 +34,18 @@ namespace THUVIENZ.ViewModels
             }
         }
 
+        private string _searchKeyword = string.Empty;
+        public string SearchKeyword
+        {
+            get => _searchKeyword;
+            set
+            {
+                _searchKeyword = value;
+                OnPropertyChanged();
+                _ = LoadReadersAsync();
+            }
+        }
+
         private ObservableCollection<DocGiaWithBorrowCount> _readersList = new ObservableCollection<DocGiaWithBorrowCount>();
         public ObservableCollection<DocGiaWithBorrowCount> ReadersList
         {
@@ -75,13 +87,21 @@ namespace THUVIENZ.ViewModels
         }
 
         /// <summary>
-        /// Nạp danh sách các độc giả đang có giao dịch tương ứng với Tab hiện tại.
+        /// Nạp danh sách các độc giả đang có giao dịch tương ứng với Tab hiện tại, hỗ trợ lọc theo từ khóa.
         /// </summary>
         public async Task LoadReadersAsync()
         {
             bool isReturnedFilter = IsHistoryTab;
+            string keyword = SearchKeyword?.Trim().ToLower() ?? "";
 
-            var readers = await _context.DocGias
+            var query = _context.DocGias.AsQueryable();
+
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                query = query.Where(d => d.HoTen.ToLower().Contains(keyword) || d.MaDocGia.ToString().Contains(keyword));
+            }
+
+            var readers = await query
                 .Select(d => new DocGiaWithBorrowCount
                 {
                     MaDocGia = d.MaDocGia,
