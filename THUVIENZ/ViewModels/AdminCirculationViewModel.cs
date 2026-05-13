@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,6 +21,61 @@ namespace THUVIENZ.ViewModels
     {
         private readonly LmsDbContext _context;
         private readonly MuonTraService _muonTraService;
+        private readonly LibrarySettingsService _settingsService;
+
+        private int _selectedTabIndex = 0; // 0: Đang mượn, 1: Lịch sử, 2: Quy định & Xử phạt
+        public int SelectedTabIndex
+        {
+            get => _selectedTabIndex;
+            set
+            {
+                _selectedTabIndex = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsCirculationVisible));
+                OnPropertyChanged(nameof(IsSettingsVisible));
+
+                if (_selectedTabIndex == 0 || _selectedTabIndex == 1)
+                {
+                    IsHistoryTab = (_selectedTabIndex == 1);
+                }
+                else if (_selectedTabIndex == 2)
+                {
+                    _ = LoadSettingsAsync();
+                }
+            }
+        }
+
+        public Visibility IsCirculationVisible => SelectedTabIndex != 2 ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility IsSettingsVisible => SelectedTabIndex == 2 ? Visibility.Visible : Visibility.Collapsed;
+
+        // Các thuộc tính Quản lý Cơ chế / Tham số Thư viện
+        private double _tienPhatMoiNgay;
+        public double TienPhatMoiNgay
+        {
+            get => _tienPhatMoiNgay;
+            set { _tienPhatMoiNgay = value; OnPropertyChanged(); }
+        }
+
+        private double _soNgayMuonToiDa;
+        public double SoNgayMuonToiDa
+        {
+            get => _soNgayMuonToiDa;
+            set { _soNgayMuonToiDa = value; OnPropertyChanged(); }
+        }
+
+        private double _soSachMuonToiDa;
+        public double SoSachMuonToiDa
+        {
+            get => _soSachMuonToiDa;
+            set { _soSachMuonToiDa = value; OnPropertyChanged(); }
+        }
+
+        private double _tongNoToiDa;
+        public double TongNoToiDa
+        {
+            get => _tongNoToiDa;
+            set { _tongNoToiDa = value; OnPropertyChanged(); }
+        }
 
         private bool _isHistoryTab;
         public bool IsHistoryTab
@@ -74,16 +130,66 @@ namespace THUVIENZ.ViewModels
 
         public ICommand LoadDataCommand { get; }
         public ICommand ReturnBookCommand { get; }
+        public ICommand SaveSettingsCommand { get; }
 
         public AdminCirculationViewModel()
         {
             _context = new LmsDbContext();
             _muonTraService = new MuonTraService();
+            _settingsService = new LibrarySettingsService();
 
             LoadDataCommand = new RelayCommand(async _ => await LoadReadersAsync());
             ReturnBookCommand = new RelayCommand(async param => await ExecuteReturnAsync(param));
+            SaveSettingsCommand = new RelayCommand(async _ => await SaveSettingsAsync());
 
             _ = LoadReadersAsync();
+        }
+
+        /// <summary>
+        /// Nạp dữ liệu các tham số cấu hình quy định thư viện.
+        /// </summary>
+        public async Task LoadSettingsAsync()
+        {
+            try
+            {
+                TienPhatMoiNgay = await _settingsService.GetValueAsync("TienPhatMoiNgay");
+                SoNgayMuonToiDa = await _settingsService.GetValueAsync("SoNgayMuonToiDa");
+                SoSachMuonToiDa = await _settingsService.GetValueAsync("SoSachMuonToiDa");
+
+                try
+                {
+                    TongNoToiDa = await _settingsService.GetValueAsync("TongNoToiDa");
+                }
+                catch (KeyNotFoundException)
+                {
+                    TongNoToiDa = 50000;
+                    await _settingsService.UpdateParamAsync("TongNoToiDa", 50000);
+                }
+            }
+            catch (Exception)
+            {
+                // Xử lý mặc định an toàn nếu DB chưa seed đủ
+            }
+        }
+
+        /// <summary>
+        /// Lưu cấu hình tham số mới xuống DB và cập nhật Cache LRU.
+        /// </summary>
+        public async Task SaveSettingsAsync()
+        {
+            try
+            {
+                await _settingsService.UpdateParamAsync("TienPhatMoiNgay", TienPhatMoiNgay);
+                await _settingsService.UpdateParamAsync("SoNgayMuonToiDa", SoNgayMuonToiDa);
+                await _settingsService.UpdateParamAsync("SoSachMuonToiDa", SoSachMuonToiDa);
+                await _settingsService.UpdateParamAsync("TongNoToiDa", TongNoToiDa);
+
+                MessageBox.Show("Đã cập nhật chính sách và tham số xử phạt thành công!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi lưu tham số: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         /// <summary>

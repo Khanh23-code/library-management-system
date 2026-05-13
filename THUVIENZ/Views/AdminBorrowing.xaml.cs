@@ -8,8 +8,7 @@ namespace THUVIENZ.Views
     public partial class AdminBorrowing : UserControl
     {
         private readonly AdminCirculationViewModel _viewModel;
-        private Border? _btnCurrentTab;
-        private Border? _btnHistoryTab;
+        private readonly Border?[] _tabBorders = new Border?[3];
 
         public AdminBorrowing()
         {
@@ -22,6 +21,7 @@ namespace THUVIENZ.Views
         private void AdminBorrowing_Loaded(object sender, RoutedEventArgs e)
         {
             FindTabBorders(this);
+            UpdateTabStyles();
         }
 
         private void FindTabBorders(DependencyObject parent)
@@ -34,15 +34,15 @@ namespace THUVIENZ.Views
                 {
                     if (tb.Text.Contains("Đang mượn"))
                     {
-                        _btnCurrentTab = b;
-                        b.MouseLeftButtonDown -= CurrentTab_Click;
-                        b.MouseLeftButtonDown += CurrentTab_Click;
+                        RegisterTab(b, 0);
                     }
                     else if (tb.Text.Contains("Lịch sử"))
                     {
-                        _btnHistoryTab = b;
-                        b.MouseLeftButtonDown -= HistoryTab_Click;
-                        b.MouseLeftButtonDown += HistoryTab_Click;
+                        RegisterTab(b, 1);
+                    }
+                    else if (tb.Text.Contains("Quy định"))
+                    {
+                        RegisterTab(b, 2);
                     }
                 }
                 else
@@ -52,35 +52,48 @@ namespace THUVIENZ.Views
             }
         }
 
-        private void CurrentTab_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void RegisterTab(Border border, int index)
         {
-            _viewModel.IsHistoryTab = false;
-            UpdateTabStyles();
+            _tabBorders[index] = border;
+            border.MouseLeftButtonDown -= Tab_Click;
+            border.MouseLeftButtonDown += Tab_Click;
         }
 
-        private void HistoryTab_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Tab_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            _viewModel.IsHistoryTab = true;
-            UpdateTabStyles();
+            if (sender is Border border)
+            {
+                for (int i = 0; i < _tabBorders.Length; i++)
+                {
+                    if (_tabBorders[i] == border)
+                    {
+                        _viewModel.SelectedTabIndex = i;
+                        break;
+                    }
+                }
+                UpdateTabStyles();
+            }
         }
 
         private void UpdateTabStyles()
         {
-            if (_btnCurrentTab?.Child is TextBlock tbCurrent)
+            for (int i = 0; i < _tabBorders.Length; i++)
             {
-                _btnCurrentTab.Background = !_viewModel.IsHistoryTab ? new SolidColorBrush(Color.FromRgb(239, 246, 255)) : new SolidColorBrush(Colors.Transparent);
-                _btnCurrentTab.BorderBrush = !_viewModel.IsHistoryTab ? new SolidColorBrush(Color.FromRgb(59, 130, 246)) : new SolidColorBrush(Colors.Transparent);
-                tbCurrent.Foreground = !_viewModel.IsHistoryTab ? new SolidColorBrush(Color.FromRgb(29, 78, 216)) : new SolidColorBrush(Color.FromRgb(107, 114, 128));
-                tbCurrent.FontWeight = !_viewModel.IsHistoryTab ? FontWeights.Bold : FontWeights.SemiBold;
+                var border = _tabBorders[i];
+                if (border?.Child is TextBlock tb)
+                {
+                    bool isSelected = (_viewModel.SelectedTabIndex == i);
+                    border.Background = isSelected ? new SolidColorBrush(Color.FromRgb(239, 246, 255)) : new SolidColorBrush(Colors.Transparent);
+                    border.BorderBrush = isSelected ? new SolidColorBrush(Color.FromRgb(59, 130, 246)) : new SolidColorBrush(Colors.Transparent);
+                    tb.Foreground = isSelected ? new SolidColorBrush(Color.FromRgb(29, 78, 216)) : new SolidColorBrush(Color.FromRgb(107, 114, 128));
+                    tb.FontWeight = isSelected ? FontWeights.Bold : FontWeights.SemiBold;
+                }
             }
+        }
 
-            if (_btnHistoryTab?.Child is TextBlock tbHistory)
-            {
-                _btnHistoryTab.Background = _viewModel.IsHistoryTab ? new SolidColorBrush(Color.FromRgb(239, 246, 255)) : new SolidColorBrush(Colors.Transparent);
-                _btnHistoryTab.BorderBrush = _viewModel.IsHistoryTab ? new SolidColorBrush(Color.FromRgb(59, 130, 246)) : new SolidColorBrush(Colors.Transparent);
-                tbHistory.Foreground = _viewModel.IsHistoryTab ? new SolidColorBrush(Color.FromRgb(29, 78, 216)) : new SolidColorBrush(Color.FromRgb(107, 114, 128));
-                tbHistory.FontWeight = _viewModel.IsHistoryTab ? FontWeights.Bold : FontWeights.SemiBold;
-            }
+        private void NumberOnly_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
+        {
+            e.Handled = !System.Text.RegularExpressions.Regex.IsMatch(e.Text, "^[0-9]+$");
         }
     }
 }

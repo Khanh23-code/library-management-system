@@ -77,12 +77,16 @@
                     <Border Background="#EFF6FF" BorderBrush="#3B82F6" BorderThickness="0,0,0,2" Padding="15,8" Margin="0,0,8,0" Cursor="Hand">
                         <TextBlock Text="Đang mượn (Hiện tại)" FontSize="15" FontWeight="Bold" Foreground="#1D4ED8"/>
                     </Border>
-                    <Border Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2" Padding="15,8" Cursor="Hand">
+                    <Border Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2" Padding="15,8" Margin="0,0,8,0" Cursor="Hand">
                         <TextBlock Text="Lịch sử (Đã xong)" FontSize="15" FontWeight="SemiBold" Foreground="#6B7280"/>
+                    </Border>
+                    <Border Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2" Padding="15,8" Cursor="Hand">
+                        <TextBlock Text="Quy định &amp; Xử phạt" FontSize="15" FontWeight="SemiBold" Foreground="#6B7280"/>
                     </Border>
                 </StackPanel>
 
-                <Grid Grid.Row="2">
+                <!-- Bố cục 2 cột Quản lý mượn trả (Tab 1 & Tab 2) -->
+                <Grid Grid.Row="2" Visibility="{Binding IsCirculationVisible}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="3.6*"/>
                         <ColumnDefinition Width="15"/>
@@ -274,6 +278,128 @@
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- Bảng điều khiển Quản lý Cơ chế & Chính sách Xử phạt (Tab 3) -->
+                <Grid Grid.Row="2" Visibility="{Binding IsSettingsVisible}">
+                    <Border Background="White" CornerRadius="16" BorderBrush="#E5E7EB" BorderThickness="1" Padding="24">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="10" Opacity="0.05" ShadowDepth="2"/>
+                        </Border.Effect>
+
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Margin="0,0,0,20">
+                                <TextBlock Text="Cấu hình Quy định &amp; Hạn mức Xử phạt" FontSize="18" FontWeight="Bold" Foreground="#111827"/>
+                                <TextBlock Text="Thiết lập các tham số tự động áp dụng khi chốt mượn trả và xử lý nợ đọng" FontSize="13" Foreground="#6B7280" Margin="0,2,0,0"/>
+                            </StackPanel>
+
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <StackPanel MaxWidth="600" HorizontalAlignment="Left">
+                                    <!-- Thẻ 1: Tiền phạt mỗi ngày -->
+                                    <Border Background="#F9FAFB" CornerRadius="12" BorderBrush="#E5E7EB" BorderThickness="1" Padding="16" Margin="0,0,0,12">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="200"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="Mức phạt trễ hạn mỗi ngày" FontSize="14" FontWeight="SemiBold" Foreground="#374151"/>
+                                                <TextBlock Text="Số tiền phạt tự động nhân với số ngày trả trễ (VNĐ/ngày)" FontSize="12" Foreground="#9CA3AF" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                            <TextBox Grid.Column="1" Text="{Binding TienPhatMoiNgay, UpdateSourceTrigger=PropertyChanged}" 
+                                                     PreviewTextInput="NumberOnly_PreviewTextInput"
+                                                     Height="36" FontSize="14" FontWeight="Bold" Foreground="#111827" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" 
+                                                     Padding="10,0" Background="White" BorderBrush="#D1D5DB" BorderThickness="1"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Thẻ 2: Hạn mức nợ tối đa -->
+                                    <Border Background="#F9FAFB" CornerRadius="12" BorderBrush="#E5E7EB" BorderThickness="1" Padding="16" Margin="0,0,0,12">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="200"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="Ngưỡng nợ đọng tối đa" FontSize="14" FontWeight="SemiBold" Foreground="#374151"/>
+                                                <TextBlock Text="Tổng nợ tích lũy vượt mức này sẽ tự động đình chỉ (Khóa) tài khoản" FontSize="12" Foreground="#9CA3AF" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                            <TextBox Grid.Column="1" Text="{Binding TongNoToiDa, UpdateSourceTrigger=PropertyChanged}" 
+                                                     PreviewTextInput="NumberOnly_PreviewTextInput"
+                                                     Height="36" FontSize="14" FontWeight="Bold" Foreground="#111827" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" 
+                                                     Padding="10,0" Background="White" BorderBrush="#D1D5DB" BorderThickness="1"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Thẻ 3: Số ngày mượn tối đa -->
+                                    <Border Background="#F9FAFB" CornerRadius="12" BorderBrush="#E5E7EB" BorderThickness="1" Padding="16" Margin="0,0,0,12">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="200"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="Thời hạn mượn sách tối đa" FontSize="14" FontWeight="SemiBold" Foreground="#374151"/>
+                                                <TextBlock Text="Số ngày mặc định từ lúc mượn đến hạn trả (Ngày)" FontSize="12" Foreground="#9CA3AF" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                            <TextBox Grid.Column="1" Text="{Binding SoNgayMuonToiDa, UpdateSourceTrigger=PropertyChanged}" 
+                                                     PreviewTextInput="NumberOnly_PreviewTextInput"
+                                                     Height="36" FontSize="14" FontWeight="Bold" Foreground="#111827" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" 
+                                                     Padding="10,0" Background="White" BorderBrush="#D1D5DB" BorderThickness="1"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- Thẻ 4: Số sách tối đa -->
+                                    <Border Background="#F9FAFB" CornerRadius="12" BorderBrush="#E5E7EB" BorderThickness="1" Padding="16" Margin="0,0,0,12">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="200"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel VerticalAlignment="Center">
+                                                <TextBlock Text="Số lượng sách mượn tối đa" FontSize="14" FontWeight="SemiBold" Foreground="#374151"/>
+                                                <TextBlock Text="Hạn mức số cuốn sách vật lý tối đa được giữ cùng lúc (Cuốn)" FontSize="12" Foreground="#9CA3AF" Margin="0,2,0,0"/>
+                                            </StackPanel>
+                                            <TextBox Grid.Column="1" Text="{Binding SoSachMuonToiDa, UpdateSourceTrigger=PropertyChanged}" 
+                                                     PreviewTextInput="NumberOnly_PreviewTextInput"
+                                                     Height="36" FontSize="14" FontWeight="Bold" Foreground="#111827" VerticalContentAlignment="Center" HorizontalContentAlignment="Right" 
+                                                     Padding="10,0" Background="White" BorderBrush="#D1D5DB" BorderThickness="1"/>
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+                            </ScrollViewer>
+
+                            <!-- Nút Lưu thay đổi đồng bộ hoàn hảo với chuẩn nút chính của project -->
+                            <Button Grid.Row="2" Content="Lưu Cấu hình" Command="{Binding SaveSettingsCommand}" 
+                                    HorizontalAlignment="Right" Width="180" Height="50" Background="#10B981" Foreground="White" 
+                                    FontSize="18" FontWeight="Bold" Cursor="Hand" Margin="0,15,0,0">
+                                <Button.Style>
+                                    <Style TargetType="Button">
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="{TemplateBinding Background}" CornerRadius="15">
+                                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#059669"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
                         </Grid>
                     </Border>
                 </Grid>
