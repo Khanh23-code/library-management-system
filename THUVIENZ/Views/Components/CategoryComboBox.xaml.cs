@@ -37,6 +37,15 @@ namespace THUVIENZ.Views.Components
         {
             InitializeComponent();
             Loaded += CategoryComboBox_Loaded;
+            IsVisibleChanged += CategoryComboBox_IsVisibleChanged;
+        }
+
+        private void CategoryComboBox_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (PopupSuggestions != null && PopupSuggestions.IsOpen && !(bool)e.NewValue)
+            {
+                PopupSuggestions.IsOpen = false;
+            }
         }
 
         private void CategoryComboBox_Loaded(object sender, RoutedEventArgs e)
@@ -106,16 +115,22 @@ namespace THUVIENZ.Views.Components
         private void TxtSearch_GotFocus(object sender, RoutedEventArgs e)
         {
             FilterSuggestions();
-            PopupSuggestions.IsOpen = true;
-        }
-
-        private void TxtSearch_PreviewMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            FilterSuggestions();
-            if (!PopupSuggestions.IsOpen)
+            Dispatcher.InvokeAsync(() =>
             {
                 PopupSuggestions.IsOpen = true;
-            }
+            }, System.Windows.Threading.DispatcherPriority.Input);
+        }
+
+        private void TxtSearch_PreviewMouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            FilterSuggestions();
+            Dispatcher.InvokeAsync(() =>
+            {
+                if (!PopupSuggestions.IsOpen)
+                {
+                    PopupSuggestions.IsOpen = true;
+                }
+            }, System.Windows.Threading.DispatcherPriority.Input);
         }
 
         private void TxtSearch_LostFocus(object sender, RoutedEventArgs e)

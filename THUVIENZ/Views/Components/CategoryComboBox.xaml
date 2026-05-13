@@ -21,7 +21,7 @@
                          TextChanged="TxtSearch_TextChanged"
                          GotFocus="TxtSearch_GotFocus"
                          LostFocus="TxtSearch_LostFocus"
-                         PreviewMouseDown="TxtSearch_PreviewMouseDown"/>
+                         PreviewMouseLeftButtonUp="TxtSearch_PreviewMouseLeftButtonUp"/>
 
                 <TextBlock x:Name="lblPlaceholder" 
                            Text="Gõ để tìm hoặc thêm..." 
