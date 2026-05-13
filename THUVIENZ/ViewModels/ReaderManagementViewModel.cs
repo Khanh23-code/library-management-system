@@ -124,7 +124,7 @@ namespace THUVIENZ.ViewModels
         {
             if (param is DocGia reader)
             {
-                var confirm = MessageBox.Show($"Bạn có chắc chắn muốn vô hiệu hóa độc giả '{reader.HoTen}' (Soft Delete)? Toàn bộ lịch sử mượn trả sẽ được giữ lại cho mục đích thống kê.", 
+                var confirm = MessageBox.Show($"Bạn có chắc chắn muốn vô hiệu hóa tài khoản độc giả '{reader.HoTen}'?", 
                                               "Xác nhận vô hiệu hóa", MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if (confirm == MessageBoxResult.No) return;
 
@@ -168,7 +168,7 @@ namespace THUVIENZ.ViewModels
 
                     await context.SaveChangesAsync();
 
-                    MessageBox.Show("Đã vô hiệu hóa độc giả thành công (Soft Delete)! Toàn bộ lịch sử giao dịch được bảo toàn nguyên vẹn.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Đã vô hiệu hóa độc giả thành công!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
                     await LoadDataAsync();
                 }
                 catch (Exception ex)
