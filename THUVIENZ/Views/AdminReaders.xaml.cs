@@ -26,17 +26,20 @@ namespace THUVIENZ.Views
             OpenSuspendPopupCommand = new RelayCommand(param => OpenActionPopup(param as DocGia, "Suspend"));
             OpenDeletePopupCommand = new RelayCommand(param =>
             {
-                // Nếu đang ở tab Active thì mở popup xử lý có nhập lý do
-                if (_viewModel.CurrentTabStatus == "Active")
+                if (param is DocGia reader)
                 {
-                    OpenActionPopup(param as DocGia, "Delete");
-                }
-                else
-                {
-                    // Nếu ở tab khác (đã khóa/vô hiệu hóa) thì dùng luôn lệnh xóa cũ của ViewModel
-                    if (_viewModel.DeleteReaderCommand.CanExecute(param))
+                    // Nếu đang ở tab Active hoặc Locked (Đình chỉ), mở popup để có nhập lý do/xem lý do
+                    if (_viewModel.CurrentTabStatus == "Active" || _viewModel.CurrentTabStatus == "Locked")
                     {
-                        _viewModel.DeleteReaderCommand.Execute(param);
+                        OpenActionPopup(reader, "Delete");
+                    }
+                    else
+                    {
+                        // Ở tab Vô hiệu hóa thì dùng lệnh xóa mềm mặc định
+                        if (_viewModel.DeleteReaderCommand.CanExecute(param))
+                        {
+                            _viewModel.DeleteReaderCommand.Execute(param);
+                        }
                     }
                 }
             });
@@ -49,7 +52,24 @@ namespace THUVIENZ.Views
             if (reader == null) return;
             ActionPopup.TargetReader = reader;
             ActionPopup.ActionMode = mode;
-            ActionPopup.ReasonText = string.Empty;
+            
+            // Nếu thao tác Xóa trên tài khoản đang bị đình chỉ, tự động tải lại lý do đình chỉ trước đó
+            if (mode == "Delete" && _viewModel.CurrentTabStatus == "Locked")
+            {
+                if (ReaderManagementViewModel.SuspensionReasonsCache.TryGetValue(reader.MaDocGia, out string? cachedReason))
+                {
+                    ActionPopup.ReasonText = cachedReason;
+                }
+                else
+                {
+                    ActionPopup.ReasonText = "Vi phạm quy chế thư viện (Đã xử lý đình chỉ trước đó)";
+                }
+            }
+            else
+            {
+                ActionPopup.ReasonText = string.Empty;
+            }
+
             ActionPopup.Visibility = Visibility.Visible;
         }
 
@@ -86,6 +106,12 @@ namespace THUVIENZ.Views
                         account.TrangThai = targetStatus;
                         await context.SaveChangesAsync();
                     }
+                }
+
+                // Lưu vết vĩnh cửu lý do đình chỉ vào bộ nhớ đệm theo mã độc giả
+                if (ActionPopup.ActionMode == "Suspend")
+                {
+                    ReaderManagementViewModel.SuspensionReasonsCache[targetReader.MaDocGia] = reason;
                 }
 
                 string summary = ActionPopup.ActionMode == "Suspend" 

@@ -56,6 +56,18 @@ namespace THUVIENZ.Views.Components
             DependencyProperty.Register("SuspendButtonVisibility", typeof(Visibility), typeof(ReaderCard), new PropertyMetadata(Visibility.Visible));
         public Visibility SuspendButtonVisibility { get { return (Visibility)GetValue(SuspendButtonVisibilityProperty); } set { SetValue(SuspendButtonVisibilityProperty, value); } }
 
+        public static readonly DependencyProperty UnsuspendCommandProperty =
+            DependencyProperty.Register("UnsuspendCommand", typeof(ICommand), typeof(ReaderCard), new PropertyMetadata(null));
+        public ICommand UnsuspendCommand { get { return (ICommand)GetValue(UnsuspendCommandProperty); } set { SetValue(UnsuspendCommandProperty, value); } }
+
+        public static readonly DependencyProperty UnsuspendCommandParameterProperty =
+            DependencyProperty.Register("UnsuspendCommandParameter", typeof(object), typeof(ReaderCard), new PropertyMetadata(null));
+        public object UnsuspendCommandParameter { get { return GetValue(UnsuspendCommandParameterProperty); } set { SetValue(UnsuspendCommandParameterProperty, value); } }
+
+        public static readonly DependencyProperty UnsuspendButtonVisibilityProperty =
+            DependencyProperty.Register("UnsuspendButtonVisibility", typeof(Visibility), typeof(ReaderCard), new PropertyMetadata(Visibility.Collapsed));
+        public Visibility UnsuspendButtonVisibility { get { return (Visibility)GetValue(UnsuspendButtonVisibilityProperty); } set { SetValue(UnsuspendButtonVisibilityProperty, value); } }
+
         public ReaderCard()
         {
             InitializeComponent();
@@ -74,6 +86,14 @@ namespace THUVIENZ.Views.Components
             if (SuspendCommand != null && SuspendCommand.CanExecute(SuspendCommandParameter))
             {
                 SuspendCommand.Execute(SuspendCommandParameter);
+            }
+        }
+
+        private void BtnUnsuspend_Click(object sender, RoutedEventArgs e)
+        {
+            if (UnsuspendCommand != null && UnsuspendCommand.CanExecute(UnsuspendCommandParameter))
+            {
+                UnsuspendCommand.Execute(UnsuspendCommandParameter);
             }
         }
     }

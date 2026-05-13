@@ -84,6 +84,31 @@
                     </Button.Style>
                 </Button>
 
+                <Button Content="MỞ KHÓA" Background="#10B981" Foreground="White" 
+                        FontWeight="Bold" FontSize="11" Cursor="Hand"
+                        Width="72" Height="25" Margin="0,0,6,0"
+                        Click="BtnUnsuspend_Click"
+                        Visibility="{Binding UnsuspendButtonVisibility, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Opacity" Value="0.85"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
                 <Button Content="XÓA" Background="#EF4444" Foreground="White" 
                         FontWeight="Bold" FontSize="11" Cursor="Hand"
                         Width="60" Height="25"

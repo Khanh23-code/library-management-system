@@ -56,11 +56,13 @@ namespace THUVIENZ.ViewModels
                 _currentTabStatus = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(IsActiveTabVisibility));
+                OnPropertyChanged(nameof(IsLockedTabVisibility));
                 _ = LoadDataAsync(); // Nạp lại ngay lập tức khi thay đổi trạng thái Tab
             }
         }
 
         public Visibility IsActiveTabVisibility => CurrentTabStatus == "Active" ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility IsLockedTabVisibility => CurrentTabStatus == "Locked" ? Visibility.Visible : Visibility.Collapsed;
 
         private int _activeCount;
         public int ActiveCount
@@ -83,6 +85,9 @@ namespace THUVIENZ.ViewModels
             set { _disActiveCount = value; OnPropertyChanged(); }
         }
 
+        // Bộ nhớ đệm lưu trữ vĩnh cửu lý do đình chỉ theo mã độc giả trong suốt phiên làm việc
+        public static readonly System.Collections.Generic.Dictionary<int, string> SuspensionReasonsCache = new();
+
         public void SetTabStatus(string status)
         {
             CurrentTabStatus = status;
@@ -90,6 +95,7 @@ namespace THUVIENZ.ViewModels
 
         public ICommand LoadReadersCommand { get; }
         public ICommand DeleteReaderCommand { get; }
+        public ICommand UnsuspendReaderCommand { get; }
 
         public ReaderManagementViewModel()
         {
@@ -98,6 +104,7 @@ namespace THUVIENZ.ViewModels
 
             LoadReadersCommand = new RelayCommand(async _ => await LoadDataAsync());
             DeleteReaderCommand = new RelayCommand(async param => await ExecuteDeleteAsync(param));
+            UnsuspendReaderCommand = new RelayCommand(async param => await ExecuteUnsuspendAsync(param));
 
             _ = LoadDataAsync();
         }
@@ -217,6 +224,40 @@ namespace THUVIENZ.ViewModels
                 {
                     string errorMsg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
                     MessageBox.Show($"Lỗi xử lý vô hiệu hóa từ CSDL: {errorMsg}\n\n(Gợi ý: Vui lòng kiểm tra lại ràng buộc CHECK constraint của bảng TAIKHOAN trong Database vật lý)", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Thực hiện thủ tục khôi phục/hủy đình chỉ trước thời hạn cho tài khoản độc giả.
+        /// </summary>
+        private async Task ExecuteUnsuspendAsync(object? param)
+        {
+            if (param is DocGia reader)
+            {
+                var confirm = MessageBox.Show($"Bạn có chắc chắn muốn hủy đình chỉ trước thời hạn cho tài khoản độc giả '{reader.HoTen}' và khôi phục hoạt động bình thường?", 
+                                              "Xác nhận hủy đình chỉ", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (confirm == MessageBoxResult.No) return;
+
+                try
+                {
+                    using var context = new LmsDbContext();
+                    if (!string.IsNullOrEmpty(reader.TenDangNhap))
+                    {
+                        var taiKhoan = await context.TaiKhoans.FindAsync(reader.TenDangNhap);
+                        if (taiKhoan != null)
+                        {
+                            taiKhoan.TrangThai = "Active";
+                            await context.SaveChangesAsync();
+                        }
+                    }
+
+                    MessageBox.Show("Đã khôi phục hoạt động tài khoản độc giả thành công!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                    await LoadDataAsync();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Lỗi xử lý hủy đình chỉ từ CSDL: {ex.Message}", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
