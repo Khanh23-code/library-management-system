@@ -51,7 +51,7 @@
                 <Grid Grid.Row="0" Margin="0,0,0,20">
                     <StackPanel HorizontalAlignment="Left">
                         <TextBlock Text="Quản lý Độc giả" FontSize="36" FontWeight="Bold" Foreground="#111827"/>
-                        <TextBlock Text="Quản lý thông tin, tìm kiếm và vô hiệu hóa (Soft Delete) tài khoản độc giả" FontSize="16" Foreground="#6B7280" Margin="0,5,0,0"/>
+                        <TextBlock Text="Quản lý thông tin, tìm kiếm và vô hiệu hóa tài khoản độc giả" FontSize="16" Foreground="#6B7280" Margin="0,5,0,0"/>
                     </StackPanel>
 
                     <Button Content="{Binding PendingRequestCount, StringFormat='🔔 Xem Yêu cầu ({0})'}" HorizontalAlignment="Right" VerticalAlignment="Center" 
