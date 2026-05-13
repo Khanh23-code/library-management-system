@@ -34,7 +34,7 @@ namespace THUVIENZ.Views.Popups
             txtBookID.Text = "";
             txtTitle.Text = "";
             txtAuthor.Text = "";
-            cboCategory.SelectedCategoryId = 1;
+            cboCategory.SelectedCategoryId = 0;
             cboCategory.LoadCategories();
             txtLang.Text = "";
             txtPageNumber.Text = "";

@@ -17,7 +17,7 @@ namespace THUVIENZ.Views.Components
 
         public static readonly DependencyProperty SelectedCategoryIdProperty =
             DependencyProperty.Register("SelectedCategoryId", typeof(int), typeof(CategoryComboBox), 
-                new FrameworkPropertyMetadata(1, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnSelectedCategoryIdChanged));
+                new FrameworkPropertyMetadata(0, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnSelectedCategoryIdChanged));
 
         public int SelectedCategoryId
         {
@@ -69,12 +69,10 @@ namespace THUVIENZ.Views.Components
                 txtSearch.Text = target.TenTheLoai;
                 _isSyncingText = false;
             }
-            else if (_allCategories.Any())
+            else
             {
-                var first = _allCategories.First();
-                SelectedCategoryId = first.MaTheLoai;
                 _isSyncingText = true;
-                txtSearch.Text = first.TenTheLoai;
+                txtSearch.Text = "";
                 _isSyncingText = false;
             }
         }
