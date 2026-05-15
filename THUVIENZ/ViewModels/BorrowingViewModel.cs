@@ -1,18 +1,33 @@
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using THUVIENZ.BLL;
-using THUVIENZ.DAL;
 using THUVIENZ.Core;
+using THUVIENZ.DAL;
 using THUVIENZ.Models;
 
 namespace THUVIENZ.ViewModels
 {
     /// <summary>
-    /// ViewModel xử lý logic mượn sách.
-    /// Quản lý mã độc giả, giỏ hàng sách mượn và thực hiện giao dịch checkout.
+    /// Lớp hỗ trợ hiển thị danh sách sách đang mượn của cá nhân trên giao diện Borrowing.xaml.
+    /// </summary>
+    public class MyBorrowedBookItem
+    {
+        public string TicketID { get; set; } = string.Empty;
+        public string BookTitle { get; set; } = string.Empty;
+        public string BorrowDate { get; set; } = string.Empty;
+        public string DueDate { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// ViewModel xử lý logic mượn sách vật lý tại Kiosk/Quầy tự phục vụ.
+    /// Kết nối trực tiếp với MuonTraService theo đúng cấu trúc DB mới.
+    /// Áp dụng Strict Null Safety tuyệt đối và chú thích Tiếng Việt.
     /// </summary>
     public class BorrowingViewModel : ObservableObject
     {
@@ -24,10 +39,14 @@ namespace THUVIENZ.ViewModels
             {
                 _readerId = value;
                 OnPropertyChanged();
+                LoadMyBorrowedBooks();
             }
         }
 
         private string _bookIdInput = string.Empty;
+        /// <summary>
+        /// Chuỗi nhập liệu từ máy quét mã vạch/RFID (Mã cuốn sách vật lý).
+        /// </summary>
         public string BookIdInput
         {
             get => _bookIdInput;
@@ -38,8 +57,11 @@ namespace THUVIENZ.ViewModels
             }
         }
 
-        private ObservableCollection<Sach> _cart = new ObservableCollection<Sach>();
-        public ObservableCollection<Sach> Cart
+        private ObservableCollection<CuonSach> _cart = new ObservableCollection<CuonSach>();
+        /// <summary>
+        /// Giỏ hàng chứa các cuốn sách vật lý chuẩn bị mượn.
+        /// </summary>
+        public ObservableCollection<CuonSach> Cart
         {
             get => _cart;
             set
@@ -49,93 +71,160 @@ namespace THUVIENZ.ViewModels
             }
         }
 
+        private ObservableCollection<MyBorrowedBookItem> _myBorrowedBooks = new ObservableCollection<MyBorrowedBookItem>();
+        /// <summary>
+        /// Danh sách sách đang mượn của độc giả (Hỗ trợ UI binding cho Borrowing.xaml).
+        /// </summary>
+        public ObservableCollection<MyBorrowedBookItem> MyBorrowedBooks
+        {
+            get => _myBorrowedBooks;
+            set
+            {
+                _myBorrowedBooks = value;
+                OnPropertyChanged();
+            }
+        }
+
         public ICommand AddToCartCommand { get; }
         public ICommand CheckoutCommand { get; }
 
-        private readonly CirculationService _circulationService;
-        private readonly SachRepository _sachRepository;
+        private readonly MuonTraService _muonTraService;
+        private readonly LmsDbContext _context;
 
         public BorrowingViewModel()
         {
-            _circulationService = new CirculationService();
-            _sachRepository = new SachRepository();
+            _muonTraService = new MuonTraService();
+            _context = new LmsDbContext();
 
             AddToCartCommand = new RelayCommand(_ => ExecuteAddToCart());
             CheckoutCommand = new RelayCommand(_ => ExecuteCheckout());
         }
 
         /// <summary>
-        /// Tìm sách theo mã và thêm vào danh sách chờ mượn.
+        /// Nạp thông tin sách đang mượn của cá nhân để hiển thị realtime.
         /// </summary>
-        private void ExecuteAddToCart()
+        public async void LoadMyBorrowedBooks()
         {
-            if (int.TryParse(BookIdInput, out int bookId))
+            if (ReaderId <= 0)
             {
-                // Kiểm tra xem sách đã có trong giỏ hàng chưa
-                if (Cart.Any(s => s.MaSach == bookId))
-                {
-                    MessageBox.Show("Cuốn sách này đã được thêm vào giỏ hàng mượn.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                // Tìm kiếm sách trong CSDL
-                var results = _sachRepository.SearchBooks(bookId.ToString());
-                var book = results.FirstOrDefault(s => s.MaSach == bookId);
-
-                if (book != null)
-                {
-                    if (book.TinhTrang == "Sẵn sàng")
-                    {
-                        Cart.Add(book);
-                        BookIdInput = string.Empty; // Xóa input sau khi thêm thành công
-                    }
-                    else
-                    {
-                        MessageBox.Show($"Cuốn sách '{book.TenSach}' hiện đang ở trạng thái '{book.TinhTrang}', không thể mượn.", "Không khả dụng", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    }
-                }
-                else
-                {
-                    MessageBox.Show("Không tìm thấy sách với mã số vừa nhập.", "Lỗi nạp sách", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                MyBorrowedBooks.Clear();
+                return;
             }
-            else
+
+            try
             {
-                MessageBox.Show("Mã sách phải là một số nguyên hợp lệ.", "Lỗi định dạng", MessageBoxButton.OK, MessageBoxImage.Warning);
+                var list = await _context.ChiTietMuonTras
+                    .Include(c => c.PhieuMuon)
+                    .Include(c => c.CuonSach)
+                    .ThenInclude(cs => cs!.Sach)
+                    .Where(c => c.PhieuMuon!.MaDocGia == ReaderId)
+                    .OrderByDescending(c => c.PhieuMuon!.NgayMuon)
+                    .Select(c => new MyBorrowedBookItem
+                    {
+                        TicketID = $"PM-{c.MaPhieuMuon}-{c.MaCuonSach}",
+                        BookTitle = c.CuonSach!.Sach != null ? c.CuonSach.Sach.TenSach : "Sách không xác định",
+                        BorrowDate = c.PhieuMuon!.NgayMuon.ToString("dd/MM/yyyy"),
+                        DueDate = c.HanTra.ToString("dd/MM/yyyy"),
+                        Status = c.NgayTraThucTe == null ? (c.HanTra < DateTime.Now ? "Quá hạn" : "Đang mượn") : "Đã trả"
+                    })
+                    .ToListAsync();
+
+                MyBorrowedBooks = new ObservableCollection<MyBorrowedBookItem>(list);
+            }
+            catch
+            {
+                // Bỏ qua lỗi nạp dữ liệu nền
             }
         }
 
         /// <summary>
-        /// Thực hiện lưu thông mượn sách thông qua Service.
+        /// Xử lý quét mã vạch/RFID cuốn sách vật lý và thêm vào giỏ hàng.
         /// </summary>
-        private void ExecuteCheckout()
+        private async void ExecuteAddToCart()
+        {
+            if (int.TryParse(BookIdInput.Trim(), out int maCuonSach))
+            {
+                if (Cart.Any(c => c.MaCuonSach == maCuonSach))
+                {
+                    MessageBox.Show("Cuốn sách vật lý này đã có trong giỏ hàng mượn.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                try
+                {
+                    var cuonSach = await _context.CuonSachs
+                        .Include(c => c.Sach)
+                        .FirstOrDefaultAsync(c => c.MaCuonSach == maCuonSach);
+
+                    if (cuonSach != null)
+                    {
+                        if (cuonSach.TinhTrang == "Sẵn sàng")
+                        {
+                            Cart.Add(cuonSach);
+                            BookIdInput = string.Empty;
+
+                            // Kích hoạt cập nhật giao diện realtime cho thuộc tính NotMapped của Đầu Sách
+                            if (cuonSach.Sach != null)
+                            {
+                                cuonSach.Sach.RaisePropertyChanged(nameof(Sach.SoLuong));
+                                cuonSach.Sach.RaisePropertyChanged(nameof(Sach.TinhTrang));
+                            }
+                        }
+                        else
+                        {
+                            MessageBox.Show($"Cuốn sách '{cuonSach.Sach?.TenSach}' (Mã vật lý: {maCuonSach}) hiện đang ở tình trạng '{cuonSach.TinhTrang}', không thể mượn.", 
+                                            "Không khả dụng", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Hệ thống không tìm thấy mã sách vật lý '{maCuonSach}'. Vui lòng thử quét lại.", 
+                                        "Lỗi tìm kiếm", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Lỗi truy xuất cơ sở dữ liệu: {ex.Message}", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Mã cuốn sách phải là số nguyên hợp lệ từ tem RFID/Barcode.", "Định dạng không hợp lệ", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        /// <summary>
+        /// Tiến hành thủ tục mượn sách tập trung qua MuonTraService.
+        /// </summary>
+        private async void ExecuteCheckout()
         {
             if (ReaderId <= 0)
             {
-                MessageBox.Show("Vui lòng nhập Mã độc giả trước khi thực hiện mượn.", "Thiếu thông tin", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Vui lòng nhập hoặc quét Mã Độc Giả trước khi xác nhận mượn.", "Thiếu thông tin", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (Cart.Count == 0)
             {
-                MessageBox.Show("Giỏ hàng đang trống. Vui lòng thêm sách cần mượn vào danh sách.", "Giỏ hàng trống", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Giỏ hàng mượn đang trống. Vui lòng quét ít nhất một cuốn sách.", "Giỏ hàng trống", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            // Gọi service thực hiện mượn sách
-            var result = _circulationService.BorrowBooks(ReaderId, Cart.Select(s => s.MaSach).ToList());
+            try
+            {
+                var dsMaCuonSach = Cart.Select(c => c.MaCuonSach).ToList();
+                bool thanhCong = await _muonTraService.ThucHienMuonSachAsync(ReaderId, dsMaCuonSach);
 
-            if (result.Success)
-            {
-                MessageBox.Show(result.Message, "Mượn sách thành công", MessageBoxButton.OK, MessageBoxImage.Information);
-                
-                // Reset form
-                Cart.Clear();
-                ReaderId = 0;
+                if (thanhCong)
+                {
+                    MessageBox.Show("Hoàn tất thủ tục mượn sách thành công!", "Thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                    Cart.Clear();
+                    LoadMyBorrowedBooks(); // Làm mới danh sách hiển thị realtime
+                }
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show(result.Message, "Lỗi mượn sách", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(ex.Message, "Từ chối giao dịch", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

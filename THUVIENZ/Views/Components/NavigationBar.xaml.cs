@@ -16,7 +16,7 @@ namespace THUVIENZ
             set { SetValue(ActivePageProperty, value); }
         }
 
-        public event Action<UserControl, string> OnNavigate;
+        public event Action<UserControl, string>? OnNavigate;
 
         public NavigationBar()
         {

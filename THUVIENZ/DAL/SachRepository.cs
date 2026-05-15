@@ -1,147 +1,122 @@
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
+using THUVIENZ.DAL.Base;
 using THUVIENZ.Models;
 
 namespace THUVIENZ.DAL
 {
     /// <summary>
-    /// Repository xử lý dữ liệu liên quan đến đầu sách (CRUD).
-    /// Đã được tái cấu trúc từ ADO.NET sang Entity Framework Core.
+    /// Repository cụ thể xử lý các nghiệp vụ truy xuất dữ liệu cho Sách.
+    /// Đã viết lại cơ chế thêm sách hỗ trợ sinh tự động các bản sao vật lý trong cùng Transaction.
+    /// Áp dụng Strict Null Safety tuyệt đối và chú thích Tiếng Việt.
     /// </summary>
-    public class SachRepository
+    public class SachRepository : BaseRepository<Sach>
     {
-        private readonly LmsDbContext _context;
-
-        public SachRepository()
+        public SachRepository() : base(new LmsDbContext())
         {
-            _context = new LmsDbContext();
+        }
+
+        public SachRepository(LmsDbContext context) : base(context)
+        {
         }
 
         /// <summary>
-        /// Lấy toàn bộ danh sách sách từ CSDL bằng LINQ.
+        /// Ghi đè phương thức thêm mới sách.
+        /// Khi giao diện UI gửi xuống 1 đối tượng Đầu Sách kèm thuộc tính SoLuong,
+        /// hệ thống lưu Đầu Sách trước, sau đó dùng vòng lặp for tạo danh sách CuonSach vật lý
+        /// và lưu toàn bộ trong cùng một Transaction để đảm bảo tính toàn vẹn dữ liệu.
         /// </summary>
-        public List<Sach> GetAllBooks()
+        public override async Task AddAsync(Sach entity)
         {
+            // Bắt đầu một Transaction để đảm bảo tính nguyên tử (Atomicity)
+            using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                return _context.Sachs.OrderByDescending(s => s.MaSach).ToList();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine("Lỗi EF GetAllBooks: " + ex.Message);
-                return new List<Sach>();
-            }
-        }
+                // 1. Thêm Đầu Sách vào Database trước để EF Core tự động sinh MaSach
+                await _context.Sachs.AddAsync(entity);
+                await _context.SaveChangesAsync();
 
-        /// <summary>
-        /// Tìm kiếm sách theo từ khóa (Tên hoặc Mã).
-        /// Sử dụng Raw SQL thông qua EF Core để tối ưu các truy vấn LIKE phức tạp.
-        /// </summary>
-        public List<Sach> SearchBooks(string keyword)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(keyword))
+                // 2. Lấy số lượng bản sao cần tạo từ thuộc tính UI binding (tối thiểu là 1)
+                int copiesCount = entity.SoLuong > 0 ? entity.SoLuong : 1;
+
+                // 3. Dùng vòng lặp for sinh danh sách các đối tượng CuonSach tương ứng
+                for (int i = 0; i < copiesCount; i++)
                 {
-                    return _context.Sachs.OrderByDescending(s => s.MaSach).Take(50).ToList();
+                    var cuonSach = new CuonSach
+                    {
+                        MaSach = entity.MaSach,
+                        TinhTrang = "Sẵn sàng",
+                        NgayNhap = DateTime.Now
+                    };
+                    await _context.CuonSachs.AddAsync(cuonSach);
                 }
 
-                // Thực thi SQL có tham số an toàn thông qua EF Core
-                string sql = "SELECT * FROM SACH WHERE TenSach LIKE @kw OR CAST(MaSach AS VARCHAR) LIKE @kw";
-                var kwParam = new Microsoft.Data.SqlClient.SqlParameter("@kw", "%" + keyword + "%");
+                // 4. Lưu tiếp danh sách các bản sao vật lý vào Database
+                await _context.SaveChangesAsync();
 
-                return _context.Sachs.FromSqlRaw(sql, kwParam).ToList();
+                // 5. Xác nhận hoàn tất toàn bộ chuỗi thao tác thành công
+                await transaction.CommitAsync();
             }
-            catch (Exception ex)
+            catch
             {
-                System.Diagnostics.Debug.WriteLine("Lỗi EF SearchBooks: " + ex.Message);
-                return new List<Sach>();
+                // Hoàn tác (Rollback) toàn bộ dữ liệu nếu xảy ra bất kỳ lỗi nào
+                await transaction.RollbackAsync();
+                throw;
             }
         }
 
         /// <summary>
-        /// Thêm sách mới vào CSDL.
-        /// </summary>
-        public bool AddBook(Sach newBook)
-        {
-            try
-            {
-                // Thiết lập trạng thái mặc định nếu trống
-                if (string.IsNullOrWhiteSpace(newBook.TinhTrang))
-                    newBook.TinhTrang = "Sẵn sàng";
-
-                _context.Sachs.Add(newBook);
-                return _context.SaveChanges() > 0;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine("Lỗi EF AddBook: " + ex.Message);
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Cập nhật thông tin sách hiện có.
-        /// </summary>
-        public bool UpdateBook(Sach updatedBook)
-        {
-            try
-            {
-                // Kiểm tra xem thực thể có đang được track không, nếu không thì attach và update
-                var existing = _context.Sachs.Local.FirstOrDefault(s => s.MaSach == updatedBook.MaSach);
-                if (existing != null)
-                {
-                    _context.Entry(existing).State = EntityState.Detached;
-                }
-
-                _context.Sachs.Update(updatedBook);
-                return _context.SaveChanges() > 0;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine("Lỗi EF UpdateBook: " + ex.Message);
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Xóa sách khỏi hệ thống.
-        /// </summary>
-        public bool DeleteBook(int maSach)
-        {
-            try
-            {
-                var book = _context.Sachs.Find(maSach);
-                if (book != null)
-                {
-                    _context.Sachs.Remove(book);
-                    return _context.SaveChanges() > 0;
-                }
-                return false;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine("Lỗi EF DeleteBook: " + ex.Message);
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Kiểm tra xem sách có đang được mượn không (Dựa trên bảng Chi Tiết Phiếu Mượn).
+        /// Kiểm tra xem một đầu sách có bất kỳ bản sao vật lý nào đang được mượn hay không.
+        /// Dựa trên bảng mới CUONSACH.
         /// </summary>
         public bool IsBookCurrentlyBorrowed(int maSach)
         {
-            try
+            return _context.CuonSachs.Any(cs => cs.MaSach == maSach && cs.TinhTrang == "Đang mượn");
+        }
+
+        public override async Task<Sach?> GetByIdAsync(object id)
+        {
+            if (id is int maSach)
             {
-                return _context.ChiTietPhieuMuons.Any(ct => ct.MaSach == maSach && ct.TrangThai == "Đang mượn");
+                return await _context.Sachs
+                    .Include(s => s.CuonSachs)
+                    .Include(s => s.TheLoaiSach)
+                    .FirstOrDefaultAsync(s => s.MaSach == maSach);
             }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine("Lỗi EF IsBookCurrentlyBorrowed: " + ex.Message);
-                return false;
-            }
+            return await base.GetByIdAsync(id);
+        }
+
+        public override async Task<IEnumerable<Sach>> GetAllAsync()
+        {
+            return await _context.Sachs
+                .Include(s => s.CuonSachs)
+                .Include(s => s.TheLoaiSach)
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Tìm kiếm sách theo Tên sách, Mã ISBN, Tác giả hoặc Mã sách.
+        /// </summary>
+        public async Task<IEnumerable<Sach>> SearchBooksAsync(string keyword)
+        {
+            if (string.IsNullOrWhiteSpace(keyword))
+                return await GetAllAsync();
+
+            string trimmedKeyword = keyword.Trim();
+            bool isId = int.TryParse(trimmedKeyword, out int id);
+
+            return await _context.Sachs
+                .Include(s => s.CuonSachs)
+                .Include(s => s.TheLoaiSach)
+                .Where(s => s.TenSach.Contains(trimmedKeyword) || 
+                            (s.MaISBN != null && s.MaISBN.Contains(trimmedKeyword)) ||
+                            (s.TacGia != null && s.TacGia.Contains(trimmedKeyword)) || 
+                            (isId && s.MaSach == id) ||
+                            s.MaSach.ToString().Contains(trimmedKeyword))
+                .ToListAsync();
         }
     }
 }

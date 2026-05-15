@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Input;
 using THUVIENZ.BLL;
@@ -12,7 +12,7 @@ namespace THUVIENZ.ViewModels
     /// </summary>
     public class LoginViewModel : ObservableObject
     {
-        public event Action OnLoginSuccess;
+        public event Action? OnLoginSuccess;
 
         private string _idError = string.Empty;
         public string IdError
@@ -88,43 +88,40 @@ namespace THUVIENZ.ViewModels
             return true;
         }
 
-        private void ExecuteLogin(object parameter)
+        private async void ExecuteLogin(object parameter)
         {
             try
             {
                 // Gọi BLL để xử lý đăng nhập
-                string? role = _authService.Login(Id, Password);
+                string? result = await _authService.LoginAsync(Id, Password);
 
-                if (role != null)
+                if (result == "PENDING_OR_LOCKED")
                 {
+                    MessageBox.Show("Tài khoản đang chờ duyệt hoặc bị khóa.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+                else if (result != null)
+                {
+                    // Lưu thông tin vào Session
+                    UserSession.UserID = Id;
+                    UserSession.Role = result;
+
                     // Thông báo thành công
                     MessageBox.Show(
-                        $"{role} đăng nhập thành công! Chào mừng bạn quay trở lại.", 
+                        $"{result} đăng nhập thành công! Chào mừng bạn quay trở lại.", 
                         "Thành công", 
                         MessageBoxButton.OK, 
                         MessageBoxImage.Information);
 
-                    THUVIENZ.Core.UserSession.UserID = this.Id; 
                     OnLoginSuccess?.Invoke();
                 }
                 else
                 {
-                    // Thông báo lỗi
-                    MessageBox.Show(
-                        "Tên đăng nhập hoặc mật khẩu không chính xác. Vui lòng thử lại.", 
-                        "Đăng nhập thất bại", 
-                        MessageBoxButton.OK, 
-                        MessageBoxImage.Error);
+                    MessageBox.Show("Tên đăng nhập hoặc mật khẩu không chính xác.", "Thất bại", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             catch (Exception ex)
             {
-                // Xử lý lỗi hệ thống/kết nối
-                MessageBox.Show(
-                    $"Đã xảy ra lỗi hệ thống: {ex.Message}", 
-                    "Lỗi kết nối", 
-                    MessageBoxButton.OK, 
-                    MessageBoxImage.Warning);
+                MessageBox.Show($"Lỗi hệ thống: {ex.Message}", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="THUVIENZ.Views.AdminBooks"
+<UserControl x:Class="THUVIENZ.Views.AdminBooks"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:comp="clr-namespace:THUVIENZ.Views.Components"
@@ -77,48 +77,125 @@
                     <TextBlock Text="Thêm, sửa, xóa và tra cứu thông tin sách trong thư viện" FontSize="16" Foreground="#6B7280" Margin="0,5,0,0"/>
                 </StackPanel>
 
-                <comp:SearchBar Grid.Row="1" Margin="0,0,0,30"/>
+                <comp:SearchBar Grid.Row="1" SearchText="{Binding SearchKeyword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,30"/>
 
                 <Border Grid.Row="2" Background="White" CornerRadius="20" BorderBrush="#E5E7EB" BorderThickness="1" Margin="0,0,0,20">
                     <Border.Effect>
                         <DropShadowEffect BlurRadius="10" Opacity="0.05" ShadowDepth="2"/>
                     </Border.Effect>
 
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <DataGrid x:Name="dgBooks" Style="{StaticResource ModernDataGrid}" Margin="10">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Mã Sách" Binding="{Binding BookID}" Width="100"/>
-                                <DataGridTextColumn Header="Tên Sách" Binding="{Binding Title}" Width="*"/>
-                                <DataGridTextColumn Header="Tác Giả" Binding="{Binding Author}" Width="180"/>
-                                <DataGridTextColumn Header="Thể Loại" Binding="{Binding Category}" Width="130"/>
-                                <DataGridTextColumn Header="Trạng Thái" Binding="{Binding Status}" Width="100"/>
+                    <DataGrid x:Name="dgBooks" ItemsSource="{Binding BooksList}" SelectedItem="{Binding SelectedBook}" Style="{StaticResource ModernDataGrid}" Margin="10" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <DataGrid.Columns>
+                            <!-- Mã -->
+                            <DataGridTextColumn Header="Mã" Binding="{Binding MaSach}" Width="Auto">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                        <Setter Property="Foreground" Value="#4B5563"/>
+                                        <Setter Property="Margin" Value="8,0"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            
+                            <!-- Thông tin Sách (Tên + ISBN) -->
+                            <DataGridTemplateColumn Header="Thông Tin Sách" Width="*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel VerticalAlignment="Center" Margin="5,8">
+                                            <TextBlock Text="{Binding TenSach}" FontSize="14" FontWeight="SemiBold" Foreground="#111827" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Border Background="#F3F4F6" CornerRadius="4" Padding="4,1" Margin="0,0,4,0">
+                                                    <TextBlock Text="ISBN" FontSize="10" FontWeight="Bold" Foreground="#6B7280"/>
+                                                </Border>
+                                                <TextBlock Text="{Binding MaISBN}" FontSize="12" Foreground="#6B7280" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
 
-                                <DataGridTemplateColumn Header="Hành Động" Width="140">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <Button Content="Sửa" Background="#EFF6FF" Foreground="#2563EB" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" Padding="15,6" Margin="0,0,8,0">
-                                                    <Button.Resources>
-                                                        <Style TargetType="Border">
-                                                            <Setter Property="CornerRadius" Value="8"/>
-                                                        </Style>
-                                                    </Button.Resources>
+                            <!-- Phân loại & Tác giả -->
+                            <DataGridTemplateColumn Header="Tác Giả &amp; Thể Loại" Width="180">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel VerticalAlignment="Center" Margin="5,8">
+                                            <TextBlock Text="{Binding TacGia}" FontSize="13" FontWeight="Medium" Foreground="#374151" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                                            <Border Background="#EEF2FF" BorderBrush="#C7D2FE" BorderThickness="1" CornerRadius="6" Padding="6,2" HorizontalAlignment="Left">
+                                                <TextBlock Text="{Binding TheLoaiSach.TenTheLoai}" FontSize="11" FontWeight="SemiBold" Foreground="#4F46E5" TextTrimming="CharacterEllipsis" MaxWidth="150"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Thông tin Xuất bản -->
+                            <DataGridTemplateColumn Header="Xuất Bản" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel VerticalAlignment="Center" Margin="5,8">
+                                            <TextBlock Text="{Binding NhaXuatBan}" FontSize="13" Foreground="#374151" TextWrapping="Wrap" Margin="0,0,0,4"/>
+                                            <TextBlock FontSize="12" Foreground="#6B7280">
+                                                <Run Text="{Binding NamXuatBan}"/>
+                                                <Run Text=" • "/>
+                                                <Run Text="{Binding NgonNgu}"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Quản Lý / Kho & Giá -->
+                            <DataGridTemplateColumn Header="Quản Lý / Giá &amp; Kho" Width="185">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Right" Margin="5,8">
+                                            <TextBlock Text="{Binding TriGia, ConverterCulture='vi-VN', StringFormat=\{0:N0\} đ}" FontSize="14" FontWeight="Bold" Foreground="#059669" HorizontalAlignment="Right" Margin="0,0,0,6"/>
+                                            
+                                            <!-- Tích hợp cực kỳ thông minh: Số lượng kho đặt cạnh các nút thao tác Sửa/Xóa tinh gọn -->
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                <TextBlock Text="Kho: " FontSize="12" Foreground="#6B7280" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding SoLuong}" FontSize="12" FontWeight="SemiBold" Foreground="#111827" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                                
+                                                <Button Content="Sửa" Cursor="Hand" Width="42" Height="24" Margin="0,0,4,0" Click="BtnEditRow_Click" ToolTip="Sửa thông tin sách">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="btnBorder" Background="#EFF6FF" CornerRadius="6">
+                                                                <TextBlock Text="Sửa" Foreground="#2563EB" FontWeight="SemiBold" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter TargetName="btnBorder" Property="Background" Value="#DBEAFE"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
                                                 </Button>
 
-                                                <Button Content="Xóa" Background="#FEF2F2" Foreground="#DC2626" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand" Padding="15,6">
-                                                    <Button.Resources>
-                                                        <Style TargetType="Border">
-                                                            <Setter Property="CornerRadius" Value="8"/>
-                                                        </Style>
-                                                    </Button.Resources>
+                                                <Button Content="Xóa" Cursor="Hand" Width="42" Height="24" ToolTip="Xóa sách này"
+                                                        Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border x:Name="btnBorder" Background="#FEF2F2" CornerRadius="6">
+                                                                <TextBlock Text="Xóa" Foreground="#DC2626" FontWeight="SemiBold" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                            </Border>
+                                                            <ControlTemplate.Triggers>
+                                                                <Trigger Property="IsMouseOver" Value="True">
+                                                                    <Setter TargetName="btnBorder" Property="Background" Value="#FEE2E2"/>
+                                                                </Trigger>
+                                                            </ControlTemplate.Triggers>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
                                                 </Button>
                                             </StackPanel>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </ScrollViewer>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
                 </Border>
 
                 <Button Grid.Row="3" Content="+ Thêm sách mới" Click="BtnShowAddPopup_Click" HorizontalAlignment="Right" Width="180" Height="50" Background="#10B981" Foreground="White" FontSize="18" FontWeight="Bold" Cursor="Hand">

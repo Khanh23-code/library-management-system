@@ -1,59 +1,161 @@
-﻿using System.Windows;
+using System;
+using System.Windows;
 using System.Windows.Controls;
-using THUVIENZ.Views.Components;
+using System.Windows.Input;
+using THUVIENZ.Core;
+using THUVIENZ.DAL;
+using THUVIENZ.Models;
+using THUVIENZ.ViewModels;
 
 namespace THUVIENZ.Views
 {
     public partial class AdminReaders : UserControl
     {
-        // Biến tạm để lưu ID của độc giả đang chuẩn bị xóa
-        private string _readerIdToDelete;
+        private readonly ReaderManagementViewModel _viewModel;
+        public event Action<UserControl>? OnSubNavigate;
 
-        public event Action<UserControl> OnSubNavigate;
+        public ICommand OpenSuspendPopupCommand { get; }
+        public ICommand OpenDeletePopupCommand { get; }
 
         public AdminReaders()
         {
             InitializeComponent();
-        }
+            _viewModel = new ReaderManagementViewModel();
+            this.DataContext = _viewModel;
 
-        // Hàm này chạy khi bấm nút "DELETE" trên bất kỳ ReaderCard nào
-        private void ReaderCard_OnDeleteClick(object sender, ReaderCard e)
-        {
-            // Lưu lại ID để lát nữa xóa
-            _readerIdToDelete = e.ReaderId;
-
-            // Cập nhật thông báo cho Popup
-            DeletePopup.PopupTitle = "Xóa Độc giả";
-            DeletePopup.PopupMessage = $"Bạn có chắc chắn muốn xóa tài khoản của độc giả '{e.ReaderName}' (ID: {e.ReaderId}) không? Dữ liệu mượn trả liên quan cũng có thể bị ảnh hưởng.";
-
-            // Hiện popup lên
-            DeletePopup.Visibility = Visibility.Visible;
-        }
-
-        // Hàm này chạy khi bấm "Xóa vĩnh viễn" trong cái Popup
-        private void DeletePopup_OnConfirm(object sender, EventArgs e)
-        {
-            if (!string.IsNullOrEmpty(_readerIdToDelete))
+            OpenSuspendPopupCommand = new RelayCommand(param => OpenActionPopup(param as DocGia, "Suspend"));
+            OpenDeletePopupCommand = new RelayCommand(param =>
             {
-                // TODO: Gọi logic xuống Database để xóa độc giả có ID là _readerIdToDelete
-                MessageBox.Show($"Đã xóa độc giả: {_readerIdToDelete}");
+                if (param is DocGia reader)
+                {
+                    // Nếu đang ở tab Active hoặc Locked (Đình chỉ), mở popup để có nhập lý do/xem lý do
+                    if (_viewModel.CurrentTabStatus == "Active" || _viewModel.CurrentTabStatus == "Locked")
+                    {
+                        OpenActionPopup(reader, "Delete");
+                    }
+                    else
+                    {
+                        // Ở tab Vô hiệu hóa thì dùng lệnh xóa mềm mặc định
+                        if (_viewModel.DeleteReaderCommand.CanExecute(param))
+                        {
+                            _viewModel.DeleteReaderCommand.Execute(param);
+                        }
+                    }
+                }
+            });
 
-                // Reset biến
-                _readerIdToDelete = null;
+            ActionPopup.OnActionSubmitted += ActionPopup_OnActionSubmitted;
+        }
+
+        private void OpenActionPopup(DocGia? reader, string mode)
+        {
+            if (reader == null) return;
+            ActionPopup.TargetReader = reader;
+            ActionPopup.ActionMode = mode;
+            
+            // Nếu thao tác Xóa trên tài khoản đang bị đình chỉ, tự động tải lại lý do đình chỉ trước đó
+            if (mode == "Delete" && _viewModel.CurrentTabStatus == "Locked")
+            {
+                if (ReaderManagementViewModel.SuspensionReasonsCache.TryGetValue(reader.MaDocGia, out string? cachedReason))
+                {
+                    ActionPopup.ReasonText = cachedReason;
+                }
+                else
+                {
+                    ActionPopup.ReasonText = "Vi phạm quy chế thư viện (Đã xử lý đình chỉ trước đó)";
+                }
+            }
+            else
+            {
+                ActionPopup.ReasonText = string.Empty;
+            }
+
+            ActionPopup.Visibility = Visibility.Visible;
+        }
+
+        private async void ActionPopup_OnActionSubmitted(string reason, string duration)
+        {
+            var targetReader = ActionPopup.TargetReader;
+            if (targetReader == null) return;
+
+            try
+            {
+                using var context = new LmsDbContext();
+                // Đảm bảo không bị lỗi reference rỗng bằng cách tự cấp tài khoản nếu chưa có
+                if (string.IsNullOrEmpty(targetReader.TenDangNhap))
+                {
+                    string targetStatus = ActionPopup.ActionMode == "Suspend" ? "Locked" : "DisActive";
+                    var newTaiKhoan = new TaiKhoan
+                    {
+                        TenDangNhap = $"acc_{targetReader.MaDocGia}_{DateTime.Now:yyMMddHHmmss}",
+                        MatKhau = "manual_locked",
+                        Quyen = "Reader",
+                        TrangThai = targetStatus
+                    };
+                    context.TaiKhoans.Add(newTaiKhoan);
+                    var dbReader = await context.DocGias.FindAsync(targetReader.MaDocGia);
+                    if (dbReader != null) dbReader.TenDangNhap = newTaiKhoan.TenDangNhap;
+                    await context.SaveChangesAsync();
+                }
+                else
+                {
+                    var account = await context.TaiKhoans.FindAsync(targetReader.TenDangNhap);
+                    if (account != null)
+                    {
+                        string targetStatus = ActionPopup.ActionMode == "Suspend" ? "Locked" : "DisActive";
+                        account.TrangThai = targetStatus;
+                        await context.SaveChangesAsync();
+                    }
+                }
+
+                // Lưu vết vĩnh cửu lý do đình chỉ vào bộ nhớ đệm theo mã độc giả
+                if (ActionPopup.ActionMode == "Suspend")
+                {
+                    ReaderManagementViewModel.SuspensionReasonsCache[targetReader.MaDocGia] = reason;
+                }
+
+                string summary = ActionPopup.ActionMode == "Suspend" 
+                    ? $"Đã đình chỉ tài khoản độc giả thành công!\n- Thời hạn: {duration}\n- Lý do chi tiết: {reason}"
+                    : $"Đã vô hiệu hóa tài khoản độc giả thành công!\n- Lý do chi tiết: {reason}";
+
+                MessageBox.Show(summary, "Hoàn tất xử lý", MessageBoxButton.OK, MessageBoxImage.Information);
+                await _viewModel.LoadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi xử lý từ CSDL: {ex.Message}", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         private void BtnViewRequests_Click(object sender, RoutedEventArgs e)
         {
             var requestPage = new AdminReaderRequests();
-
             requestPage.GoBackRequested += () =>
             {
                 // Khởi tạo trang mới để làm mới UI và Data
                 OnSubNavigate?.Invoke(new AdminReaders());
             };
-
             OnSubNavigate?.Invoke(requestPage);
+        }
+
+        private void DeletePopup_OnConfirm(object sender, EventArgs e)
+        {
+            DeletePopup.Visibility = Visibility.Collapsed;
+        }
+
+        private void TabActive_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel?.SetTabStatus("Active");
+        }
+
+        private void TabLocked_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel?.SetTabStatus("Locked");
+        }
+
+        private void TabDisActive_Click(object sender, RoutedEventArgs e)
+        {
+            _viewModel?.SetTabStatus("DisActive");
         }
     }
 }

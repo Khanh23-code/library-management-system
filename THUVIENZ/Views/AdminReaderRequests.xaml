@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="THUVIENZ.Views.AdminReaderRequests"
+<UserControl x:Class="THUVIENZ.Views.AdminReaderRequests"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:comp="clr-namespace:THUVIENZ.Views.Components">
@@ -27,17 +27,24 @@
                 </Grid>
 
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" BorderThickness="0" Padding="0,5,10,5">
-                    <WrapPanel Orientation="Horizontal">
-                        <comp:RequestCard ReaderName="Nguyễn Tân Binh" Gender="Nam" Email="tanbinh@gmail.com" 
-                                          Address="Quận 1, TP.HCM" Phone="0999888777" 
-                                          OnAcceptClick="RequestCard_OnAcceptClick" 
-                                          OnRejectClick="RequestCard_OnRejectClick"/>
-
-                        <comp:RequestCard ReaderName="Lê Đợi Duyệt" Gender="Nữ" Email="doiduyet@outlook.com" 
-                                          Address="Đà Lạt" Phone="0123456789" 
-                                          OnAcceptClick="RequestCard_OnAcceptClick" 
-                                          OnRejectClick="RequestCard_OnRejectClick"/>
-                    </WrapPanel>
+                    <ItemsControl ItemsSource="{Binding PendingAccounts}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <comp:RequestCard ReaderName="{Binding DocGia.HoTen}" Gender="{Binding DocGia.GioiTinh}" 
+                                                  Email="{Binding DocGia.Email}" Address="{Binding DocGia.DiaChi}" 
+                                                  Phone="{Binding DocGia.SoDienThoai}" 
+                                                  AcceptCommand="{Binding DataContext.ApproveCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  AcceptCommandParameter="{Binding}"
+                                                  RejectCommand="{Binding DataContext.RejectCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  RejectCommandParameter="{Binding}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </ScrollViewer>
             </Grid>
         </Border>

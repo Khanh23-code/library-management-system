@@ -48,8 +48,8 @@ namespace THUVIENZ.ViewModels
             
             // Khởi tạo các Commands
             LoadPendingCommand = new RelayCommand(_ => LoadData());
-            ApproveCommand = new RelayCommand(_ => ExecuteApprove());
-            RejectCommand = new RelayCommand(_ => ExecuteReject());
+            ApproveCommand = new RelayCommand(param => ExecuteApprove(param));
+            RejectCommand = new RelayCommand(param => ExecuteReject(param));
 
             // Tải dữ liệu ban đầu
             LoadData();
@@ -58,11 +58,11 @@ namespace THUVIENZ.ViewModels
         /// <summary>
         /// Nạp danh sách các tài khoản đang ở trạng thái Pending.
         /// </summary>
-        private void LoadData()
+        private async void LoadData()
         {
             try
             {
-                var accounts = _approvalService.GetPendingAccounts();
+                var accounts = await _approvalService.GetPendingAccountsAsync();
                 PendingAccounts = new ObservableCollection<TaiKhoan>(accounts);
             }
             catch (Exception ex)
@@ -71,52 +71,50 @@ namespace THUVIENZ.ViewModels
             }
         }
 
-        /// <summary>
-        /// Duyệt tài khoản đang chọn.
-        /// </summary>
-        private void ExecuteApprove()
+        private async void ExecuteApprove(object? param)
         {
-            if (SelectedAccount == null)
+            var targetAccount = param as TaiKhoan ?? SelectedAccount;
+            if (targetAccount == null)
             {
                 MessageBox.Show("Vui lòng chọn một tài khoản từ danh sách.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            if (_approvalService.ApproveAccount(SelectedAccount.TenDangNhap))
+            try
             {
-                MessageBox.Show($"Tài khoản '{SelectedAccount.TenDangNhap}' đã được kích hoạt thành công.", "Hoàn tất", MessageBoxButton.OK, MessageBoxImage.Information);
-                LoadData(); // Làm mới danh sách
+                await _approvalService.ApproveAccountAsync(targetAccount.TenDangNhap);
+                MessageBox.Show($"Tài khoản '{targetAccount.TenDangNhap}' đã được kích hoạt thành công.", "Hoàn tất", MessageBoxButton.OK, MessageBoxImage.Information);
+                LoadData();
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show("Không thể duyệt tài khoản này. Vui lòng thử lại sau.", "Lỗi thực thi", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Không thể duyệt tài khoản: {ex.Message}", "Lỗi thực thi", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        /// <summary>
-        /// Từ chối và xóa thông tin tài khoản đang chọn.
-        /// </summary>
-        private void ExecuteReject()
+        private async void ExecuteReject(object? param)
         {
-            if (SelectedAccount == null)
+            var targetAccount = param as TaiKhoan ?? SelectedAccount;
+            if (targetAccount == null)
             {
                 MessageBox.Show("Vui lòng chọn một tài khoản từ danh sách.", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            var confirm = MessageBox.Show($"Bạn có chắc chắn muốn TỪ CHỐI tài khoản '{SelectedAccount.TenDangNhap}'? Toàn bộ thông tin độc giả liên quan sẽ bị xóa khỏi hệ thống.", 
+            var confirm = MessageBox.Show($"Bạn có chắc chắn muốn TỪ CHỐI tài khoản '{targetAccount.TenDangNhap}'? Toàn bộ thông tin độc giả liên quan sẽ bị xóa khỏi hệ thống.", 
                                         "Xác nhận từ chối", MessageBoxButton.YesNo, MessageBoxImage.Warning);
             
             if (confirm == MessageBoxResult.No) return;
 
-            if (_approvalService.RejectAccount(SelectedAccount.TenDangNhap))
+            try
             {
+                await _approvalService.RejectAccountAsync(targetAccount.TenDangNhap);
                 MessageBox.Show("Đã từ chối và xóa bỏ thông tin tài khoản thành công.", "Hoàn tất", MessageBoxButton.OK, MessageBoxImage.Information);
-                LoadData(); // Làm mới danh sách
+                LoadData();
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show("Lỗi trong quá trình xóa dữ liệu.", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Lỗi trong quá trình xóa dữ liệu: {ex.Message}", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

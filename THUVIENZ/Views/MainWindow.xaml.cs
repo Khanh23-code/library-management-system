@@ -16,7 +16,10 @@ namespace THUVIENZ
 
         private void ApplyRouting()
         {
-            // Giả sử bạn lưu Username/ID vào UserSession sau khi Login thành công
+            // Bỏ qua Login để test Admin (Auth đang ở nhánh khác)
+            UserSession.UserID = "AD_DEV_TEST";
+            UserSession.Role = "Admin";
+
             string userId = UserSession.UserID ?? "";
 
             if (userId.StartsWith("AD_"))

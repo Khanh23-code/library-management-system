@@ -1,129 +1,68 @@
-using Microsoft.Data.SqlClient;
-using System;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using THUVIENZ.DAL.Base;
 using THUVIENZ.Models;
 
 namespace THUVIENZ.DAL
 {
     /// <summary>
-    /// Repository xử lý dữ liệu liên quan đến Độc giả và thông tin mượn trả của họ.
+    /// Repository cụ thể cho Độc giả. Kế thừa từ BaseRepository để tận dụng CRUD Generic.
+    /// Cập nhật truy vấn dựa trên cấu trúc bảng mới CHITIETMUONTRA gộp chung.
+    /// Áp dụng Strict Null Safety tuyệt đối và chú thích Tiếng Việt.
     /// </summary>
-    public class DocGiaRepository
+    public class DocGiaRepository : BaseRepository<DocGia>
     {
-        /// <summary>
-        /// Lấy thông tin chi tiết của Độc giả dựa trên tên đăng nhập.
-        /// </summary>
-        public DocGia? GetReaderProfile(string username)
+        public DocGiaRepository(LmsDbContext context) : base(context)
         {
-            using (SqlConnection connection = DataProvider.Instance.GetConnection())
-            {
-                string query = "SELECT * FROM DOCGIA WHERE TenDangNhap = @username";
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@username", username);
-
-                try
-                {
-                    connection.Open();
-                    using (SqlDataReader reader = command.ExecuteReader())
-                    {
-                        if (reader.Read())
-                        {
-                            return new DocGia
-                            {
-                                MaDocGia = Convert.ToInt32(reader["MaDocGia"]),
-                                HoTen = reader["HoTen"]?.ToString() ?? string.Empty,
-                                MaLoaiDocGia = reader["MaLoaiDocGia"] != DBNull.Value ? (int?)reader["MaLoaiDocGia"] : null,
-                                NgaySinh = reader["NgaySinh"] != DBNull.Value ? (DateTime?)reader["NgaySinh"] : null,
-                                DiaChi = reader["DiaChi"]?.ToString(),
-                                Email = reader["Email"]?.ToString(),
-                                NgayLapThe = reader["NgayLapThe"] != DBNull.Value ? (DateTime?)reader["NgayLapThe"] : null,
-                                TongNo = reader["TongNo"] != DBNull.Value ? (decimal?)reader["TongNo"] : null,
-                                TenDangNhap = reader["TenDangNhap"]?.ToString()
-                            };
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine("Lỗi GetReaderProfile: " + ex.Message);
-                    throw;
-                }
-            }
-            return null;
         }
 
         /// <summary>
-        /// Lấy danh sách các cuốn sách mà Độc giả đang mượn (Trạng thái: Đang mượn).
+        /// Lấy danh sách độc giả kèm theo số lượng sách đang mượn.
         /// </summary>
-        public List<Sach> GetBorrowedBooks(int maDocGia)
+        public async Task<IEnumerable<object>> GetReadersWithBorrowedCountAsync()
         {
-            List<Sach> borrowedBooks = new List<Sach>();
-            using (SqlConnection connection = DataProvider.Instance.GetConnection())
-            {
-                // Truy vấn JOIN để lấy thông tin sách từ các phiếu mượn chưa trả
-                string query = @"
-                    SELECT S.* 
-                    FROM SACH S
-                    JOIN CHITIETPHIEUMUON CT ON S.MaSach = CT.MaSach
-                    JOIN PHIEUMUON P ON CT.MaPhieuMuon = P.MaPhieuMuon
-                    WHERE P.MaDocGia = @maDocGia AND CT.TrangThai = N'Đang mượn'";
-                
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@maDocGia", maDocGia);
-
-                try
+            return await _context.DocGias
+                .Select(d => new
                 {
-                    connection.Open();
-                    using (SqlDataReader reader = command.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            borrowedBooks.Add(new Sach
-                            {
-                                MaSach = Convert.ToInt32(reader["MaSach"]),
-                                TenSach = reader["TenSach"]?.ToString() ?? string.Empty,
-                                MaTheLoai = reader["MaTheLoai"] != DBNull.Value ? (int?)reader["MaTheLoai"] : null,
-                                TacGia = reader["TacGia"]?.ToString(),
-                                NamXuatBan = reader["NamXuatBan"] != DBNull.Value ? (int?)reader["NamXuatBan"] : null,
-                                NhaXuatBan = reader["NhaXuatBan"]?.ToString(),
-                                NgayNhap = reader["NgayNhap"] != DBNull.Value ? (DateTime?)reader["NgayNhap"] : null,
-                                TriGia = reader["TriGia"] != DBNull.Value ? (decimal?)reader["TriGia"] : null,
-                                TinhTrang = reader["TinhTrang"]?.ToString()
-                            });
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine("Lỗi GetBorrowedBooks: " + ex.Message);
-                    throw;
-                }
-            }
-            return borrowedBooks;
+                    ReaderID = d.MaDocGia,
+                    ReaderName = d.HoTen,
+                    TotalBorrowed = _context.ChiTietMuonTras
+                        .Include(c => c.PhieuMuon)
+                        .Count(c => c.PhieuMuon!.MaDocGia == d.MaDocGia && c.NgayTraThucTe == null)
+                })
+                .ToListAsync();
         }
-        /// <summary>
-        /// Truy vấn số tiền nợ hiện tại của Độc giả.
-        /// </summary>
-        public decimal GetReaderDebt(int maDocGia)
-        {
-            using (SqlConnection connection = DataProvider.Instance.GetConnection())
-            {
-                string query = "SELECT ISNULL(TongNo, 0) FROM DOCGIA WHERE MaDocGia = @maDG";
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@maDG", maDocGia);
 
-                try
-                {
-                    connection.Open();
-                    object result = command.ExecuteScalar();
-                    return result != null ? Convert.ToDecimal(result) : 0;
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine("Lỗi GetReaderDebt: " + ex.Message);
-                    return 0;
-                }
-            }
+        public async Task<DocGia?> GetReaderProfileAsync(string username)
+        {
+            return await _context.DocGias.FirstOrDefaultAsync(d => d.TenDangNhap == username);
+        }
+
+        /// <summary>
+        /// Lấy danh sách các Đầu Sách mà độc giả đang mượn chưa trả.
+        /// </summary>
+        public async Task<IEnumerable<Sach>> GetBorrowedBooksAsync(int maDocGia)
+        {
+            var items = await _context.ChiTietMuonTras
+                .Include(c => c.PhieuMuon)
+                .Include(c => c.CuonSach)
+                .ThenInclude(cs => cs!.Sach)
+                .Where(c => c.PhieuMuon!.MaDocGia == maDocGia && c.NgayTraThucTe == null)
+                .ToListAsync();
+
+            return items
+                .Where(c => c.CuonSach?.Sach != null)
+                .Select(c => c.CuonSach!.Sach!)
+                .Distinct()
+                .ToList();
+        }
+
+        public async Task<decimal> GetReaderDebtAsync(int maDocGia)
+        {
+            var reader = await _context.DocGias.FindAsync(maDocGia);
+            return reader?.TongNo ?? 0;
         }
     }
 }

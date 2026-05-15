@@ -1,0 +1,173 @@
+<UserControl x:Class="THUVIENZ.Views.Components.CategoryComboBox"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Name="root">
+    <Grid>
+        <!-- Top Input Box with embedded Plus button -->
+        <Border x:Name="TopBorder" Background="#F9FAFB" CornerRadius="10" Height="38" BorderBrush="#E5E7EB" BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBox x:Name="txtSearch" 
+                         Background="Transparent" 
+                         BorderThickness="0" 
+                         VerticalContentAlignment="Center" 
+                         Padding="10,0"
+                         FontSize="14"
+                         Foreground="#111827"
+                         TextChanged="TxtSearch_TextChanged"
+                         GotFocus="TxtSearch_GotFocus"
+                         LostFocus="TxtSearch_LostFocus"
+                         PreviewMouseLeftButtonUp="TxtSearch_PreviewMouseLeftButtonUp"/>
+
+                <TextBlock x:Name="lblPlaceholder" 
+                           Text="Gõ để tìm hoặc thêm..." 
+                           Foreground="#9CA3AF" 
+                           FontSize="14" 
+                           VerticalAlignment="Center" 
+                           Margin="12,0,0,0" 
+                           IsHitTestVisible="False">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Text, ElementName=txtSearch}" Value="">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+
+                <Button Grid.Column="1" 
+                        Content="+" 
+                        FontSize="22" 
+                        FontWeight="Light"
+                        Foreground="#6B7280" 
+                        Background="Transparent" 
+                        BorderThickness="0" 
+                        Width="38" 
+                        Cursor="Hand"
+                        ToolTip="Thêm thể loại này"
+                        Click="BtnAdd_Click">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}" CornerRadius="0,10,10,0">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-2,0,0"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#E5E7EB"/>
+                                    <Setter Property="Foreground" Value="#10B981"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Suggestion List Popup -->
+        <Popup x:Name="PopupSuggestions" 
+               PlacementTarget="{Binding ElementName=TopBorder}" 
+               Placement="Bottom" 
+               StaysOpen="False" 
+               AllowsTransparency="True" 
+               PopupAnimation="Slide">
+            <Border x:Name="DropDownBorder" 
+                    Width="{Binding ActualWidth, ElementName=TopBorder}"
+                    Background="White" 
+                    BorderThickness="1" 
+                    BorderBrush="#E5E7EB" 
+                    CornerRadius="8" 
+                    Margin="0,4,0,10"
+                    MaxHeight="220">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="15" Opacity="0.1" ShadowDepth="4"/>
+                </Border.Effect>
+                <ScrollViewer Margin="4" SnapsToDevicePixels="True" HorizontalScrollBarVisibility="Disabled">
+                    <ItemsControl x:Name="icCategories">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border x:Name="RowBorder" CornerRadius="6" Background="Transparent" Margin="2,1">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Clickable Category Name to Select -->
+                                        <Button Grid.Column="0" 
+                                                Content="{Binding TenTheLoai}" 
+                                                HorizontalContentAlignment="Left"
+                                                Background="Transparent" 
+                                                BorderThickness="0" 
+                                                Foreground="#111827" 
+                                                FontSize="14"
+                                                Padding="10,8"
+                                                Cursor="Hand"
+                                                Click="BtnSelectCategory_Click">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="{TemplateBinding Background}" CornerRadius="6,0,0,6">
+                                                        <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+
+                                        <!-- Inline Delete Button (X) -->
+                                        <Button Grid.Column="1" 
+                                                Content="✕" 
+                                                FontSize="14"
+                                                Foreground="#9CA3AF" 
+                                                Background="Transparent" 
+                                                BorderThickness="0" 
+                                                Width="32" 
+                                                Cursor="Hand"
+                                                ToolTip="Xóa thể loại này"
+                                                Click="BtnDeleteCategory_Click">
+                                            <Button.Style>
+                                                <Style TargetType="Button">
+                                                    <Setter Property="Template">
+                                                        <Setter.Value>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border Background="{TemplateBinding Background}" CornerRadius="0,6,6,0">
+                                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                </Border>
+                                                            </ControlTemplate>
+                                                        </Setter.Value>
+                                                    </Setter>
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="#FEE2E2"/>
+                                                            <Setter Property="Foreground" Value="#DC2626"/>
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                    </Grid>
+                                </Border>
+                                <DataTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="RowBorder" Property="Background" Value="#F3F4F6"/>
+                                    </Trigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Border>
+        </Popup>
+    </Grid>
+</UserControl>

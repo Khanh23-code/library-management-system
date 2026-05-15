@@ -1,5 +1,7 @@
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using THUVIENZ.BLL;
@@ -9,18 +11,22 @@ using THUVIENZ.DAL;
 namespace THUVIENZ.ViewModels
 {
     /// <summary>
-    /// Model hỗ trợ hiển thị các bản ghi sách đang mượn để thực hiện trả.
+    /// Model hỗ trợ hiển thị các bản ghi sách vật lý đang mượn để thực hiện trả.
     /// </summary>
     public class BorrowingDisplayModel : ObservableObject
     {
         public int MaPhieuMuon { get; set; }
-        public DateTime NgayMuon { get; set; }
+        public int MaCuonSach { get; set; }
         public int MaSach { get; set; }
         public string? TenSach { get; set; }
+        public DateTime NgayMuon { get; set; }
+        public DateTime HanTra { get; set; }
     }
 
     /// <summary>
-    /// ViewModel cho tính năng Trả sách và xử lý Tiền phạt.
+    /// ViewModel cho tính năng Trả sách và xử lý Tiền phạt tập trung.
+    /// Kết nối trực tiếp với MuonTraService theo chuẩn DB mới.
+    /// Áp dụng Strict Null Safety tuyệt đối và chú thích Tiếng Việt.
     /// </summary>
     public class ReturnViewModel : ObservableObject
     {
@@ -60,43 +66,54 @@ namespace THUVIENZ.ViewModels
         public ICommand SearchCommand { get; }
         public ICommand ReturnBookCommand { get; }
 
-        private readonly ReturnService _returnService;
-        private readonly PhieuMuonRepository _phieuMuonRepository;
+        private readonly MuonTraService _muonTraService;
+        private readonly LmsDbContext _context;
 
         public ReturnViewModel()
         {
-            _returnService = new ReturnService();
-            _phieuMuonRepository = new PhieuMuonRepository();
+            _muonTraService = new MuonTraService();
+            _context = new LmsDbContext();
 
             SearchCommand = new RelayCommand(_ => ExecuteSearch());
             ReturnBookCommand = new RelayCommand(_ => ExecuteReturn());
         }
 
         /// <summary>
-        /// Tìm kiếm các cuốn sách mà độc giả hiện đang mượn nhưng chưa trả.
+        /// Tìm kiếm các cuốn sách vật lý mà độc giả hiện đang mượn nhưng chưa trả.
         /// </summary>
-        private void ExecuteSearch()
+        private async void ExecuteSearch()
         {
-            if (int.TryParse(ReaderIdInput, out int readerId))
+            if (int.TryParse(ReaderIdInput.Trim(), out int readerId))
             {
-                // Gọi DAL để lấy danh sách mượn
-                var rawBooks = _phieuMuonRepository.GetActiveBorrowings(readerId);
-                
-                BorrowedBooks.Clear();
-                foreach (var item in rawBooks)
+                try
                 {
-                    BorrowedBooks.Add(new BorrowingDisplayModel
-                    {
-                        MaPhieuMuon = item.MaPhieuMuon,
-                        NgayMuon = item.NgayMuon,
-                        MaSach = item.MaSach,
-                        TenSach = item.TenSach
-                    });
-                }
+                    var rawBooks = await _context.ChiTietMuonTras
+                        .Include(c => c.PhieuMuon)
+                        .Include(c => c.CuonSach)
+                        .ThenInclude(cs => cs!.Sach)
+                        .Where(c => c.PhieuMuon!.MaDocGia == readerId && c.NgayTraThucTe == null)
+                        .Select(c => new BorrowingDisplayModel
+                        {
+                            MaPhieuMuon = c.MaPhieuMuon,
+                            MaCuonSach = c.MaCuonSach,
+                            MaSach = c.CuonSach!.MaSach,
+                            TenSach = c.CuonSach.Sach != null ? c.CuonSach.Sach.TenSach : "Không xác định",
+                            NgayMuon = c.PhieuMuon!.NgayMuon,
+                            HanTra = c.HanTra
+                        })
+                        .ToListAsync();
 
-                if (BorrowedBooks.Count == 0)
+                    BorrowedBooks = new ObservableCollection<BorrowingDisplayModel>(rawBooks);
+
+                    if (BorrowedBooks.Count == 0)
+                    {
+                        MessageBox.Show("Thư viện không tìm thấy cuốn sách vật lý nào đang được mượn bởi độc giả này.", 
+                                        "Thông tin", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                }
+                catch (Exception ex)
                 {
-                    MessageBox.Show("Thư viện không tìm thấy cuốn sách nào đang được mượn bởi độc giả này.", "Thông tin", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show($"Lỗi truy xuất danh sách mượn: {ex.Message}", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             else
@@ -106,9 +123,9 @@ namespace THUVIENZ.ViewModels
         }
 
         /// <summary>
-        /// Thực hiện thủ tục trả cuốn sách đang được chọn.
+        /// Thực hiện thủ tục trả cuốn sách vật lý đang được chọn qua MuonTraService.
         /// </summary>
-        private void ExecuteReturn()
+        private async void ExecuteReturn()
         {
             if (SelectedBorrowing == null)
             {
@@ -116,27 +133,21 @@ namespace THUVIENZ.ViewModels
                 return;
             }
 
-            if (int.TryParse(ReaderIdInput, out int readerId))
+            try
             {
-                // Gọi Service thực hiện nghiệp vụ trả và phạt
-                var result = _returnService.ReturnBook(
-                    SelectedBorrowing.MaPhieuMuon,
-                    SelectedBorrowing.MaSach,
-                    readerId,
-                    SelectedBorrowing.NgayMuon
-                );
+                var ketQua = await _muonTraService.ThucHienTraSachAsync(SelectedBorrowing.MaCuonSach);
 
-                if (result.Success)
+                if (ketQua.ThanhCong)
                 {
-                    MessageBox.Show(result.Message, "Trả sách thành công", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show(ketQua.ThongBao, "Trả sách thành công", MessageBoxButton.OK, MessageBoxImage.Information);
                     
-                    // Tải lại danh sách sau khi trả thành công
+                    // Tải lại danh sách sau khi trả thành công để cập nhật giao diện realtime
                     ExecuteSearch();
                 }
-                else
-                {
-                    MessageBox.Show(result.Message, "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi xử lý hoàn trả: {ex.Message}", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

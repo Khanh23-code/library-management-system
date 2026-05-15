@@ -1,84 +1,54 @@
-using Microsoft.Data.SqlClient;
-using System;
+using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using THUVIENZ.DAL.Base;
 using THUVIENZ.Models;
 
 namespace THUVIENZ.DAL
 {
     /// <summary>
-    /// Repositoy xử lý các truy vấn liên quan đến bảng TAIKHOAN.
-    /// Tuân thủ quy tắc 3-Tier: DAL chỉ chứa logic truy vấn DB.
+    /// Repository cho Tài khoản.
     /// </summary>
-    public class TaiKhoanRepository
+    public class TaiKhoanRepository : BaseRepository<TaiKhoan>
     {
-        public TaiKhoan? GetAccount(string username, string password)
+        public TaiKhoanRepository() : base(new LmsDbContext())
         {
-            using (SqlConnection connection = DataProvider.Instance.GetConnection())
-            {
-                // Sử dụng Parameterized Query để tránh SQL Injection
-                string query = "SELECT * FROM TAIKHOAN WHERE TenDangNhap = @user AND MatKhau = @pass";
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@user", username);
-                command.Parameters.AddWithValue("@pass", password);
-
-                try
-                {
-                    connection.Open();
-                    using (SqlDataReader reader = command.ExecuteReader())
-                    {
-                        if (reader.Read())
-                        {
-                            return new TaiKhoan
-                            {
-                                TenDangNhap = reader["TenDangNhap"]?.ToString() ?? string.Empty,
-                                MatKhau = reader["MatKhau"]?.ToString() ?? string.Empty,
-                                Quyen = reader["Quyen"]?.ToString() ?? string.Empty
-                            };
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // Ghi log lỗi để debug (tương tự tinh thần SLF4J cho Java)
-                    System.Diagnostics.Debug.WriteLine("Lỗi truy vấn GetAccount: " + ex.Message);
-                    throw; // Ném ngoại lệ để BLL hoặc ViewModel xử lý hoặc thông báo người dùng
-                }
-            }
-            return null;
         }
-        /// <summary>
-        /// Lấy thông tin tài khoản dựa trên tên đăng nhập (Dùng cho quy trình xác thực BCrypt).
-        /// </summary>
-        public TaiKhoan? GetAccountByUsername(string username)
-        {
-            using (SqlConnection connection = DataProvider.Instance.GetConnection())
-            {
-                string query = "SELECT * FROM TAIKHOAN WHERE TenDangNhap = @user";
-                SqlCommand command = new SqlCommand(query, connection);
-                command.Parameters.AddWithValue("@user", username);
 
-                try
-                {
-                    connection.Open();
-                    using (SqlDataReader reader = command.ExecuteReader())
-                    {
-                        if (reader.Read())
-                        {
-                            return new TaiKhoan
-                            {
-                                TenDangNhap = reader["TenDangNhap"]?.ToString() ?? string.Empty,
-                                MatKhau = reader["MatKhau"]?.ToString() ?? string.Empty,
-                                Quyen = reader["Quyen"]?.ToString() ?? string.Empty,
-                                TrangThai = reader["TrangThai"]?.ToString() ?? "Pending"
-                            };
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine("Lỗi GetAccountByUsername: " + ex.Message);
-                }
-            }
-            return null;
+        public TaiKhoanRepository(LmsDbContext context) : base(context)
+        {
+        }
+
+        public async Task<TaiKhoan?> GetAccountByUsernameAsync(string username)
+        {
+            return await GetByIdAsync(username);
+        }
+
+        /// <summary>
+        /// Lấy danh sách tài khoản đang chờ duyệt.
+        /// </summary>
+        public async Task<IEnumerable<TaiKhoan>> GetPendingAccountsAsync()
+        {
+            return await _context.TaiKhoans
+                .Include(t => t.DocGia)
+                .Where(t => t.TrangThai == "Pending")
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Xóa tài khoản và dữ liệu Độc giả liên quan (Dùng khi Reject).
+        /// Sử dụng EF Core Transaction ngầm định.
+        /// </summary>
+        public async Task DeleteAccountAndReaderAsync(string username)
+        {
+            var reader = await _context.DocGias.FirstOrDefaultAsync(d => d.TenDangNhap == username);
+            if (reader != null) _context.DocGias.Remove(reader);
+
+            var account = await _context.TaiKhoans.FindAsync(username);
+            if (account != null) _context.TaiKhoans.Remove(account);
+
+            await _context.SaveChangesAsync();
         }
     }
 }

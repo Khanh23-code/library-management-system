@@ -1,52 +1,116 @@
-﻿using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
-using THUVIENZ.Views.Components;
+using THUVIENZ.ViewModels;
 using THUVIENZ.Views.Popups;
 
 namespace THUVIENZ.Views
 {
     public partial class AdminBooks : UserControl
     {
-        // Sử dụng ObservableCollection để UI tự động cập nhật khi có thêm/xóa sách
-        private ObservableCollection<BookModel> _mockBooks;
+        private readonly BookManagementViewModel _viewModel;
 
         public AdminBooks()
         {
             InitializeComponent();
-            LoadMockData();
+            
+            _viewModel = new BookManagementViewModel();
+            this.DataContext = _viewModel;
 
-            // Đăng ký lắng nghe sự kiện từ AddPopup
             AddPopup.OnBookAdded += AddPopup_OnBookAdded;
+            AddPopup.OnBookUpdated += AddPopup_OnBookUpdated;
         }
 
-        private void LoadMockData()
-        {
-            _mockBooks = new ObservableCollection<BookModel>
-            {
-                new BookModel { BookID = "DNT-101", Title = "Đắc Nhân Tâm", Author = "Dale Carnegie", Category = "Tâm lý kỹ năng", Status = "Sẵn sàng" },
-                new BookModel { BookID = "IT-404", Title = "Clean Code", Author = "Robert C. Martin", Category = "Công nghệ", Status = "Đang mượn" },
-                new BookModel { BookID = "NGK-999", Title = "Nhà Giả Kim", Author = "Paulo Coelho", Category = "Tiểu thuyết", Status = "Sẵn sàng" },
-                new BookModel { BookID = "ECO-200", Title = "Tâm lý học tội phạm", Author = "Stanton E. Samenow", Category = "Tâm lý học", Status = "Sẵn sàng" }
-            };
-
-            // Nạp dữ liệu vào bảng DataGrid
-            dgBooks.ItemsSource = _mockBooks;
-        }
-
-        // Sự kiện hiển thị Popup
         private void BtnShowAddPopup_Click(object sender, RoutedEventArgs e)
         {
+            AddPopup.OpenForAdd();
             AddPopup.Visibility = Visibility.Visible;
         }
 
-        // Bắt lấy dữ liệu sách mới từ Popup ném ra
-        private void AddPopup_OnBookAdded(object sender, BookModel newBook)
+        private async void BtnEditRow_Click(object sender, RoutedEventArgs e)
         {
-            // Thêm sách vào danh sách. ObservableCollection sẽ tự động vẽ thêm 1 dòng trên DataGrid!
-            _mockBooks.Add(newBook);
+            if (sender is Button btn && btn.DataContext is THUVIENZ.Models.Sach bookRow)
+            {
+                try
+                {
+                    // Load data mới nhất từ database theo yêu cầu
+                    var service = new THUVIENZ.BLL.BookManagementService();
+                    var latestBook = await service.GetByIdAsync(bookRow.MaSach);
+                    if (latestBook != null)
+                    {
+                        AddPopup.LoadBookForEdit(latestBook);
+                        AddPopup.Visibility = Visibility.Visible;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Không tìm thấy thông tin sách trong cơ sở dữ liệu.", "Lỗi dữ liệu", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    MessageBox.Show($"Lỗi tải thông tin sách: {ex.Message}", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
 
-            MessageBox.Show($"Đã thêm sách '{newBook.Title}' thành công!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+        private async void AddPopup_OnBookAdded(object? sender, BookModel newBook)
+        {
+            try
+            {
+                var service = new THUVIENZ.BLL.BookManagementService();
+                int.TryParse(newBook.PageNumber, out int year);
+                var sach = new THUVIENZ.Models.Sach
+                {
+                    MaISBN = $"ISBN-{System.Guid.NewGuid().ToString().Substring(0, 8)}",
+                    TenSach = newBook.Title,
+                    TacGia = newBook.Author,
+                    NhaXuatBan = newBook.Language,
+                    NgonNgu = newBook.RealLanguage,
+                    NamXuatBan = year > 0 ? year : System.DateTime.Now.Year,
+                    SoLuong = newBook.Quantity > 0 ? newBook.Quantity : 1,
+                    TinhTrang = string.IsNullOrWhiteSpace(newBook.Status) ? "Còn sách" : newBook.Status,
+                    MoTa = newBook.Description,
+                    TriGia = newBook.Price > 0 ? newBook.Price : 100000,
+                    MaTheLoai = 1
+                };
+
+                // Nếu nhập mã thể loại là số
+                if (int.TryParse(newBook.Category, out int catId))
+                    sach.MaTheLoai = catId;
+
+                await service.AddBookAsync(sach);
+
+                if (!string.IsNullOrEmpty(newBook.ImagePath) && System.IO.File.Exists(newBook.ImagePath))
+                {
+                    using (var stream = new System.IO.FileStream(newBook.ImagePath, System.IO.FileMode.Open, System.IO.FileAccess.Read))
+                    {
+                        string ext = System.IO.Path.GetExtension(newBook.ImagePath);
+                        await service.UploadBookCoverAsync(sach.MaSach, stream, ext);
+                    }
+                }
+
+                MessageBox.Show("Thêm sách và tải ảnh bìa thành công!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                _viewModel.LoadBooksCommand.Execute(null);
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show($"Lỗi xử lý thêm sách: {ex.Message}", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void AddPopup_OnBookUpdated(object? sender, THUVIENZ.Models.Sach updatedBook)
+        {
+            try
+            {
+                var service = new THUVIENZ.BLL.BookManagementService();
+                await service.UpdateAsync(updatedBook);
+
+                MessageBox.Show("Cập nhật thông tin sách thành công!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
+                _viewModel.LoadBooksCommand.Execute(null);
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show($"Lỗi xử lý cập nhật sách: {ex.Message}", "Lỗi hệ thống", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }

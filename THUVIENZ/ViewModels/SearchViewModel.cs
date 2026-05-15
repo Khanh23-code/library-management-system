@@ -50,9 +50,9 @@ namespace THUVIENZ.ViewModels
         /// <summary>
         /// Thực hiện logic tìm kiếm và cập nhật UI thông qua ObservableCollection.
         /// </summary>
-        public void ExecuteSearch(object? parameter = null)
+        public async void ExecuteSearch(object? parameter = null)
         {
-            List<Sach> books = _searchService.Search(SearchKeyword);
+            var books = await _searchService.SearchAsync(SearchKeyword);
             SearchResults = new ObservableCollection<Sach>(books);
         }
     }

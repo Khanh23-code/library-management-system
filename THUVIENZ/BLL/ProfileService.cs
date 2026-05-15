@@ -1,37 +1,45 @@
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using THUVIENZ.DAL;
 using THUVIENZ.Models;
+using THUVIENZ.DAL.Base;
 
 namespace THUVIENZ.BLL
 {
     /// <summary>
     /// Service xử lý logic liên quan đến hồ sơ Độc giả.
+    /// Tuân thủ kiến trúc mới của Tech Lead.
     /// </summary>
     public class ProfileService
     {
         private readonly DocGiaRepository _docGiaRepository;
 
-        public ProfileService()
+        public ProfileService() : this(new DocGiaRepository(new LmsDbContext()))
         {
-            _docGiaRepository = new DocGiaRepository();
+        }
+
+        public ProfileService(DocGiaRepository repository)
+        {
+            _docGiaRepository = repository;
         }
 
         /// <summary>
         /// Lấy thông tin cá nhân của Độc giả.
         /// </summary>
-        public DocGia? GetReaderInfo(string username)
+        public async Task<DocGia?> GetReaderInfoAsync(string username)
         {
             if (string.IsNullOrWhiteSpace(username)) return null;
-            return _docGiaRepository.GetReaderProfile(username);
+            return await _docGiaRepository.GetReaderProfileAsync(username);
         }
 
         /// <summary>
         /// Lấy danh sách sách đang mượn của Độc giả.
         /// </summary>
-        public List<Sach> GetActiveBorrowedBooks(int maDocGia)
+        public async Task<IEnumerable<Sach>> GetActiveBorrowedBooksAsync(int maDocGia)
         {
-            if (maDocGia <= 0) return new List<Sach>();
-            return _docGiaRepository.GetBorrowedBooks(maDocGia);
+            if (maDocGia <= 0) return Enumerable.Empty<Sach>();
+            return await _docGiaRepository.GetBorrowedBooksAsync(maDocGia);
         }
     }
 }

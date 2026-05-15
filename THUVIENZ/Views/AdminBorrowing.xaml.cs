@@ -1,94 +1,99 @@
-﻿using System.Collections.Generic;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using THUVIENZ.ViewModels;
 
 namespace THUVIENZ.Views
 {
     public partial class AdminBorrowing : UserControl
     {
-        // Danh sách lưu trữ dữ liệu giả lập
-        private List<BorrowingReader> _mockReaders;
+        private readonly AdminCirculationViewModel _viewModel;
+        private readonly Border?[] _tabBorders = new Border?[3];
 
         public AdminBorrowing()
         {
             InitializeComponent();
-            LoadMockData();
+            _viewModel = new AdminCirculationViewModel();
+            this.DataContext = _viewModel;
+            this.Loaded += AdminBorrowing_Loaded;
         }
 
-        private void LoadMockData()
+        private void AdminBorrowing_Loaded(object sender, RoutedEventArgs e)
         {
-            // 1. Tạo dữ liệu giả
-            _mockReaders = new List<BorrowingReader>
+            FindTabBorders(this);
+            UpdateTabStyles();
+        }
+
+        private void FindTabBorders(DependencyObject parent)
+        {
+            int childCount = VisualTreeHelper.GetChildrenCount(parent);
+            for (int i = 0; i < childCount; i++)
             {
-                new BorrowingReader
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is Border b && b.Child is TextBlock tb)
                 {
-                    ReaderID = "RD-20511", ReaderName = "Nguyễn Tân Binh", TotalBorrowed = 2,
-                    Books = new List<BorrowedBook>
+                    if (tb.Text.Contains("Đang mượn"))
                     {
-                        new BorrowedBook { BookID = "IT-404", Title = "Clean Code", BorrowDate = "15/04/2026", DueDate = "22/04/2026" },
-                        new BorrowedBook { BookID = "IT-102", Title = "Design Patterns", BorrowDate = "15/04/2026", DueDate = "22/04/2026" }
+                        RegisterTab(b, 0);
                     }
-                },
-                new BorrowingReader
-                {
-                    ReaderID = "RD-20512", ReaderName = "Trần Thị B", TotalBorrowed = 1,
-                    Books = new List<BorrowedBook>
+                    else if (tb.Text.Contains("Lịch sử"))
                     {
-                        new BorrowedBook { BookID = "NGK-999", Title = "Nhà Giả Kim", BorrowDate = "20/04/2026", DueDate = "27/04/2026" }
+                        RegisterTab(b, 1);
                     }
-                },
-                new BorrowingReader
-                {
-                    ReaderID = "RD-20513", ReaderName = "Lê Văn C", TotalBorrowed = 3,
-                    Books = new List<BorrowedBook>
+                    else if (tb.Text.Contains("Quy định"))
                     {
-                        new BorrowedBook { BookID = "DNT-101", Title = "Đắc Nhân Tâm", BorrowDate = "10/04/2026", DueDate = "17/04/2026" },
-                        new BorrowedBook { BookID = "ECO-200", Title = "Tâm lý học tội phạm", BorrowDate = "12/04/2026", DueDate = "19/04/2026" },
-                        new BorrowedBook { BookID = "NOV-333", Title = "Hai vạn dặm dưới đáy biển", BorrowDate = "12/04/2026", DueDate = "19/04/2026" }
+                        RegisterTab(b, 2);
                     }
                 }
-            };
-
-            // 2. Nạp danh sách Độc giả vào bảng bên trái
-            dgReaders.ItemsSource = _mockReaders;
-
-            // 3. Mặc định chọn dòng đầu tiên khi mới mở trang
-            if (_mockReaders.Count > 0)
-            {
-                dgReaders.SelectedIndex = 0;
+                else
+                {
+                    FindTabBorders(child);
+                }
             }
         }
 
-        // Sự kiện khi Admin click chọn 1 độc giả ở bảng bên trái
-        private void dgReaders_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void RegisterTab(Border border, int index)
         {
-            // Lấy dòng dữ liệu đang được chọn
-            if (dgReaders.SelectedItem is BorrowingReader selectedReader)
-            {
-                // Cập nhật tiêu đề bên phải
-                txtSelectedReader.Text = $"Độc giả: {selectedReader.ReaderName} ({selectedReader.ReaderID})";
+            _tabBorders[index] = border;
+            border.MouseLeftButtonDown -= Tab_Click;
+            border.MouseLeftButtonDown += Tab_Click;
+        }
 
-                // Đổ danh sách sách mượn của người này vào bảng bên phải
-                dgBooks.ItemsSource = selectedReader.Books;
+        private void Tab_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (sender is Border border)
+            {
+                for (int i = 0; i < _tabBorders.Length; i++)
+                {
+                    if (_tabBorders[i] == border)
+                    {
+                        _viewModel.SelectedTabIndex = i;
+                        break;
+                    }
+                }
+                UpdateTabStyles();
             }
         }
-    }
 
-    // --- CÁC CLASS ĐẠI DIỆN DATA (MODELS) ---
-    public class BorrowingReader
-    {
-        public string ReaderID { get; set; }
-        public string ReaderName { get; set; }
-        public int TotalBorrowed { get; set; }
+        private void UpdateTabStyles()
+        {
+            for (int i = 0; i < _tabBorders.Length; i++)
+            {
+                var border = _tabBorders[i];
+                if (border?.Child is TextBlock tb)
+                {
+                    bool isSelected = (_viewModel.SelectedTabIndex == i);
+                    border.Background = isSelected ? new SolidColorBrush(Color.FromRgb(239, 246, 255)) : new SolidColorBrush(Colors.Transparent);
+                    border.BorderBrush = isSelected ? new SolidColorBrush(Color.FromRgb(59, 130, 246)) : new SolidColorBrush(Colors.Transparent);
+                    tb.Foreground = isSelected ? new SolidColorBrush(Color.FromRgb(29, 78, 216)) : new SolidColorBrush(Color.FromRgb(107, 114, 128));
+                    tb.FontWeight = isSelected ? FontWeights.Bold : FontWeights.SemiBold;
+                }
+            }
+        }
 
-        // Chứa danh sách các cuốn sách mà người này mượn
-        public List<BorrowedBook> Books { get; set; }
-    }
-
-    public class BorrowedBook
-    {
-        public string BookID { get; set; }
-        public string Title { get; set; }
-        public string BorrowDate { get; set; }
-        public string DueDate { get; set; }
+        private void NumberOnly_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
+        {
+            e.Handled = !System.Text.RegularExpressions.Regex.IsMatch(e.Text, "^[0-9]+$");
+        }
     }
 }
