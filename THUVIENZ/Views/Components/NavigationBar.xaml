@@ -132,13 +132,18 @@
 
             <Button Click="BtnNotifications_Click">
                 <Button.Content>
-                    <StackPanel Orientation="Horizontal">
-                        <fa:IconImage Icon="Bell" 
-                      Width="22" Height="22" Margin="0,0,15,0"
-                      Foreground="{Binding Path=Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                    <Grid>
+                        <StackPanel Orientation="Horizontal">
+                            <fa:IconImage Icon="Bell" Width="22" Height="22" Margin="0,0,15,0"
+                              Foreground="{Binding Path=Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+                            <TextBlock Text="Thông báo" VerticalAlignment="Center"/>
+                        </StackPanel>
 
-                        <TextBlock Text="Thông báo" VerticalAlignment="Center"/>
-                    </StackPanel>
+                        <Border x:Name="RedDotBadge" Width="10" Height="10" 
+                    Background="#EF4444" CornerRadius="5" 
+                    HorizontalAlignment="Left" VerticalAlignment="Top" 
+                    Margin="12,-4,0,0" Visibility="Visible"/>
+                    </Grid>
                 </Button.Content>
 
                 <Button.Style>

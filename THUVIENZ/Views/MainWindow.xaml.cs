@@ -16,35 +16,31 @@ namespace THUVIENZ
 
         private void ApplyRouting()
         {
-            // Bỏ qua Login để test Admin (Auth đang ở nhánh khác)
-            UserSession.UserID = "AD_DEV_TEST";
-            UserSession.Role = "Admin";
+            string role = UserSession.Role ?? "";
+            string checkRole = role.ToUpper();
 
-            string userId = UserSession.UserID ?? "";
-
-            if (userId.StartsWith("AD_"))
+            // Nếu Backend trả về Role là "ADMIN" hoặc "QUANLY" (bạn tự chỉnh cho khớp chữ DB nhé)
+            if (checkRole == "ADMIN")
             {
-                // 1. Khởi tạo thanh Nav cho Admin
                 var adminNav = new AdminNavigationBar();
                 adminNav.OnNavigate += (page, name) => HandleNavigation(adminNav, page, name);
-
-                // 2. Lắp vào cột trái
                 NavContainer.Content = adminNav;
-
-                // 3. Trang mặc định khi Admin vào app
                 HandleNavigation(adminNav, new AdminBooks(), "Books");
             }
-            else if (userId.StartsWith("RD_"))
+            // Nếu Backend trả về Role là "READER" hoặc "DOCGIA"
+            else if (checkRole == "READER")
             {
-                // 1. Khởi tạo thanh Nav cho Reader
                 var readerNav = new NavigationBar();
                 readerNav.OnNavigate += (page, name) => HandleNavigation(readerNav, page, name);
-
-                // 2. Lắp vào cột trái
                 NavContainer.Content = readerNav;
-
-                // 3. Trang mặc định cho Reader
                 HandleNavigation(readerNav, new Profile(), "Profile");
+            }
+            else
+            {
+                // Role không hợp lệ thì đá văng ra ngoài Login
+                MessageBox.Show("Tài khoản của bạn không được cấp quyền truy cập hợp lệ!", "Lỗi phân quyền", MessageBoxButton.OK, MessageBoxImage.Error);
+                new Login().Show();
+                this.Close();
             }
         }
 
@@ -59,6 +55,18 @@ namespace THUVIENZ
                 adminNav.ActivePage = pageName;
             else if (navBar is NavigationBar readerNav)
                 readerNav.ActivePage = pageName;
+
+            if (newPage is Notifications notificationsPage)
+            {
+                notificationsPage.OnNotificationsViewed += () =>
+                {
+                    // Nếu thanh Nav hiện tại là của Reader, ra lệnh xóa chấm đỏ
+                    if (navBar is NavigationBar readerMenu)
+                    {
+                        readerMenu.ClearRedDot();
+                    }
+                };
+            }
         }
     }
 }
