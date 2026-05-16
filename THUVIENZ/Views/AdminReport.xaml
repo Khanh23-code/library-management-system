@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:comp="clr-namespace:THUVIENZ.Views.Components"
              xmlns:vm="clr-namespace:THUVIENZ.ViewModels"
+             xmlns:fa="http://schemas.awesome.incremented/wpf/xaml/fontawesome.sharp"
              xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf">
 
     <UserControl.Resources>
@@ -46,10 +47,9 @@
         <vm:AdminReportViewModel/>
     </UserControl.DataContext>
 
-    <Grid>
+    <Viewbox Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Center">
         <Border Background="White" CornerRadius="35" 
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                Width="1100" Height="780">
+                Width="1100" MinHeight="750" Margin="20">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="30" Opacity="0.2" ShadowDepth="10" Color="Black"/>
             </Border.Effect>
@@ -90,16 +90,35 @@
                     </Border>
                     
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Border Background="#D1FAE5" CornerRadius="6" Padding="8,4" Margin="0,0,10,0">
-                            <TextBlock Text="LIVE DATA" FontSize="10" FontWeight="Bold" Foreground="#059669"/>
+                        <Button Command="{Binding ExportCommand}" Cursor="Hand" Margin="0,0,15,0" VerticalAlignment="Center">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border x:Name="border" Background="White" CornerRadius="8" Padding="12,6" BorderBrush="#E5E7EB" BorderThickness="1" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <fa:IconImage Icon="FileDownload" Width="14" Height="14" Foreground="#2563EB" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Xuất Báo cáo" Foreground="#374151" FontSize="13" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="border" Property="Background" Value="#F9FAFB"/>
+                                            <Setter TargetName="border" Property="BorderBrush" Value="#D1D5DB"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                        
+                        <Border Background="#D1FAE5" CornerRadius="6" Padding="8,4" Margin="0,0,10,0" VerticalAlignment="Center">
+                            <TextBlock Text="LIVE DATA" FontSize="10" FontWeight="Bold" Foreground="#059669" VerticalAlignment="Center"/>
                         </Border>
-                        <TextBlock Text="Cập nhật 1 phút trước" 
+                        <TextBlock Text="{Binding LastUpdated}" 
                                    FontSize="12" Foreground="#9CA3AF" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Grid>
 
-                <!-- KPI CARDS - Using UniformGrid to prevent clipping -->
-                <UniformGrid Grid.Row="2" Columns="4" Margin="-10,0,-10,20">
+                <!-- KPI CARDS -->
+                <UniformGrid Grid.Row="2" Columns="4" Margin="-10,0,-10,25">
                     <comp:KPICard CardTitle="Tổng Sách" CardValue="{Binding TotalBooks}" 
                                   CardIcon="Book" IconBgColor="#DBEAFE" IconColor="#2563EB"/>
 
@@ -122,7 +141,7 @@
                     <Border Grid.Column="0" Background="#F9FAFB" CornerRadius="20" Margin="0,0,10,0" Padding="20">
                         <DockPanel>
                             <TextBlock Text="{Binding TrendTitle}" DockPanel.Dock="Top" FontSize="18" FontWeight="Bold" Foreground="#374151" Margin="0,0,0,15"/>
-                            <lvc:CartesianChart Series="{Binding BorrowingTrendSeries}">
+                            <lvc:CartesianChart Series="{Binding BorrowingTrendSeries}" MinHeight="300">
                                 <lvc:CartesianChart.AxisX>
                                     <lvc:Axis Labels="{Binding TrendLabels}">
                                         <lvc:Axis.Separator>
@@ -140,7 +159,7 @@
                     <Border Grid.Column="1" Background="#F9FAFB" CornerRadius="20" Margin="10,0,0,0" Padding="20">
                         <DockPanel>
                             <TextBlock Text="Thị hiếu Thể loại" DockPanel.Dock="Top" FontSize="18" FontWeight="Bold" Foreground="#374151" Margin="0,0,0,15" HorizontalAlignment="Center"/>
-                            <lvc:PieChart Series="{Binding CategoryRatioSeries}" InnerRadius="60" LegendLocation="Bottom">
+                            <lvc:PieChart Series="{Binding CategoryRatioSeries}" InnerRadius="60" LegendLocation="Bottom" MinHeight="300">
                                 <lvc:PieChart.ChartLegend>
                                     <lvc:DefaultLegend BulletSize="15"/>
                                 </lvc:PieChart.ChartLegend>
@@ -150,5 +169,5 @@
                 </Grid>
             </Grid>
         </Border>
-    </Grid>
+    </Viewbox>
 </UserControl>

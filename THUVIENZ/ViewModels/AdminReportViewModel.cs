@@ -1,11 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Win32;
 using LiveCharts;
 using LiveCharts.Wpf;
 using THUVIENZ.BLL;
 using THUVIENZ.Core;
+using THUVIENZ.Models;
 
 namespace THUVIENZ.ViewModels
 {
@@ -16,6 +21,7 @@ namespace THUVIENZ.ViewModels
 
         // --- COMMANDS ---
         public RelayCommand ChangeFilterCommand { get; }
+        public RelayCommand ExportCommand { get; }
 
         // --- DATA CHO KPI CARDS ---
         private string _totalBooks = "0";
@@ -44,6 +50,13 @@ namespace THUVIENZ.ViewModels
         {
             get => _overdueBooks;
             set => SetProperty(ref _overdueBooks, value);
+        }
+
+        private string _lastUpdated = "Đang cập nhật...";
+        public string LastUpdated
+        {
+            get => _lastUpdated;
+            set => SetProperty(ref _lastUpdated, value);
         }
 
         // --- DATA CHO BIỂU ĐỒ ĐƯỜNG/CỘT (Lượt mượn / Trễ hạn) ---
@@ -85,6 +98,14 @@ namespace THUVIENZ.ViewModels
             set => SetProperty(ref _categoryRatioSeries, value);
         }
 
+        // --- INTELLIGENCE DATA (APRIORI) ---
+        private ObservableCollection<BookPairDTO> _frequentPairs = new();
+        public ObservableCollection<BookPairDTO> FrequentPairs
+        {
+            get => _frequentPairs;
+            set => SetProperty(ref _frequentPairs, value);
+        }
+
         public AdminReportViewModel()
         {
             _reportService = new ReportService();
@@ -96,7 +117,75 @@ namespace THUVIENZ.ViewModels
                 }
             });
 
+            ExportCommand = new RelayCommand(_ => _ = ExportReportAsync());
+
             _ = LoadDataAsync(7);
+        }
+
+        private async Task ExportReportAsync()
+        {
+            var saveFileDialog = new SaveFileDialog
+            {
+                Filter = "CSV files (*.csv)|*.csv",
+                FileName = $"BaoCaoThongKe_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
+                Title = "Lưu báo cáo thống kê"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    var sb = new StringBuilder();
+                    // Thêm BOM cho UTF-8 để Excel đọc được tiếng Việt
+                    sb.Append('\uFEFF');
+
+                    // 1. Header & KPI Summary
+                    sb.AppendLine("BÁO CÁO THỐNG KÊ THƯ VIỆN");
+                    sb.AppendLine($"Ngày xuất: {DateTime.Now:dd/MM/yyyy HH:mm}");
+                    sb.AppendLine($"Khoảng thời gian: {_currentDays} ngày qua");
+                    sb.AppendLine();
+                    sb.AppendLine("TÓM TẮT CHỈ SỐ");
+                    sb.AppendLine($"Tổng đầu sách: {TotalBooks}");
+                    sb.AppendLine($"Tổng độc giả: {TotalReaders}");
+                    sb.AppendLine($"Sách đang mượn: {BorrowedBooks}");
+                    sb.AppendLine($"Sách trễ hạn: {OverdueBooks}");
+                    sb.AppendLine();
+
+                    // 2. Chi tiết xu hướng (Trend Data)
+                    sb.AppendLine("CHI TIẾT XU HƯỚNG MƯỢN TRẢ");
+                    sb.AppendLine("Thời gian,Số lượt mượn,Số lượt trễ");
+                    
+                    if (TrendLabels != null && BorrowingTrendSeries != null)
+                    {
+                        var borrowValues = BorrowingTrendSeries[0].Values;
+                        var overdueValues = BorrowingTrendSeries[1].Values;
+                        for (int i = 0; i < TrendLabels.Length; i++)
+                        {
+                            sb.AppendLine($"{TrendLabels[i]},{borrowValues[i]},{overdueValues[i]}");
+                        }
+                    }
+                    sb.AppendLine();
+
+                    // 3. Thống kê thể loại
+                    sb.AppendLine("TỈ LỆ THỂ LOẠI (Lượt mượn)");
+                    if (CategoryRatioSeries != null)
+                    {
+                        foreach (var series in CategoryRatioSeries)
+                        {
+                            sb.AppendLine($"{series.Title},{series.Values[0]}");
+                        }
+                    }
+
+                    await File.WriteAllTextAsync(saveFileDialog.FileName, sb.ToString(), Encoding.UTF8);
+                    
+                    // Thông báo thành công (có thể dùng MessageBox)
+                    System.Windows.MessageBox.Show("Xuất báo cáo thành công!", "Thông báo", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    System.Windows.MessageBox.Show($"Lỗi khi xuất báo cáo: {ex.Message}", "Lỗi", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                }
+            }
         }
 
         private async Task LoadDataAsync(int days)
@@ -106,7 +195,7 @@ namespace THUVIENZ.ViewModels
 
             try
             {
-                // 1. Tải KPI Summary (Luôn lấy tổng thể)
+                // 1. Tải KPI Summary
                 var summary = await _reportService.GetDashboardSummaryAsync();
                 TotalBooks = summary.TotalBooks.ToString("N0");
                 TotalReaders = summary.TotalReaders.ToString("N0");
@@ -118,16 +207,13 @@ namespace THUVIENZ.ViewModels
                 var fromDate = toDate.AddDays(-(days - 1));
                 var trendData = await _reportService.GetBorrowingTrendAsync(fromDate, toDate);
 
-                // Chuẩn bị dữ liệu cho LiveCharts
                 var borrowValues = new ChartValues<int>();
                 var overdueValues = new ChartValues<int>();
                 var labels = new List<string>();
 
-                // Nếu là 1 năm, chúng ta nên nhóm theo tháng thay vì theo ngày
                 if (days > 60)
                 {
                     LabelStep = 1;
-                    // Nhóm theo tháng
                     var monthlyGroups = trendData
                         .GroupBy(t => new { t.Date.Year, t.Date.Month })
                         .Select(g => new 
@@ -148,7 +234,6 @@ namespace THUVIENZ.ViewModels
                 else
                 {
                     LabelStep = days == 30 ? 5 : 1;
-                    // Nhóm theo ngày (đảm bảo đủ các ngày)
                     for (var date = fromDate.Date; date <= toDate.Date; date = date.AddDays(1))
                     {
                         var dayStat = trendData.FirstOrDefault(t => t.Date.Date == date);
@@ -188,16 +273,23 @@ namespace THUVIENZ.ViewModels
                     pieSeries.Add(new PieSeries
                     {
                         Title = stat.CategoryName,
-                        Values = new ChartValues<int> { stat.BorrowCount },
+                        Values = new ChartValues<int> { (int)stat.BorrowCount },
                         DataLabels = true
                     });
                 }
                 CategoryRatioSeries = pieSeries;
+
+                // 4. Intelligence: Tải các cặp sách hay được mượn cùng nhau (Apriori)
+                var pairs = await _reportService.GetFrequentBookPairsWithNamesAsync(minSupport: 2);
+                FrequentPairs = new ObservableCollection<BookPairDTO>(pairs.Take(5));
+
+                LastUpdated = $"Cập nhật lúc {DateTime.Now:HH:mm:ss}";
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error loading report data: {ex.Message}");
+                LastUpdated = "Lỗi cập nhật";
             }
         }
     }
-}
+}
