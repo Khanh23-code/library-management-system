@@ -74,35 +74,86 @@ namespace THUVIENZ.BLL
         }
 
         /// <summary>
+        /// Lấy tóm tắt các con số KPI cho Dashboard.
+        /// </summary>
+        public async Task<DashboardSummaryDTO> GetDashboardSummaryAsync()
+        {
+            var totalBooks = await _context.Sachs.CountAsync();
+            var totalReaders = await _context.DocGias.CountAsync();
+            
+            // Sách đang mượn (NgayTraThucTe == null)
+            var borrowedBooks = await _context.ChiTietMuonTras
+                .CountAsync(c => c.NgayTraThucTe == null);
+
+            // Sách trễ hạn (NgayTraThucTe == null và HanTra < Now)
+            var overdueBooks = await _context.ChiTietMuonTras
+                .CountAsync(c => c.NgayTraThucTe == null && c.HanTra < DateTime.Now);
+
+            return new DashboardSummaryDTO
+            {
+                TotalBooks = totalBooks,
+                TotalReaders = totalReaders,
+                BorrowedBooks = borrowedBooks,
+                OverdueBooks = overdueBooks
+            };
+        }
+
+        /// <summary>
+        /// Lấy xu hướng mượn sách và trễ hạn trong khoảng thời gian xác định.
+        /// Thường dùng cho biểu đồ đường.
+        /// </summary>
+        public async Task<List<BorrowingTrendDTO>> GetBorrowingTrendAsync(DateTime from, DateTime to)
+        {
+            var trend = new List<BorrowingTrendDTO>();
+            var allData = await _context.ChiTietMuonTras
+                .Include(c => c.PhieuMuon)
+                .Where(c => c.PhieuMuon!.NgayMuon >= from && c.PhieuMuon!.NgayMuon <= to)
+                .Select(c => new { c.PhieuMuon!.NgayMuon, c.HanTra, c.NgayTraThucTe })
+                .ToListAsync();
+
+            // Nhóm theo ngày ở tầng ứng dụng vì SQL Lite/Server DATE casting phức tạp với EF Core
+            var grouped = allData
+                .GroupBy(c => c.NgayMuon.Date)
+                .OrderBy(g => g.Key);
+
+            foreach (var group in grouped)
+            {
+                trend.Add(new BorrowingTrendDTO
+                {
+                    Date = group.Key,
+                    BorrowCount = group.Count(),
+                    OverdueCount = group.Count(c => (c.NgayTraThucTe == null && c.HanTra < DateTime.Now) || 
+                                                   (c.NgayTraThucTe != null && c.NgayTraThucTe > c.HanTra))
+                });
+            }
+
+            return trend;
+        }
+
+        /// <summary>
         /// Lấy danh sách các đầu sách được mượn nhiều nhất (Top Borrowed).
-        /// Chú thích bằng tiếng Việt.
         /// </summary>
         public async Task<List<BookStatDTO>> GetTopBorrowedBooksAsync(DateTime from, DateTime to, int top = 10)
         {
-            var rawData = await _context.ChiTietMuonTras
+            return await _context.ChiTietMuonTras
                 .Include(c => c.PhieuMuon)
                 .Include(c => c.CuonSach)
                 .ThenInclude(cs => cs!.Sach)
                 .Where(c => c.PhieuMuon!.NgayMuon >= from && c.PhieuMuon!.NgayMuon <= to)
-                .ToListAsync();
-
-            return rawData
-                .Where(c => c.CuonSach != null)
-                .GroupBy(c => c.CuonSach!.MaSach)
+                .GroupBy(c => new { c.CuonSach!.MaSach, c.CuonSach!.Sach!.TenSach })
                 .Select(g => new BookStatDTO
                 {
-                    MaSach = g.Key,
-                    TenSach = g.FirstOrDefault()?.CuonSach?.Sach?.TenSach ?? "Không xác định",
+                    MaSach = g.Key.MaSach,
+                    TenSach = g.Key.TenSach,
                     BorrowCount = g.Count()
                 })
                 .OrderByDescending(x => x.BorrowCount)
                 .Take(top)
-                .ToList();
+                .ToListAsync();
         }
 
         /// <summary>
         /// Báo cáo độc giả quá hạn hoặc nợ tiền.
-        /// Tính toán theo thời gian thực dựa trên HanTra.
         /// </summary>
         public async Task<List<ReaderStatDTO>> GetReaderOverdueReportsAsync()
         {
@@ -113,12 +164,11 @@ namespace THUVIENZ.BLL
                     HoTen = d.HoTen,
                     TongNo = d.TongNo,
                     OverdueCount = _context.ChiTietMuonTras
-                        .Include(c => c.PhieuMuon)
                         .Count(c => c.PhieuMuon!.MaDocGia == d.MaDocGia && 
                                     c.NgayTraThucTe == null && 
                                     c.HanTra < DateTime.Now)
                 })
-                .Where(x => x.TongNo > 0 || x.OverdueCount > 0)
+                .Where(x => (double)x.TongNo > 0 || x.OverdueCount > 0)
                 .ToListAsync();
         }
 
@@ -127,24 +177,21 @@ namespace THUVIENZ.BLL
         /// </summary>
         public async Task<IEnumerable<object>> GetBorrowingStatsByCategoryAsync(DateTime from, DateTime to)
         {
-            var list = await _context.ChiTietMuonTras
+            var data = await _context.ChiTietMuonTras
                 .Include(c => c.PhieuMuon)
                 .Include(c => c.CuonSach)
                 .ThenInclude(cs => cs!.Sach)
                 .ThenInclude(s => s!.TheLoaiSach)
                 .Where(c => c.PhieuMuon!.NgayMuon >= from && c.PhieuMuon!.NgayMuon <= to)
-                .ToListAsync();
-
-            return list
-                .Where(c => c.CuonSach?.Sach?.TheLoaiSach != null)
                 .GroupBy(c => c.CuonSach!.Sach!.TheLoaiSach!.TenTheLoai)
                 .Select(g => new
                 {
                     CategoryName = g.Key,
-                    BorrowCount = g.Count(),
-                    Percentage = 0 // Sẽ tính toán tỷ lệ phần trăm ở tầng hiển thị
+                    BorrowCount = g.Count()
                 })
-                .ToList();
+                .ToListAsync();
+
+            return data;
         }
     }
 }
