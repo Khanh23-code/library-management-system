@@ -8,32 +8,42 @@
     <UserControl.Template>
         <ControlTemplate TargetType="local:NotificationCard">
 
-            <Border x:Name="CardBorder" CornerRadius="16" BorderThickness="1.5" Padding="16" Background="White">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="10" Opacity="0.05" ShadowDepth="2" Color="Black"/>
-                </Border.Effect>
-
+            <Border x:Name="CardBorder" CornerRadius="16" BorderThickness="1.5" Padding="16" Background="White"
+                    Cursor="Hand" MouseLeftButtonUp="Card_MouseLeftButtonUp">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <Border x:Name="IconContainer" Grid.Column="0" Width="40" Height="40" CornerRadius="20" Margin="0,0,16,0">
+                    <Border x:Name="IconContainer" Grid.Column="0" Width="40" Height="40" CornerRadius="20" Margin="0,0,16,0" VerticalAlignment="Top">
                         <fa:IconImage x:Name="IconVisual" Width="20" Height="20"/>
                     </Border>
 
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <TextBlock Text="{TemplateBinding Message}" 
-                                   FontSize="15" Foreground="#111827" TextWrapping="Wrap" FontWeight="Medium"/>
-                        <TextBlock Text="{TemplateBinding Timestamp}" 
-                                   FontSize="12" Foreground="#9CA3AF" Margin="0,4,0,0"/>
-                    </StackPanel>
+                    <Grid Grid.Column="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
 
-                    <Button Grid.Column="2" VerticalAlignment="Top" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="BtnDelete_Click">
-                        <fa:IconImage Icon="Times" Width="14" Height="14" Foreground="#9CA3AF"/>
-                    </Button>
+                        <Grid Grid.Row="0" Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="{TemplateBinding Title}" FontSize="16" FontWeight="Bold" Foreground="#111827" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{TemplateBinding Timestamp}" FontSize="12" Foreground="#9CA3AF" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <Button Grid.Column="2" VerticalAlignment="Center" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="BtnDelete_Click">
+                                <fa:IconImage Icon="Times" Width="14" Height="14" Foreground="#9CA3AF"/>
+                            </Button>
+                        </Grid>
+
+                        <TextBlock Grid.Row="1" Text="{TemplateBinding Message}" 
+                           FontSize="14" Foreground="#4B5563" TextWrapping="Wrap" 
+                           MaxHeight="40" TextTrimming="CharacterEllipsis" LineHeight="20"/>
+                    </Grid>
                 </Grid>
             </Border>
 
