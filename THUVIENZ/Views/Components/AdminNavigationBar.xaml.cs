@@ -58,7 +58,7 @@ namespace THUVIENZ.Views.Components
 
         private void BtnReport_Click(object sender, RoutedEventArgs e)
         {
-            // OnNavigate?.Invoke(new AdminReport(), "Report");
+            OnNavigate?.Invoke(new AdminReport(), "Report");
         }
 
         private void BtnLogout_Click(object sender, RoutedEventArgs e)
