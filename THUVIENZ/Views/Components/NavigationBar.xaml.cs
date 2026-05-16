@@ -55,5 +55,10 @@ namespace THUVIENZ
             new Login().Show();
             Window.GetWindow(this)?.Close();
         }
+
+        public void ClearRedDot()
+        {
+            RedDotBadge.Visibility = Visibility.Collapsed;
+        }
     }
 }

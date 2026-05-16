@@ -55,6 +55,18 @@ namespace THUVIENZ
                 adminNav.ActivePage = pageName;
             else if (navBar is NavigationBar readerNav)
                 readerNav.ActivePage = pageName;
+
+            if (newPage is Notifications notificationsPage)
+            {
+                notificationsPage.OnNotificationsViewed += () =>
+                {
+                    // Nếu thanh Nav hiện tại là của Reader, ra lệnh xóa chấm đỏ
+                    if (navBar is NavigationBar readerMenu)
+                    {
+                        readerMenu.ClearRedDot();
+                    }
+                };
+            }
         }
     }
 }
