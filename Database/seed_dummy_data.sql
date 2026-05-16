@@ -1,248 +1,185 @@
 -- ======================================================================
--- SCRIPT SINH DỮ LIỆU MẪU (DUMMY DATA) PHONG PHÚ CHO HỆ THỐNG
--- Cung cấp đầy đủ dữ liệu test cho: Độc giả, Yêu cầu đăng ký (Pending),
--- Kho sách vật lý, Giao dịch đang mượn, Lịch sử trả sách và Sách quá hạn.
--- Tích hợp bộ dữ liệu trễ hạn chuyên sâu theo từng ngưỡng cài đặt xử phạt.
+-- SCRIPT SINH DỮ LIỆU MẪU (DUMMY DATA) SIÊU CẤP CHO HỆ THỐNG
+-- Cung cấp hàng trăm bản ghi để biểu đồ thống kê trông chuyên nghiệp hơn.
 -- ======================================================================
 USE QL_ThuVien;
 GO
 
+-- XÓA DỮ LIỆU CŨ ĐỂ SEED MỚI (CHỈ DÙNG TRONG MÔI TRƯỜNG DEV)
+DELETE FROM CHITIETMUONTRA;
+DELETE FROM PHIEUMUON;
+DELETE FROM CUONSACH;
+DELETE FROM SACH;
+DELETE FROM DOCGIA;
+DELETE FROM TAIKHOAN WHERE TenDangNhap <> 'admin'; -- Giữ lại admin
+DELETE FROM THELOAISACH;
+DELETE FROM LOAIDOCGIA;
+GO
+
+-- RESET IDENTITY SEEDS
+DBCC CHECKIDENT ('LOAIDOCGIA', RESEED, 0);
+DBCC CHECKIDENT ('DOCGIA', RESEED, 0);
+DBCC CHECKIDENT ('THELOAISACH', RESEED, 0);
+DBCC CHECKIDENT ('SACH', RESEED, 100); -- Start books from 101
+DBCC CHECKIDENT ('CUONSACH', RESEED, 0);
+DBCC CHECKIDENT ('PHIEUMUON', RESEED, 0);
+GO
+
 -- 1. THỂ LOẠI SÁCH
 SET IDENTITY_INSERT THELOAISACH ON;
-IF NOT EXISTS (SELECT 1 FROM THELOAISACH WHERE MaTheLoai = 1)
-    INSERT INTO THELOAISACH (MaTheLoai, TenTheLoai) VALUES (1, N'Khoa học Công nghệ');
-IF NOT EXISTS (SELECT 1 FROM THELOAISACH WHERE MaTheLoai = 2)
-    INSERT INTO THELOAISACH (MaTheLoai, TenTheLoai) VALUES (2, N'Văn học Nghệ thuật');
-IF NOT EXISTS (SELECT 1 FROM THELOAISACH WHERE MaTheLoai = 3)
-    INSERT INTO THELOAISACH (MaTheLoai, TenTheLoai) VALUES (3, N'Kinh tế & Quản trị');
-IF NOT EXISTS (SELECT 1 FROM THELOAISACH WHERE MaTheLoai = 4)
-    INSERT INTO THELOAISACH (MaTheLoai, TenTheLoai) VALUES (4, N'Ngoại ngữ');
-IF NOT EXISTS (SELECT 1 FROM THELOAISACH WHERE MaTheLoai = 5)
-    INSERT INTO THELOAISACH (MaTheLoai, TenTheLoai) VALUES (5, N'Kỹ năng sống');
-IF NOT EXISTS (SELECT 1 FROM THELOAISACH WHERE MaTheLoai = 6)
-    INSERT INTO THELOAISACH (MaTheLoai, TenTheLoai) VALUES (6, N'Lịch sử & Địa lý');
-IF NOT EXISTS (SELECT 1 FROM THELOAISACH WHERE MaTheLoai = 7)
-    INSERT INTO THELOAISACH (MaTheLoai, TenTheLoai) VALUES (7, N'Tâm lý học');
-IF NOT EXISTS (SELECT 1 FROM THELOAISACH WHERE MaTheLoai = 8)
-    INSERT INTO THELOAISACH (MaTheLoai, TenTheLoai) VALUES (8, N'Triết học');
+INSERT INTO THELOAISACH (MaTheLoai, TenTheLoai) VALUES 
+(1, N'Khoa học Công nghệ'),
+(2, N'Văn học Nghệ thuật'),
+(3, N'Kinh tế & Quản trị'),
+(4, N'Ngoại ngữ'),
+(5, N'Kỹ năng sống'),
+(6, N'Lịch sử & Địa lý'),
+(7, N'Tâm lý học'),
+(8, N'Triết học'),
+(9, N'Y học & Sức khỏe'),
+(10, N'Chính trị - Pháp luật');
 SET IDENTITY_INSERT THELOAISACH OFF;
 GO
 
 -- 2. LOẠI ĐỘC GIẢ
 SET IDENTITY_INSERT LOAIDOCGIA ON;
-IF NOT EXISTS (SELECT 1 FROM LOAIDOCGIA WHERE MaLoaiDocGia = 1)
-    INSERT INTO LOAIDOCGIA (MaLoaiDocGia, TenLoaiDocGia) VALUES (1, N'Sinh viên');
-IF NOT EXISTS (SELECT 1 FROM LOAIDOCGIA WHERE MaLoaiDocGia = 2)
-    INSERT INTO LOAIDOCGIA (MaLoaiDocGia, TenLoaiDocGia) VALUES (2, N'Giảng viên');
+INSERT INTO LOAIDOCGIA (MaLoaiDocGia, TenLoaiDocGia) VALUES 
+(1, N'Sinh viên'),
+(2, N'Giảng viên'),
+(3, N'Nghiên cứu sinh');
 SET IDENTITY_INSERT LOAIDOCGIA OFF;
 GO
 
--- 2B. THAM SỐ HỆ THỐNG
-IF NOT EXISTS (SELECT 1 FROM THAMSO WHERE TenThamSo = 'SoSachMuonToiDa')
-    INSERT INTO THAMSO (TenThamSo, GiaTri) VALUES ('SoSachMuonToiDa', 5);
-IF NOT EXISTS (SELECT 1 FROM THAMSO WHERE TenThamSo = 'SoNgayMuonToiDa')
-    INSERT INTO THAMSO (TenThamSo, GiaTri) VALUES ('SoNgayMuonToiDa', 14);
-IF NOT EXISTS (SELECT 1 FROM THAMSO WHERE TenThamSo = 'TienPhatMoiNgay')
-    INSERT INTO THAMSO (TenThamSo, GiaTri) VALUES ('TienPhatMoiNgay', 2000);
-IF NOT EXISTS (SELECT 1 FROM THAMSO WHERE TenThamSo = 'TongNoToiDa')
-    INSERT INTO THAMSO (TenThamSo, GiaTri) VALUES ('TongNoToiDa', 50000);
-GO
-
--- 3. TÀI KHOẢN (Bao gồm Active gốc và các tài khoản chuyên dụng cho test trễ hạn)
-IF NOT EXISTS (SELECT 1 FROM TAIKHOAN WHERE TenDangNhap = 'reader_vana')
-    INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, Quyen, TrangThai) VALUES ('reader_vana', '123456', 'Reader', 'Active');
-IF NOT EXISTS (SELECT 1 FROM TAIKHOAN WHERE TenDangNhap = 'reader_thib')
-    INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, Quyen, TrangThai) VALUES ('reader_thib', '123456', 'Reader', 'Active');
-IF NOT EXISTS (SELECT 1 FROM TAIKHOAN WHERE TenDangNhap = 'reader_leminh')
-    INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, Quyen, TrangThai) VALUES ('reader_leminh', '123456', 'Reader', 'Active');
-
--- Các tài khoản trễ hạn chuyên sâu
-IF NOT EXISTS (SELECT 1 FROM TAIKHOAN WHERE TenDangNhap = 'reader_trehan1')
-    INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, Quyen, TrangThai) VALUES ('reader_trehan1', '123456', 'Reader', 'Active');
-IF NOT EXISTS (SELECT 1 FROM TAIKHOAN WHERE TenDangNhap = 'reader_trehan2')
-    INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, Quyen, TrangThai) VALUES ('reader_trehan2', '123456', 'Reader', 'Active');
-IF NOT EXISTS (SELECT 1 FROM TAIKHOAN WHERE TenDangNhap = 'reader_trehan3')
-    INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, Quyen, TrangThai) VALUES ('reader_trehan3', '123456', 'Reader', 'Active');
-
--- Tài khoản Pending
-IF NOT EXISTS (SELECT 1 FROM TAIKHOAN WHERE TenDangNhap = 'pending_user1')
-    INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, Quyen, TrangThai) VALUES ('pending_user1', 'password123', 'Reader', 'Pending');
-IF NOT EXISTS (SELECT 1 FROM TAIKHOAN WHERE TenDangNhap = 'pending_user2')
-    INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, Quyen, TrangThai) VALUES ('pending_user2', 'securepass', 'Reader', 'Pending');
-GO
-
--- 4. ĐỘC GIẢ
+-- 3. TÀI KHOẢN & ĐỘC GIẢ (Sinh tự động 30 độc giả với tên thật)
 SET IDENTITY_INSERT DOCGIA ON;
-IF NOT EXISTS (SELECT 1 FROM DOCGIA WHERE MaDocGia = 1)
-    INSERT INTO DOCGIA (MaDocGia, TenDangNhap, HoTen, MaLoaiDocGia, GioiTinh, SoDienThoai, Email, DiaChi, NgaySinh, TongNo) 
-    VALUES (1, 'reader_vana', N'Nguyễn Văn A', 1, N'Nam', '0901234567', 'vana@gmail.com', N'Quận 1, TP.HCM', '2003-05-15', 0);
+DECLARE @i INT = 1;
 
-IF NOT EXISTS (SELECT 1 FROM DOCGIA WHERE MaDocGia = 2)
-    INSERT INTO DOCGIA (MaDocGia, TenDangNhap, HoTen, MaLoaiDocGia, GioiTinh, SoDienThoai, Email, DiaChi, NgaySinh, TongNo) 
-    VALUES (2, 'reader_thib', N'Trần Thị B', 2, N'Nữ', '0919876543', 'thib@gmail.com', N'Quận Bình Thạnh, TP.HCM', '1995-08-22', 0);
+-- Danh sách họ và tên đệm/tên để tạo tên ngẫu nhiên
+DECLARE @HOS TABLE (ID INT IDENTITY(1,1), Ho NVARCHAR(20));
+INSERT INTO @HOS (Ho) VALUES (N'Nguyễn'), (N'Trần'), (N'Lê'), (N'Phạm'), (N'Hoàng'), (N'Phan'), (N'Vũ'), (N'Đặng'), (N'Bùi'), (N'Đỗ');
 
-IF NOT EXISTS (SELECT 1 FROM DOCGIA WHERE MaDocGia = 3)
-    INSERT INTO DOCGIA (MaDocGia, TenDangNhap, HoTen, MaLoaiDocGia, GioiTinh, SoDienThoai, Email, DiaChi, NgaySinh, TongNo) 
-    VALUES (3, 'reader_leminh', N'Lê Minh C', 1, N'Nam', '0988112233', 'leminh@gmail.com', N'Quận 7, TP.HCM', '2002-12-01', 15000);
+DECLARE @TENS TABLE (ID INT IDENTITY(1,1), Ten NVARCHAR(20));
+INSERT INTO @TENS (Ten) VALUES (N'Anh'), (N'Bình'), (N'Chi'), (N'Dũng'), (N'Em'), (N'Phương'), (N'Giang'), (N'Hương'), (N'Khánh'), (N'Linh'), (N'Minh'), (N'Nam'), (N'Oanh'), (N'Phúc'), (N'Quân'), (N'Sơn'), (N'Thảo'), (N'Uyên'), (N'Việt'), (N'Yến');
 
-IF NOT EXISTS (SELECT 1 FROM DOCGIA WHERE MaDocGia = 4)
-    INSERT INTO DOCGIA (MaDocGia, TenDangNhap, HoTen, MaLoaiDocGia, GioiTinh, SoDienThoai, Email, DiaChi, NgaySinh, TongNo) 
-    VALUES (4, 'pending_user1', N'Nguyễn Chờ Duyệt 1', 1, N'Nam', '0911223344', 'pending1@gmail.com', N'Quận 3, TP.HCM', '2004-01-10', 0);
+WHILE @i <= 30
+BEGIN
+    DECLARE @user NVARCHAR(50) = 'reader' + CAST(@i AS NVARCHAR);
+    IF NOT EXISTS (SELECT 1 FROM TAIKHOAN WHERE TenDangNhap = @user)
+        INSERT INTO TAIKHOAN (TenDangNhap, MatKhau, Quyen, TrangThai) VALUES (@user, '123456', 'Reader', 'Active');
+    
+    DECLARE @Ho NVARCHAR(20) = (SELECT Ho FROM @HOS WHERE ID = (@i % 10) + 1);
+    DECLARE @Ten NVARCHAR(20) = (SELECT Ten FROM @TENS WHERE ID = (@i % 20) + 1);
+    DECLARE @HoTenFull NVARCHAR(100) = @Ho + N' ' + @Ten;
 
-IF NOT EXISTS (SELECT 1 FROM DOCGIA WHERE MaDocGia = 5)
     INSERT INTO DOCGIA (MaDocGia, TenDangNhap, HoTen, MaLoaiDocGia, GioiTinh, SoDienThoai, Email, DiaChi, NgaySinh, TongNo) 
-    VALUES (5, 'pending_user2', N'Trần Chờ Duyệt 2', 2, N'Nữ', '0955667788', 'pending2@gmail.com', N'Quận 5, TP.HCM', '1998-06-15', 0);
-
--- Các độc giả trễ hạn minh họa cụ thể cho từng ngưỡng cài đặt
-IF NOT EXISTS (SELECT 1 FROM DOCGIA WHERE MaDocGia = 6)
-    INSERT INTO DOCGIA (MaDocGia, TenDangNhap, HoTen, MaLoaiDocGia, GioiTinh, SoDienThoai, Email, DiaChi, NgaySinh, TongNo) 
-    VALUES (6, 'reader_trehan1', N'Trần Trễ Hạn Nhẹ', 1, N'Nữ', '0933112233', 'trehan1@gmail.com', N'Quận 10, TP.HCM', '2001-04-12', 0);
-
-IF NOT EXISTS (SELECT 1 FROM DOCGIA WHERE MaDocGia = 7)
-    INSERT INTO DOCGIA (MaDocGia, TenDangNhap, HoTen, MaLoaiDocGia, GioiTinh, SoDienThoai, Email, DiaChi, NgaySinh, TongNo) 
-    VALUES (7, 'reader_trehan2', N'Phạm Nợ Ngập Đầu', 1, N'Nam', '0944112233', 'trehan2@gmail.com', N'Quận Gò Vấp, TP.HCM', '2000-09-09', 60000); -- Nợ gốc vượt ngưỡng 50k
-
-IF NOT EXISTS (SELECT 1 FROM DOCGIA WHERE MaDocGia = 8)
-    INSERT INTO DOCGIA (MaDocGia, TenDangNhap, HoTen, MaLoaiDocGia, GioiTinh, SoDienThoai, Email, DiaChi, NgaySinh, TongNo) 
-    VALUES (8, 'reader_trehan3', N'Hoàng Mượn Kịch Trần', 2, N'Nam', '0966112233', 'trehan3@gmail.com', N'TP. Thủ Đức, TP.HCM', '1992-02-02', 0);
+    VALUES (@i, @user, @HoTenFull, (@i % 3) + 1, 
+            CASE WHEN @i % 2 = 0 THEN N'Nam' ELSE N'Nữ' END, 
+            '09' + CAST(10000000 + @i AS NVARCHAR), 
+            @user + '@gmail.com', N'Địa chỉ ' + CAST(@i AS NVARCHAR), 
+            DATEADD(year, -20 - (@i % 10), GETDATE()), 0);
+    SET @i = @i + 1;
+END;
 SET IDENTITY_INSERT DOCGIA OFF;
 GO
 
--- 5. ĐẦU SÁCH (SACH)
+-- 4. ĐẦU SÁCH (Sinh tự động 50 đầu sách với tên thật hơn tí)
 SET IDENTITY_INSERT SACH ON;
-IF NOT EXISTS (SELECT 1 FROM SACH WHERE MaSach = 101)
+DECLARE @j INT = 101;
+WHILE @j <= 150
+BEGIN
     INSERT INTO SACH (MaSach, MaISBN, TenSach, MaTheLoai, TacGia, NhaXuatBan, NamXuatBan, TriGia, MoTa) 
-    VALUES (101, 'ISBN-9780132350884', N'Clean Code: A Handbook of Agile Software Craftsmanship', 1, N'Robert C. Martin', N'Prentice Hall', 2008, 500000, N'Sách hướng dẫn viết mã sạch và tối ưu hóa phần mềm');
-
-IF NOT EXISTS (SELECT 1 FROM SACH WHERE MaSach = 102)
-    INSERT INTO SACH (MaSach, MaISBN, TenSach, MaTheLoai, TacGia, NhaXuatBan, NamXuatBan, TriGia, MoTa) 
-    VALUES (102, 'ISBN-9780201633610', N'Design Patterns: Elements of Reusable Object-Oriented Software', 1, N'Erich Gamma', N'Addison-Wesley', 1994, 450000, N'Sách kinh điển về các mẫu thiết kế hướng đối tượng');
-
-IF NOT EXISTS (SELECT 1 FROM SACH WHERE MaSach = 103)
-    INSERT INTO SACH (MaSach, MaISBN, TenSach, MaTheLoai, TacGia, NhaXuatBan, NamXuatBan, TriGia, MoTa) 
-    VALUES (103, 'ISBN-9781491950296', N'Programming C# 8.0: Build Cloud, Web, and Desktop Applications', 1, N'Ian Griffiths', N'O''Reilly Media', 2019, 600000, N'Cẩm nang toàn diện về lập trình C# và nền tảng .NET');
-
-IF NOT EXISTS (SELECT 1 FROM SACH WHERE MaSach = 104)
-    INSERT INTO SACH (MaSach, MaISBN, TenSach, MaTheLoai, TacGia, NhaXuatBan, NamXuatBan, TriGia, MoTa) 
-    VALUES (104, 'ISBN-9780321125217', N'Domain-Driven Design: Tackling Complexity in the Heart of Software', 1, N'Eric Evans', N'Addison-Wesley', 2003, 550000, N'Sách chuyên sâu về kiến trúc và thiết kế hướng tên miền');
-
-IF NOT EXISTS (SELECT 1 FROM SACH WHERE MaSach = 105)
-    INSERT INTO SACH (MaSach, MaISBN, TenSach, MaTheLoai, TacGia, NhaXuatBan, NamXuatBan, TriGia, MoTa) 
-    VALUES (105, 'ISBN-9780134685991', N'Effective Java (3rd Edition)', 1, N'Joshua Bloch', N'Addison-Wesley', 2017, 480000, N'Sách cẩm nang các quy tắc tối ưu cho lập trình viên Java');
+    VALUES (@j, 'ISBN-' + CAST(9780000000000 + @j AS NVARCHAR), 
+            CASE 
+                WHEN @j % 10 = 1 THEN N'Lập trình C# nâng cao'
+                WHEN @j % 10 = 2 THEN N'Đắc Nhân Tâm'
+                WHEN @j % 10 = 3 THEN N'Kinh tế vĩ mô'
+                WHEN @j % 10 = 4 THEN N'Tiếng Anh giao tiếp'
+                WHEN @j % 10 = 5 THEN N'Hạt giống tâm hồn'
+                WHEN @j % 10 = 6 THEN N'Lịch sử Việt Nam'
+                WHEN @j % 10 = 7 THEN N'Tâm lý học tội phạm'
+                WHEN @j % 10 = 8 THEN N'Triết học Mác-Lênin'
+                WHEN @j % 10 = 9 THEN N'Y học cổ truyền'
+                ELSE N'Luật dân sự'
+            END + N' Vol ' + CAST(@j AS NVARCHAR), 
+            (@j % 10) + 1, 
+            N'Tác giả ' + CAST(@j AS NVARCHAR), 
+            N'NXB ' + CASE WHEN @j % 2 = 0 THEN N'Giáo dục' ELSE N'Trẻ' END, 
+            2010 + (@j % 14), 100000 + (@j * 1000), 
+            N'Mô tả cho cuốn sách ' + CAST(@j AS NVARCHAR));
+    SET @j = @j + 1;
+END;
 SET IDENTITY_INSERT SACH OFF;
 GO
 
--- 6. TẠO CÁC BẢN SAO VẬT LÝ (CUONSACH)
--- Bổ sung đầy đủ sách vật lý cho các giao dịch
-IF NOT EXISTS (SELECT 1 FROM CUONSACH WHERE MaSach = 101)
+-- 4B. CUỐN SÁCH (Bản sao vật lý)
+SET IDENTITY_INSERT CUONSACH ON;
+DECLARE @cs_id INT = 1;
+DECLARE @book_id INT = 101;
+WHILE @book_id <= 150
 BEGIN
-    INSERT INTO CUONSACH (MaSach, TinhTrang) VALUES (101, N'Sẵn sàng');
-    INSERT INTO CUONSACH (MaSach, TinhTrang) VALUES (101, N'Đang mượn');
-    INSERT INTO CUONSACH (MaSach, TinhTrang) VALUES (101, N'Sẵn sàng');
+    INSERT INTO CUONSACH (MaCuonSach, MaSach, TinhTrang) VALUES (@cs_id, @book_id, N'Sẵn sàng'); SET @cs_id = @cs_id + 1;
+    INSERT INTO CUONSACH (MaCuonSach, MaSach, TinhTrang) VALUES (@cs_id, @book_id, N'Sẵn sàng'); SET @cs_id = @cs_id + 1;
+    SET @book_id = @book_id + 1;
 END;
+SET IDENTITY_INSERT CUONSACH OFF;
+GO
 
-IF NOT EXISTS (SELECT 1 FROM CUONSACH WHERE MaSach = 102)
+-- 5. GIAO DỊCH MƯỢN TRẢ (Sinh 400 giao dịch: 300 rải rác năm, 100 tập trung tháng này)
+DECLARE @k INT = 1;
+WHILE @k <= 400
 BEGIN
-    INSERT INTO CUONSACH (MaSach, TinhTrang) VALUES (102, N'Sẵn sàng');
-    INSERT INTO CUONSACH (MaSach, TinhTrang) VALUES (102, N'Đang mượn');
-    INSERT INTO CUONSACH (MaSach, TinhTrang) VALUES (102, N'Đang mượn');
-END;
+    DECLARE @MaDG INT = (@k % 30) + 1;
+    DECLARE @NgayMuon DATETIME;
 
-IF NOT EXISTS (SELECT 1 FROM CUONSACH WHERE MaSach = 103)
-BEGIN
-    INSERT INTO CUONSACH (MaSach, TinhTrang) VALUES (103, N'Đang mượn');
-    INSERT INTO CUONSACH (MaSach, TinhTrang) VALUES (103, N'Sẵn sàng');
-    INSERT INTO CUONSACH (MaSach, TinhTrang) VALUES (103, N'Đang mượn');
-END;
-
-IF NOT EXISTS (SELECT 1 FROM CUONSACH WHERE MaSach = 104)
-BEGIN
-    INSERT INTO CUONSACH (MaSach, TinhTrang) VALUES (104, N'Đang mượn');
-    INSERT INTO CUONSACH (MaSach, TinhTrang) VALUES (104, N'Đang mượn');
-    INSERT INTO CUONSACH (MaSach, TinhTrang) VALUES (104, N'Đang mượn');
-END;
-
-IF NOT EXISTS (SELECT 1 FROM CUONSACH WHERE MaSach = 105)
-BEGIN
-    INSERT INTO CUONSACH (MaSach, TinhTrang) VALUES (105, N'Đang mượn');
-    INSERT INTO CUONSACH (MaSach, TinhTrang) VALUES (105, N'Đang mượn');
+    IF @k <= 300
+    BEGIN
+        -- 300 bản ghi rải rác cả năm
+        DECLARE @Factor FLOAT = SIN(@k * 0.1);
+        DECLARE @DaysAgo INT = CAST(((@k * 1.2) + (@Factor * 60)) AS INT) % 365;
+        IF @DaysAgo < 0 SET @DaysAgo = @DaysAgo * -1;
+        SET @NgayMuon = DATEADD(day, -@DaysAgo, GETDATE());
+    END
+    ELSE
+    BEGIN
+        -- 100 bản ghi tập trung 30 ngày qua để biểu đồ tháng "dày" hơn
+        SET @NgayMuon = DATEADD(day, -(@k % 30), GETDATE());
+    END
+    
+    INSERT INTO PHIEUMUON (MaDocGia, NgayMuon) VALUES (@MaDG, @NgayMuon);
+    DECLARE @MaPhieu INT = SCOPE_IDENTITY();
+    
+    DECLARE @MaSach1 INT = 101 + (@k % 50);
+    DECLARE @MaCuon1 INT = (SELECT TOP 1 MaCuonSach FROM CUONSACH WHERE MaSach = @MaSach1);
+    
+    -- Apriori Pattern
+    IF @k % 7 = 0
+    BEGIN
+        SET @MaCuon1 = (SELECT TOP 1 MaCuonSach FROM CUONSACH WHERE MaSach = 101);
+        DECLARE @MaCuon2 INT = (SELECT TOP 1 MaCuonSach FROM CUONSACH WHERE MaSach = 102);
+        IF @MaCuon1 IS NOT NULL
+            INSERT INTO CHITIETMUONTRA (MaPhieuMuon, MaCuonSach, HanTra, NgayTraThucTe, TienPhat) 
+            VALUES (@MaPhieu, @MaCuon1, DATEADD(day, 14, @NgayMuon), CASE WHEN @k % 2 = 0 THEN DATEADD(day, 7, @NgayMuon) ELSE NULL END, 0);
+        IF @MaCuon2 IS NOT NULL
+            INSERT INTO CHITIETMUONTRA (MaPhieuMuon, MaCuonSach, HanTra, NgayTraThucTe, TienPhat) 
+            VALUES (@MaPhieu, @MaCuon2, DATEADD(day, 14, @NgayMuon), CASE WHEN @k % 2 = 0 THEN DATEADD(day, 7, @NgayMuon) ELSE NULL END, 0);
+    END
+    ELSE
+    BEGIN
+        IF @MaCuon1 IS NOT NULL
+            INSERT INTO CHITIETMUONTRA (MaPhieuMuon, MaCuonSach, HanTra, NgayTraThucTe, TienPhat) 
+            VALUES (@MaPhieu, @MaCuon1, DATEADD(day, 14, @NgayMuon), 
+                   CASE WHEN (@k % 4 != 0) THEN DATEADD(day, 10, @NgayMuon) ELSE NULL END, 0);
+    END
+    SET @k = @k + 1;
 END;
 GO
 
--- 7. PHIẾU MƯỢN & CHI TIẾT MƯỢN TRẢ MẪU
-DELETE FROM CHITIETMUONTRA;
-DELETE FROM PHIEUMUON;
+-- 6. FINAL POLISH
+UPDATE CHITIETMUONTRA SET HanTra = DATEADD(day, -5, GETDATE())
+WHERE MaPhieuMuon IN (SELECT TOP 60 MaPhieuMuon FROM PHIEUMUON ORDER BY NEWID()) AND NgayTraThucTe IS NULL;
+
+UPDATE CUONSACH SET TinhTrang = N'Đang mượn' WHERE MaCuonSach IN (SELECT MaCuonSach FROM CHITIETMUONTRA WHERE NgayTraThucTe IS NULL);
+UPDATE CUONSACH SET TinhTrang = N'Sẵn sàng' WHERE MaCuonSach NOT IN (SELECT MaCuonSach FROM CHITIETMUONTRA WHERE NgayTraThucTe IS NULL);
 GO
 
-SET IDENTITY_INSERT PHIEUMUON ON;
--- Phiếu 1: Nguyễn Văn A mượn
-INSERT INTO PHIEUMUON (MaPhieuMuon, MaDocGia, NgayMuon) VALUES (1, 1, DATEADD(day, -10, GETDATE()));
--- Phiếu 2: Trần Thị B mượn
-INSERT INTO PHIEUMUON (MaPhieuMuon, MaDocGia, NgayMuon) VALUES (2, 2, DATEADD(day, -3, GETDATE()));
--- Phiếu 3: Lê Minh C mượn
-INSERT INTO PHIEUMUON (MaPhieuMuon, MaDocGia, NgayMuon) VALUES (3, 3, DATEADD(day, -25, GETDATE()));
-
--- Phiếu 4: Trần Trễ Hạn Nhẹ (Trường hợp 1: Trễ 5 ngày để test phạt tiền)
-INSERT INTO PHIEUMUON (MaPhieuMuon, MaDocGia, NgayMuon) VALUES (4, 6, DATEADD(day, -19, GETDATE()));
-
--- Phiếu 5: Phạm Nợ Ngập Đầu (Trường hợp 2: Trễ 30 ngày, cộng nợ cũ vượt 50k)
-INSERT INTO PHIEUMUON (MaPhieuMuon, MaDocGia, NgayMuon) VALUES (5, 7, DATEADD(day, -44, GETDATE()));
-
--- Phiếu 6: Hoàng Mượn Kịch Trần (Trường hợp 3: Mượn tối đa 5 cuốn sách)
-INSERT INTO PHIEUMUON (MaPhieuMuon, MaDocGia, NgayMuon) VALUES (6, 8, DATEADD(day, -5, GETDATE()));
-SET IDENTITY_INSERT PHIEUMUON OFF;
-GO
-
--- Lấy ra danh sách các mã cuốn sách vật lý ngẫu nhiên để map vào phiếu mượn
-DECLARE @cs1 INT, @cs2 INT, @cs3 INT, @cs4 INT, @cs5 INT, @cs6 INT, @cs7 INT, @cs8 INT, @cs9 INT, @cs10 INT, @cs11 INT;
-
--- Gán mã cuốn sách tuần tự từ các bảng
-SELECT TOP 1 @cs1 = MaCuonSach FROM CUONSACH WHERE MaSach = 101 ORDER BY MaCuonSach ASC;
-SELECT TOP 1 @cs2 = MaCuonSach FROM CUONSACH WHERE MaSach = 101 AND MaCuonSach > @cs1 ORDER BY MaCuonSach ASC;
-SELECT TOP 1 @cs3 = MaCuonSach FROM CUONSACH WHERE MaSach = 102 ORDER BY MaCuonSach ASC;
-SELECT TOP 1 @cs4 = MaCuonSach FROM CUONSACH WHERE MaSach = 103 ORDER BY MaCuonSach ASC;
-SELECT TOP 1 @cs5 = MaCuonSach FROM CUONSACH WHERE MaSach = 102 AND MaCuonSach > @cs3 ORDER BY MaCuonSach ASC;
-SELECT TOP 1 @cs6 = MaCuonSach FROM CUONSACH WHERE MaSach = 103 AND MaCuonSach > @cs4 ORDER BY MaCuonSach ASC;
-SELECT TOP 1 @cs7 = MaCuonSach FROM CUONSACH WHERE MaSach = 104 ORDER BY MaCuonSach ASC;
-SELECT TOP 1 @cs8 = MaCuonSach FROM CUONSACH WHERE MaSach = 104 AND MaCuonSach > @cs7 ORDER BY MaCuonSach ASC;
-SELECT TOP 1 @cs9 = MaCuonSach FROM CUONSACH WHERE MaSach = 104 AND MaCuonSach > @cs8 ORDER BY MaCuonSach ASC;
-SELECT TOP 1 @cs10 = MaCuonSach FROM CUONSACH WHERE MaSach = 105 ORDER BY MaCuonSach ASC;
-SELECT TOP 1 @cs11 = MaCuonSach FROM CUONSACH WHERE MaSach = 105 AND MaCuonSach > @cs10 ORDER BY MaCuonSach ASC;
-
--- Chi tiết Phiếu 1:
-IF @cs1 IS NOT NULL INSERT INTO CHITIETMUONTRA (MaPhieuMuon, MaCuonSach, HanTra, NgayTraThucTe, TienPhat) VALUES (1, @cs1, DATEADD(day, 4, GETDATE()), DATEADD(day, -5, GETDATE()), 0);
-IF @cs2 IS NOT NULL INSERT INTO CHITIETMUONTRA (MaPhieuMuon, MaCuonSach, HanTra, NgayTraThucTe, TienPhat) VALUES (1, @cs2, DATEADD(day, 4, GETDATE()), NULL, 0);
-
--- Chi tiết Phiếu 2:
-IF @cs3 IS NOT NULL INSERT INTO CHITIETMUONTRA (MaPhieuMuon, MaCuonSach, HanTra, NgayTraThucTe, TienPhat) VALUES (2, @cs3, DATEADD(day, 11, GETDATE()), NULL, 0);
-
--- Chi tiết Phiếu 3:
-IF @cs4 IS NOT NULL INSERT INTO CHITIETMUONTRA (MaPhieuMuon, MaCuonSach, HanTra, NgayTraThucTe, TienPhat) VALUES (3, @cs4, DATEADD(day, -11, GETDATE()), NULL, 0);
-
--- Chi tiết Phiếu 4 (Trần Trễ Hạn Nhẹ - Quá hạn 5 ngày):
-IF @cs5 IS NOT NULL INSERT INTO CHITIETMUONTRA (MaPhieuMuon, MaCuonSach, HanTra, NgayTraThucTe, TienPhat) VALUES (4, @cs5, DATEADD(day, -5, GETDATE()), NULL, 0);
-
--- Chi tiết Phiếu 5 (Phạm Nợ Ngập Đầu - Quá hạn 30 ngày):
-IF @cs6 IS NOT NULL INSERT INTO CHITIETMUONTRA (MaPhieuMuon, MaCuonSach, HanTra, NgayTraThucTe, TienPhat) VALUES (5, @cs6, DATEADD(day, -30, GETDATE()), NULL, 0);
-
--- Chi tiết Phiếu 6 (Hoàng Mượn Kịch Trần - 5 cuốn cùng lúc đang giữ bình thường):
-IF @cs7 IS NOT NULL INSERT INTO CHITIETMUONTRA (MaPhieuMuon, MaCuonSach, HanTra, NgayTraThucTe, TienPhat) VALUES (6, @cs7, DATEADD(day, 9, GETDATE()), NULL, 0);
-IF @cs8 IS NOT NULL INSERT INTO CHITIETMUONTRA (MaPhieuMuon, MaCuonSach, HanTra, NgayTraThucTe, TienPhat) VALUES (6, @cs8, DATEADD(day, 9, GETDATE()), NULL, 0);
-IF @cs9 IS NOT NULL INSERT INTO CHITIETMUONTRA (MaPhieuMuon, MaCuonSach, HanTra, NgayTraThucTe, TienPhat) VALUES (6, @cs9, DATEADD(day, 9, GETDATE()), NULL, 0);
-IF @cs10 IS NOT NULL INSERT INTO CHITIETMUONTRA (MaPhieuMuon, MaCuonSach, HanTra, NgayTraThucTe, TienPhat) VALUES (6, @cs10, DATEADD(day, 9, GETDATE()), NULL, 0);
-IF @cs11 IS NOT NULL INSERT INTO CHITIETMUONTRA (MaPhieuMuon, MaCuonSach, HanTra, NgayTraThucTe, TienPhat) VALUES (6, @cs11, DATEADD(day, 9, GETDATE()), NULL, 0);
-GO
-
--- Đồng bộ lại trạng thái TinhTrang trong bảng CUONSACH cho khớp thực tế luồng giao dịch
-UPDATE CS
-SET TinhTrang = N'Đang mượn'
-FROM CUONSACH CS
-WHERE MaCuonSach IN (SELECT MaCuonSach FROM CHITIETMUONTRA WHERE NgayTraThucTe IS NULL);
-
-UPDATE CS
-SET TinhTrang = N'Sẵn sàng'
-FROM CUONSACH CS
-WHERE MaCuonSach NOT IN (SELECT MaCuonSach FROM CHITIETMUONTRA WHERE NgayTraThucTe IS NULL);
-GO
-
-PRINT N'---> Khởi tạo và làm phong phú toàn bộ dữ liệu mẫu (Dummy Data) kèm kịch bản trễ hạn thành công!';
+PRINT N'---> Dữ liệu "Người thật việc thật" và biểu đồ tháng siêu dày đã sẵn sàng!';
