@@ -12,6 +12,10 @@ namespace THUVIENZ.ViewModels
     public class AdminReportViewModel : ObservableObject
     {
         private readonly ReportService _reportService;
+        private int _currentDays = 7;
+
+        // --- COMMANDS ---
+        public RelayCommand ChangeFilterCommand { get; }
 
         // --- DATA CHO KPI CARDS ---
         private string _totalBooks = "0";
@@ -43,6 +47,13 @@ namespace THUVIENZ.ViewModels
         }
 
         // --- DATA CHO BIỂU ĐỒ ĐƯỜNG/CỘT (Lượt mượn / Trễ hạn) ---
+        private string _trendTitle = "Lượt mượn & Trễ hạn (7 ngày qua)";
+        public string TrendTitle
+        {
+            get => _trendTitle;
+            set => SetProperty(ref _trendTitle, value);
+        }
+
         private SeriesCollection? _borrowingTrendSeries;
         public SeriesCollection? BorrowingTrendSeries
         {
@@ -70,23 +81,34 @@ namespace THUVIENZ.ViewModels
         public AdminReportViewModel()
         {
             _reportService = new ReportService();
-            _ = LoadDataAsync();
+            ChangeFilterCommand = new RelayCommand(p =>
+            {
+                if (int.TryParse(p?.ToString(), out int days))
+                {
+                    _ = LoadDataAsync(days);
+                }
+            });
+
+            _ = LoadDataAsync(7);
         }
 
-        private async Task LoadDataAsync()
+        private async Task LoadDataAsync(int days)
         {
+            _currentDays = days;
+            TrendTitle = $"Lượt mượn & Trễ hạn ({days} ngày qua)";
+
             try
             {
-                // 1. Tải KPI Summary
+                // 1. Tải KPI Summary (Luôn lấy tổng thể)
                 var summary = await _reportService.GetDashboardSummaryAsync();
                 TotalBooks = summary.TotalBooks.ToString("N0");
                 TotalReaders = summary.TotalReaders.ToString("N0");
                 BorrowedBooks = summary.BorrowedBooks.ToString("N0");
                 OverdueBooks = summary.OverdueBooks.ToString("N0");
 
-                // 2. Tải Xu hướng mượn sách (7 ngày qua)
+                // 2. Tải Xu hướng mượn sách
                 var toDate = DateTime.Now;
-                var fromDate = toDate.AddDays(-6);
+                var fromDate = toDate.AddDays(-(days - 1));
                 var trendData = await _reportService.GetBorrowingTrendAsync(fromDate, toDate);
 
                 // Chuẩn bị dữ liệu cho LiveCharts
@@ -94,13 +116,37 @@ namespace THUVIENZ.ViewModels
                 var overdueValues = new ChartValues<int>();
                 var labels = new List<string>();
 
-                // Đảm bảo đủ 7 ngày kể cả ngày không có dữ liệu
-                for (var date = fromDate.Date; date <= toDate.Date; date = date.AddDays(1))
+                // Nếu là 1 năm, chúng ta nên nhóm theo tháng thay vì theo ngày
+                if (days > 60)
                 {
-                    var dayStat = trendData.FirstOrDefault(t => t.Date.Date == date);
-                    borrowValues.Add(dayStat?.BorrowCount ?? 0);
-                    overdueValues.Add(dayStat?.OverdueCount ?? 0);
-                    labels.Add(date.ToString("dd/MM"));
+                    // Nhóm theo tháng
+                    var monthlyGroups = trendData
+                        .GroupBy(t => new { t.Date.Year, t.Date.Month })
+                        .Select(g => new 
+                        { 
+                            Date = new DateTime(g.Key.Year, g.Key.Month, 1),
+                            BorrowCount = g.Sum(x => x.BorrowCount),
+                            OverdueCount = g.Sum(x => x.OverdueCount)
+                        })
+                        .OrderBy(x => x.Date);
+
+                    foreach (var m in monthlyGroups)
+                    {
+                        borrowValues.Add(m.BorrowCount);
+                        overdueValues.Add(m.OverdueCount);
+                        labels.Add(m.Date.ToString("MM/yy"));
+                    }
+                }
+                else
+                {
+                    // Nhóm theo ngày (đảm bảo đủ các ngày)
+                    for (var date = fromDate.Date; date <= toDate.Date; date = date.AddDays(1))
+                    {
+                        var dayStat = trendData.FirstOrDefault(t => t.Date.Date == date);
+                        borrowValues.Add(dayStat?.BorrowCount ?? 0);
+                        overdueValues.Add(dayStat?.OverdueCount ?? 0);
+                        labels.Add(date.ToString("dd/MM"));
+                    }
                 }
 
                 BorrowingTrendSeries = new SeriesCollection
@@ -110,14 +156,14 @@ namespace THUVIENZ.ViewModels
                         Title = "Sách được mượn",
                         Values = borrowValues,
                         PointGeometry = DefaultGeometries.Circle,
-                        PointGeometrySize = 8
+                        PointGeometrySize = days > 30 ? 4 : 8
                     },
                     new LineSeries
                     {
                         Title = "Sách trễ hạn",
                         Values = overdueValues,
                         PointGeometry = DefaultGeometries.Square,
-                        PointGeometrySize = 8,
+                        PointGeometrySize = days > 30 ? 4 : 8,
                         Stroke = System.Windows.Media.Brushes.Red,
                         Fill = System.Windows.Media.Brushes.Transparent
                     }
@@ -141,7 +187,6 @@ namespace THUVIENZ.ViewModels
             }
             catch (Exception ex)
             {
-                // TODO: Handle error properly (e.g. show message box)
                 System.Diagnostics.Debug.WriteLine($"Error loading report data: {ex.Message}");
             }
         }
