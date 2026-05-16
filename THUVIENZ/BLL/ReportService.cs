@@ -27,6 +27,28 @@ namespace THUVIENZ.BLL
         }
 
         /// <summary>
+        /// Lấy danh sách các cặp sách thường được mượn cùng nhau kèm theo tên sách.
+        /// Dùng cho hiển thị UI.
+        /// </summary>
+        public async Task<List<BookPairDTO>> GetFrequentBookPairsWithNamesAsync(int minSupport = 2)
+        {
+            var pairs = await GetFrequentBookPairsAsync(minSupport);
+            if (!pairs.Any()) return new List<BookPairDTO>();
+
+            var bookIds = pairs.Select(p => p.Item1).Union(pairs.Select(p => p.Item2)).Distinct().ToList();
+            var bookNames = await _context.Sachs
+                .Where(s => bookIds.Contains(s.MaSach))
+                .ToDictionaryAsync(s => s.MaSach, s => s.TenSach);
+
+            return pairs.Select(p => new BookPairDTO
+            {
+                Book1Name = bookNames.ContainsKey(p.Item1) ? bookNames[p.Item1] : "Sách " + p.Item1,
+                Book2Name = bookNames.ContainsKey(p.Item2) ? bookNames[p.Item2] : "Sách " + p.Item2,
+                SupportCount = p.Item3
+            }).ToList();
+        }
+
+        /// <summary>
         /// Khai phá mẫu mượn sách bằng thuật toán Apriori đơn giản.
         /// Tìm các cặp đầu sách thường xuyên được mượn cùng nhau.
         /// </summary>
