@@ -49,12 +49,12 @@
     <Grid>
         <Border Background="White" CornerRadius="35" 
                 HorizontalAlignment="Center" VerticalAlignment="Center"
-                Width="1000" Height="680">
+                Width="1100" Height="780">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="30" Opacity="0.2" ShadowDepth="10" Color="Black"/>
             </Border.Effect>
 
-            <Grid Margin="60,50,60,50">
+            <Grid Margin="50,40,50,40">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -62,14 +62,14 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <StackPanel Grid.Row="0" Margin="0,0,0,30">
+                <StackPanel Grid.Row="0" Margin="0,0,0,25">
                     <TextBlock Text="Báo cáo Thống kê" FontSize="36" FontWeight="Bold" Foreground="#111827"/>
                     <TextBlock Text="Phân tích dữ liệu hoạt động và xu hướng mượn trả" 
                                FontSize="16" Foreground="#6B7280" Margin="0,5,0,0"/>
                 </StackPanel>
 
-                <!-- FILTER BAR (Sychronized with project style) -->
-                <Grid Grid.Row="1" Margin="0,0,0,25">
+                <!-- FILTER BAR -->
+                <Grid Grid.Row="1" Margin="0,0,0,20">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
@@ -98,41 +98,35 @@
                     </StackPanel>
                 </Grid>
 
-                <Grid Grid.Row="2" Margin="0,0,0,25">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="1*"/>
-                        <ColumnDefinition Width="1*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <comp:KPICard Grid.Column="0" CardTitle="Tổng Sách" CardValue="{Binding TotalBooks}" 
+                <!-- KPI CARDS - Using UniformGrid to prevent clipping -->
+                <UniformGrid Grid.Row="2" Columns="4" Margin="-10,0,-10,20">
+                    <comp:KPICard CardTitle="Tổng Sách" CardValue="{Binding TotalBooks}" 
                                   CardIcon="Book" IconBgColor="#DBEAFE" IconColor="#2563EB"/>
 
-                    <comp:KPICard Grid.Column="1" CardTitle="Độc Giả" CardValue="{Binding TotalReaders}" 
+                    <comp:KPICard CardTitle="Độc Giả" CardValue="{Binding TotalReaders}" 
                                   CardIcon="Users" IconBgColor="#D1FAE5" IconColor="#059669"/>
 
-                    <comp:KPICard Grid.Column="2" CardTitle="Đang Mượn" CardValue="{Binding BorrowedBooks}" 
+                    <comp:KPICard CardTitle="Đang Mượn" CardValue="{Binding BorrowedBooks}" 
                                   CardIcon="ArrowRightArrowLeft" IconBgColor="#FEF3C7" IconColor="#D97706"/>
 
-                    <comp:KPICard Grid.Column="3" CardTitle="Trễ Hạn" CardValue="{Binding OverdueBooks}" 
+                    <comp:KPICard CardTitle="Trễ Hạn" CardValue="{Binding OverdueBooks}" 
                                   CardIcon="ExclamationTriangle" IconBgColor="#FEE2E2" IconColor="#DC2626"/>
-                </Grid>
+                </UniformGrid>
 
                 <Grid Grid.Row="3">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="1.8*"/>
+                        <ColumnDefinition Width="1.2*"/>
                     </Grid.ColumnDefinitions>
 
                     <Border Grid.Column="0" Background="#F9FAFB" CornerRadius="20" Margin="0,0,10,0" Padding="20">
-                        <StackPanel>
-                            <TextBlock Text="{Binding TrendTitle}" FontSize="18" FontWeight="Bold" Foreground="#374151" Margin="0,0,0,15"/>
-                            <lvc:CartesianChart Series="{Binding BorrowingTrendSeries}" Height="280">
+                        <DockPanel>
+                            <TextBlock Text="{Binding TrendTitle}" DockPanel.Dock="Top" FontSize="18" FontWeight="Bold" Foreground="#374151" Margin="0,0,0,15"/>
+                            <lvc:CartesianChart Series="{Binding BorrowingTrendSeries}">
                                 <lvc:CartesianChart.AxisX>
                                     <lvc:Axis Labels="{Binding TrendLabels}">
                                         <lvc:Axis.Separator>
-                                            <lvc:Separator Step="1" StrokeThickness="0"/>
+                                            <lvc:Separator Step="{Binding LabelStep}" StrokeThickness="0"/>
                                         </lvc:Axis.Separator>
                                     </lvc:Axis>
                                 </lvc:CartesianChart.AxisX>
@@ -140,21 +134,20 @@
                                     <lvc:Axis LabelFormatter="{Binding YFormatter}"/>
                                 </lvc:CartesianChart.AxisY>
                             </lvc:CartesianChart>
-                        </StackPanel>
+                        </DockPanel>
                     </Border>
 
                     <Border Grid.Column="1" Background="#F9FAFB" CornerRadius="20" Margin="10,0,0,0" Padding="20">
-                        <StackPanel>
-                            <TextBlock Text="Thị hiếu Thể loại" FontSize="18" FontWeight="Bold" Foreground="#374151" Margin="0,0,0,15" HorizontalAlignment="Center"/>
-                            <lvc:PieChart Series="{Binding CategoryRatioSeries}" InnerRadius="50" LegendLocation="Bottom" Height="280">
+                        <DockPanel>
+                            <TextBlock Text="Thị hiếu Thể loại" DockPanel.Dock="Top" FontSize="18" FontWeight="Bold" Foreground="#374151" Margin="0,0,0,15" HorizontalAlignment="Center"/>
+                            <lvc:PieChart Series="{Binding CategoryRatioSeries}" InnerRadius="60" LegendLocation="Bottom">
                                 <lvc:PieChart.ChartLegend>
                                     <lvc:DefaultLegend BulletSize="15"/>
                                 </lvc:PieChart.ChartLegend>
                             </lvc:PieChart>
-                        </StackPanel>
+                        </DockPanel>
                     </Border>
                 </Grid>
-
             </Grid>
         </Border>
     </Grid>

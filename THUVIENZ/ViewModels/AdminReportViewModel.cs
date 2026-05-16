@@ -68,6 +68,13 @@ namespace THUVIENZ.ViewModels
             set => SetProperty(ref _trendLabels, value);
         }
 
+        private double _labelStep = 1;
+        public double LabelStep
+        {
+            get => _labelStep;
+            set => SetProperty(ref _labelStep, value);
+        }
+
         public Func<double, string> YFormatter { get; set; } = value => value.ToString("N0");
 
         // --- DATA CHO BIỂU ĐỒ TRÒN (Tỉ lệ thể loại) ---
@@ -119,6 +126,7 @@ namespace THUVIENZ.ViewModels
                 // Nếu là 1 năm, chúng ta nên nhóm theo tháng thay vì theo ngày
                 if (days > 60)
                 {
+                    LabelStep = 1;
                     // Nhóm theo tháng
                     var monthlyGroups = trendData
                         .GroupBy(t => new { t.Date.Year, t.Date.Month })
@@ -139,6 +147,7 @@ namespace THUVIENZ.ViewModels
                 }
                 else
                 {
+                    LabelStep = days == 30 ? 5 : 1;
                     // Nhóm theo ngày (đảm bảo đủ các ngày)
                     for (var date = fromDate.Date; date <= toDate.Date; date = date.AddDays(1))
                     {
