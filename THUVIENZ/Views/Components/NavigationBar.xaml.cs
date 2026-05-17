@@ -28,7 +28,23 @@ namespace THUVIENZ
             InitializeComponent();
         }
 
+        private System.Windows.Threading.DispatcherTimer? _unreadPollTimer;
+
         private async void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            await CheckUnreadNotificationsAsync();
+
+            // Khởi tạo bộ đếm thời gian polling kiểm tra thông báo mới (Real-time polling)
+            if (_unreadPollTimer == null)
+            {
+                _unreadPollTimer = new System.Windows.Threading.DispatcherTimer();
+                _unreadPollTimer.Interval = TimeSpan.FromSeconds(10); // Cứ mỗi 10 giây quét DB một lần
+                _unreadPollTimer.Tick += async (s, args) => await CheckUnreadNotificationsAsync();
+                _unreadPollTimer.Start();
+            }
+        }
+
+        private async Task CheckUnreadNotificationsAsync()
         {
             if (!string.IsNullOrEmpty(UserSession.UserID))
             {

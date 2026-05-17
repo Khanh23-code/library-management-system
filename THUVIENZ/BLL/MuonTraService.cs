@@ -115,6 +115,26 @@ namespace THUVIENZ.BLL
                 // Lưu toàn bộ thay đổi xuống DB
                 await _context.SaveChangesAsync();
 
+                // Tạo thông báo trả sách cho Độc giả
+                if (chiTiet.PhieuMuon?.DocGia != null)
+                {
+                    try
+                    {
+                        var notificationService = new NotificationService();
+                        await notificationService.CreateNotificationAsync(
+                            chiTiet.PhieuMuon.DocGia.MaDocGia,
+                            "Trả sách thành công",
+                            $"Bạn đã hoàn trả cuốn sách '{chiTiet.CuonSach?.Sach?.TenSach}' thành công. " +
+                            (tienPhat > 0 ? $"Phát sinh phí phạt quá hạn: {tienPhat:N0} VNĐ." : "Đúng hạn."),
+                            tienPhat > 0 ? NotificationType.Warning : NotificationType.Success
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Lỗi tạo thông báo trả sách: " + ex.Message);
+                    }
+                }
+
                 // Xác nhận giao dịch thành công
                 await transaction.CommitAsync();
 
@@ -206,6 +226,23 @@ namespace THUVIENZ.BLL
                 }
 
                 await _context.SaveChangesAsync();
+
+                // Tạo thông báo mượn sách cho Độc giả
+                try
+                {
+                    var notificationService = new NotificationService();
+                    await notificationService.CreateNotificationAsync(
+                        maDocGia,
+                        "Mượn sách thành công",
+                        $"Bạn đã mượn thành công {danhSachMaCuonSach.Count} cuốn sách vật lý. Hạn trả: {hanTra:dd/MM/yyyy}.",
+                        NotificationType.Success
+                    );
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine("Lỗi tạo thông báo mượn sách: " + ex.Message);
+                }
+
                 await transaction.CommitAsync();
                 return true;
             }
