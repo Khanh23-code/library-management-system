@@ -10,74 +10,84 @@ namespace THUVIENZ.BLL
 {
     /// <summary>
     /// Service xử lý nghiệp vụ liên quan đến Thông báo của độc giả.
-    /// Đã tích hợp bộ quét tự động dịch các bản ghi mượn sách thực tế thành thông báo tiếng Việt cá nhân hóa.
+    /// Thiết kế theo dạng Transient Thread-safe để ngăn chặn triệt để hiện tượng đụng độ Transaction trong WPF đa luồng.
     /// </summary>
     public class NotificationService
     {
-        private readonly LmsDbContext _context;
-        private readonly ThongBaoRepository _thongBaoRepository;
-        private readonly DocGiaRepository _docGiaRepository;
-
         public NotificationService()
         {
-            _context = new LmsDbContext();
-            _thongBaoRepository = new ThongBaoRepository(_context);
-            _docGiaRepository = new DocGiaRepository(_context);
         }
 
         public NotificationService(ThongBaoRepository repo, DocGiaRepository docGiaRepo)
         {
-            _context = new LmsDbContext();
-            _thongBaoRepository = repo;
-            _docGiaRepository = docGiaRepo;
+            // Hỗ trợ tương thích ngược cho unit test nếu có
         }
 
         /// <summary>
         /// Lấy toàn bộ thông báo của độc giả theo tên đăng nhập.
-        /// Tự động quét CSDL mượn trả thực tế để tạo các thông báo quá hạn / hết hạn trước khi nạp.
+        /// Sử dụng LmsDbContext ngắn hạn để bảo đảm an toàn đa luồng.
         /// </summary>
         public async Task<IEnumerable<ThongBao>> GetNotificationsAsync(string username)
         {
             if (string.IsNullOrWhiteSpace(username)) return Enumerable.Empty<ThongBao>();
 
-            // 1. Chạy quét ngầm tự sinh thông báo thật dựa trên lịch sử mượn thực tế
-            await AutoGenerateActiveBorrowingNotificationsAsync(username);
+            using (var context = new LmsDbContext())
+            {
+                var thongBaoRepo = new ThongBaoRepository(context);
+                var docGiaRepo = new DocGiaRepository(context);
 
-            // 2. Tải danh sách thông báo từ Database lên giao diện
-            var reader = await _docGiaRepository.GetReaderProfileAsync(username);
-            if (reader == null) return Enumerable.Empty<ThongBao>();
+                // 1. Chạy quét ngầm tự sinh thông báo thật dựa trên lịch sử mượn thực tế
+                await AutoGenerateActiveBorrowingNotificationsAsync(username, context, thongBaoRepo, docGiaRepo);
 
-            return await _thongBaoRepository.GetByReaderIdAsync(reader.MaDocGia);
+                // 2. Tải danh sách thông báo từ Database lên giao diện
+                var reader = await docGiaRepo.GetReaderProfileAsync(username);
+                if (reader == null) return Enumerable.Empty<ThongBao>();
+
+                return await thongBaoRepo.GetByReaderIdAsync(reader.MaDocGia);
+            }
         }
 
         /// <summary>
         /// Kiểm tra xem độc giả có thông báo chưa đọc hay không để bật chấm đỏ.
-        /// Tự động quét CSDL mượn trả thực tế để bật chấm đỏ thời gian thực nếu có sách quá hạn mới phát sinh.
+        /// Sử dụng LmsDbContext ngắn hạn để tránh đụng độ với luồng chính của Thủ thư.
         /// </summary>
         public async Task<bool> HasUnreadNotificationsAsync(string username)
         {
             if (string.IsNullOrWhiteSpace(username)) return false;
 
-            // 1. Chạy quét ngầm tự sinh thông báo thật dựa trên lịch sử mượn thực tế
-            await AutoGenerateActiveBorrowingNotificationsAsync(username);
+            using (var context = new LmsDbContext())
+            {
+                var thongBaoRepo = new ThongBaoRepository(context);
+                var docGiaRepo = new DocGiaRepository(context);
 
-            // 2. Kiểm tra trạng thái chấm đỏ
-            var reader = await _docGiaRepository.GetReaderProfileAsync(username);
-            if (reader == null) return false;
+                // 1. Chạy quét ngầm tự sinh thông báo thật dựa trên lịch sử mượn thực tế
+                await AutoGenerateActiveBorrowingNotificationsAsync(username, context, thongBaoRepo, docGiaRepo);
 
-            return await _thongBaoRepository.HasUnreadAsync(reader.MaDocGia);
+                // 2. Kiểm tra trạng thái chấm đỏ
+                var reader = await docGiaRepo.GetReaderProfileAsync(username);
+                if (reader == null) return false;
+
+                return await thongBaoRepo.HasUnreadAsync(reader.MaDocGia);
+            }
         }
 
         /// <summary>
-        /// Đánh dấu toàn bộ thông báo của độc giả là đã đọc (được gọi khi vào màn hình Thông báo).
+        /// Đánh dấu toàn bộ thông báo của độc giả là đã đọc.
         /// </summary>
         public async Task MarkAsReadAsync(string username)
         {
             if (string.IsNullOrWhiteSpace(username)) return;
-            var reader = await _docGiaRepository.GetReaderProfileAsync(username);
-            if (reader == null) return;
 
-            await _thongBaoRepository.MarkAllAsReadAsync(reader.MaDocGia);
+            using (var context = new LmsDbContext())
+            {
+                var thongBaoRepo = new ThongBaoRepository(context);
+                var docGiaRepo = new DocGiaRepository(context);
+
+                var reader = await docGiaRepo.GetReaderProfileAsync(username);
+                if (reader == null) return;
+
+                await thongBaoRepo.MarkAllAsReadAsync(reader.MaDocGia);
+            }
         }
 
         /// <summary>
@@ -86,21 +96,30 @@ namespace THUVIENZ.BLL
         public async Task DeleteNotificationAsync(int notificationId)
         {
             if (notificationId <= 0) return;
-            var noti = await _thongBaoRepository.GetByIdAsync(notificationId);
-            if (noti != null)
+
+            using (var context = new LmsDbContext())
             {
-                _thongBaoRepository.Delete(noti);
-                await _thongBaoRepository.SaveChangesAsync();
+                var thongBaoRepo = new ThongBaoRepository(context);
+                var noti = await thongBaoRepo.GetByIdAsync(notificationId);
+                if (noti != null)
+                {
+                    thongBaoRepo.Delete(noti);
+                    await thongBaoRepo.SaveChangesAsync();
+                }
             }
         }
 
         /// <summary>
-        /// Quét CSDL mượn trả thực tế của độc giả để tự sinh thông báo thật (quá hạn, sắp hết hạn).
+        /// Phương thức nội bộ thực hiện quét và tự sinh thông báo thật cho độc giả.
         /// </summary>
-        private async Task AutoGenerateActiveBorrowingNotificationsAsync(string username)
+        private async Task AutoGenerateActiveBorrowingNotificationsAsync(
+            string username, 
+            LmsDbContext context, 
+            ThongBaoRepository thongBaoRepository, 
+            DocGiaRepository docGiaRepository)
         {
             if (string.IsNullOrWhiteSpace(username)) return;
-            var reader = await _docGiaRepository.GetReaderProfileAsync(username);
+            var reader = await docGiaRepository.GetReaderProfileAsync(username);
             if (reader == null) return;
 
             string friendlyName = GetFirstName(reader.HoTen);
@@ -108,14 +127,14 @@ namespace THUVIENZ.BLL
             try
             {
                 // Lấy toàn bộ chi tiết giao dịch mượn chưa trả (NgayTraThucTe == null) của độc giả này
-                var activeBorrowings = await _context.ChiTietMuonTras
+                var activeBorrowings = await context.ChiTietMuonTras
                     .Include(c => c.CuonSach)
                     .ThenInclude(cs => cs!.Sach)
                     .Where(c => c.PhieuMuon != null && c.PhieuMuon.MaDocGia == reader.MaDocGia && c.NgayTraThucTe == null)
                     .ToListAsync();
 
                 // Lấy toàn bộ thông báo đang có của độc giả này để tránh tạo trùng lặp
-                var existingNotis = await _thongBaoRepository.GetByReaderIdAsync(reader.MaDocGia);
+                var existingNotis = await thongBaoRepository.GetByReaderIdAsync(reader.MaDocGia);
 
                 foreach (var b in activeBorrowings)
                 {
@@ -136,7 +155,7 @@ namespace THUVIENZ.BLL
                         if (!hasAlreadyNotifiedOverdue)
                         {
                             var msg = $"{friendlyName} ơi, quyển sách '{bookName}' của bạn đã bị quá hạn trả rồi đấy!! Bạn hãy thu xếp hoàn trả sớm để tránh tích lũy thêm phí phạt trễ hạn nhé!";
-                            await CreateNotificationAsync(reader.MaDocGia, title, msg, NotificationType.Failure);
+                            await CreateNotificationInternalAsync(context, thongBaoRepository, reader.MaDocGia, title, msg, NotificationType.Failure);
                         }
                     }
                     else if (daysRemaining <= 3)
@@ -153,7 +172,7 @@ namespace THUVIENZ.BLL
                         if (!hasAlreadyNotifiedExpiry)
                         {
                             var msg = $"{friendlyName} ơi, quyển '{bookName}' của bạn chỉ còn thời hạn mượn là {daysRemaining} ngày thôi, bạn đừng quên nhé!!";
-                            await CreateNotificationAsync(reader.MaDocGia, title, msg, NotificationType.Warning);
+                            await CreateNotificationInternalAsync(context, thongBaoRepository, reader.MaDocGia, title, msg, NotificationType.Warning);
                         }
                     }
                 }
@@ -175,9 +194,21 @@ namespace THUVIENZ.BLL
         }
 
         /// <summary>
-        /// Phương thức tiện ích để tạo thông báo mới cho độc giả (ví dụ: mượn/trả sách thành công).
+        /// Tạo thông báo mới cho độc giả sử dụng DbContext độc lập.
         /// </summary>
         public async Task CreateNotificationAsync(int maDocGia, string title, string message, NotificationType type)
+        {
+            using (var context = new LmsDbContext())
+            {
+                var thongBaoRepo = new ThongBaoRepository(context);
+                await CreateNotificationInternalAsync(context, thongBaoRepo, maDocGia, title, message, type);
+            }
+        }
+
+        /// <summary>
+        /// Ghi trực tiếp thông báo vào DbContext đang được sử dụng.
+        /// </summary>
+        private async Task CreateNotificationInternalAsync(LmsDbContext context, ThongBaoRepository repo, int maDocGia, string title, string message, NotificationType type)
         {
             var noti = new ThongBao
             {
@@ -188,8 +219,8 @@ namespace THUVIENZ.BLL
                 NgayTao = DateTime.Now,
                 DaDoc = false
             };
-            await _thongBaoRepository.AddAsync(noti);
-            await _thongBaoRepository.SaveChangesAsync();
+            await repo.AddAsync(noti);
+            await repo.SaveChangesAsync();
         }
     }
 }
