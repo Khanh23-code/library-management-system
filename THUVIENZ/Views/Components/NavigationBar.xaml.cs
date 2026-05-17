@@ -1,5 +1,8 @@
+using System;
 using System.Windows;
 using System.Windows.Controls;
+using THUVIENZ.BLL;
+using THUVIENZ.Core;
 using THUVIENZ.Views;
 using THUVIENZ.Views.Components;
 
@@ -18,9 +21,32 @@ namespace THUVIENZ
 
         public event Action<UserControl, string>? OnNavigate;
 
+        private readonly NotificationService _notificationService = new NotificationService();
+
         public NavigationBar()
         {
             InitializeComponent();
+        }
+
+        private async void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(UserSession.UserID))
+            {
+                try
+                {
+                    bool hasUnread = await _notificationService.HasUnreadNotificationsAsync(UserSession.UserID);
+                    RedDotBadge.Visibility = hasUnread ? Visibility.Visible : Visibility.Collapsed;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine("Lỗi check thông báo chưa đọc: " + ex.Message);
+                    RedDotBadge.Visibility = Visibility.Collapsed;
+                }
+            }
+            else
+            {
+                RedDotBadge.Visibility = Visibility.Collapsed;
+            }
         }
 
         private void BtnProfile_Click(object sender, RoutedEventArgs e)

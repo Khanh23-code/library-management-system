@@ -29,6 +29,7 @@ namespace THUVIENZ.DAL
         public DbSet<ChiTietMuonTra> ChiTietMuonTras { get; set; } = null!;
         public DbSet<ThamSo> ThamSos { get; set; } = null!;
         public DbSet<PhieuThuTienPhat> PhieuThuTienPhats { get; set; } = null!;
+        public DbSet<ThongBao> ThongBaos { get; set; } = null!;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -60,6 +61,7 @@ namespace THUVIENZ.DAL
             modelBuilder.Entity<ChiTietMuonTra>().ToTable("CHITIETMUONTRA", tb => tb.HasTrigger("trg_SyncCuonSachStatus"));
             modelBuilder.Entity<ThamSo>().ToTable("THAMSO");
             modelBuilder.Entity<PhieuThuTienPhat>().ToTable("PHIEUTHUTIENPHAT");
+            modelBuilder.Entity<ThongBao>().ToTable("THONGBAO");
 
             // ====================================================================
             // 2. ĐỊNH NGHĨA KHÓA CHÍNH (PRIMARY KEYS)
@@ -73,6 +75,7 @@ namespace THUVIENZ.DAL
             modelBuilder.Entity<PhieuMuon>().HasKey(p => p.MaPhieuMuon);
             modelBuilder.Entity<ThamSo>().HasKey(t => t.TenThamSo);
             modelBuilder.Entity<PhieuThuTienPhat>().HasKey(p => p.MaPhieuThu);
+            modelBuilder.Entity<ThongBao>().HasKey(t => t.MaThongBao);
 
             // Cấu hình Khóa chính phức hợp (Composite Key) cho bảng gộp mượn trả
             modelBuilder.Entity<ChiTietMuonTra>()
@@ -142,6 +145,18 @@ namespace THUVIENZ.DAL
                 .WithMany(d => d.PhieuThuTienPhats)
                 .HasForeignKey(p => p.MaDocGia)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Quan hệ: Thông Báo - Độc Giả (N-1)
+            modelBuilder.Entity<ThongBao>()
+                .HasOne(t => t.DocGia)
+                .WithMany()
+                .HasForeignKey(t => t.MaDocGia)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Chuyển đổi enum thành string trong Database
+            modelBuilder.Entity<ThongBao>()
+                .Property(t => t.LoaiThongBao)
+                .HasConversion<string>();
         }
     }
 }
