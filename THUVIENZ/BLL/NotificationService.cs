@@ -80,6 +80,16 @@ namespace THUVIENZ.BLL
         }
 
         /// <summary>
+        /// Tách lấy tên gọi (tên riêng) từ Họ và Tên đầy đủ của người Việt.
+        /// </summary>
+        public static string GetFirstName(string? fullName)
+        {
+            if (string.IsNullOrWhiteSpace(fullName)) return "Bạn";
+            var parts = fullName.Trim().Split(' ');
+            return parts[parts.Length - 1];
+        }
+
+        /// <summary>
         /// Phương thức tiện ích để tạo thông báo mới cho độc giả (ví dụ: mượn/trả sách thành công).
         /// </summary>
         public async Task CreateNotificationAsync(int maDocGia, string title, string message, NotificationType type)

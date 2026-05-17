@@ -121,11 +121,14 @@ namespace THUVIENZ.BLL
                     try
                     {
                         var notificationService = new NotificationService();
+                        string friendlyName = NotificationService.GetFirstName(chiTiet.PhieuMuon.DocGia.HoTen);
+                        string message = tienPhat > 0 
+                            ? $"{friendlyName} ơi, bạn đã trả quyển '{chiTiet.CuonSach?.Sach?.TenSach}' thành công, nhưng bạn còn nợ {tienPhat:N0} VNĐ phí trễ hạn nhé, bạn lưu ý nha!"
+                            : $"{friendlyName} ơi, bạn đã trả quyển '{chiTiet.CuonSach?.Sach?.TenSach}' thành công rồi nhé!!";
                         await notificationService.CreateNotificationAsync(
                             chiTiet.PhieuMuon.DocGia.MaDocGia,
                             "Trả sách thành công",
-                            $"Bạn đã hoàn trả cuốn sách '{chiTiet.CuonSach?.Sach?.TenSach}' thành công. " +
-                            (tienPhat > 0 ? $"Phát sinh phí phạt quá hạn: {tienPhat:N0} VNĐ." : "Đúng hạn."),
+                            message,
                             tienPhat > 0 ? NotificationType.Warning : NotificationType.Success
                         );
                     }
@@ -230,11 +233,13 @@ namespace THUVIENZ.BLL
                 // Tạo thông báo mượn sách cho Độc giả
                 try
                 {
+                    var docGia = await _context.DocGias.FindAsync(maDocGia);
+                    string friendlyName = docGia != null ? NotificationService.GetFirstName(docGia.HoTen) : "Bạn";
                     var notificationService = new NotificationService();
                     await notificationService.CreateNotificationAsync(
                         maDocGia,
                         "Mượn sách thành công",
-                        $"Bạn đã mượn thành công {danhSachMaCuonSach.Count} cuốn sách vật lý. Hạn trả: {hanTra:dd/MM/yyyy}.",
+                        $"{friendlyName} ơi, bạn đã mượn thành công {danhSachMaCuonSach.Count} cuốn sách rồi nhé. Hạn trả là ngày {hanTra:dd/MM/yyyy}, bạn đừng quên nhé!!",
                         NotificationType.Success
                     );
                 }
