@@ -290,14 +290,8 @@ namespace THUVIENZ.ViewModels
                     {
                         MessageBox.Show(ketQua.ThongBao, "Hoàn tất trả sách", MessageBoxButton.OK, MessageBoxImage.Information);
                         
-                        // Tải lại danh sách readers đảm bảo phục hồi binding liền mạch
+                        // Tải lại danh sách readers (hàm này tự động kích hoạt LoadBorrowedBooksAsync thông qua thuộc tính SelectedReader mà không bị đụng độ)
                         await LoadReadersAsync();
-                        
-                        // Nếu tài khoản vẫn còn sách đang mượn, tải tiếp chi tiết các cuốn còn lại
-                        if (SelectedReader != null && SelectedReader.MaDocGia == currentReaderId)
-                        {
-                            await LoadBorrowedBooksAsync(currentReaderId);
-                        }
                     }
                 }
                 catch (Exception ex)
