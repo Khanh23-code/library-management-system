@@ -51,8 +51,9 @@ namespace THUVIENZ.BLL
                 // 1. Tìm bản ghi trong CHITIETMUONTRA khớp mã cuốn sách và chưa được trả (NgayTraThucTe == null)
                 var chiTiet = await _context.ChiTietMuonTras
                     .Include(c => c.CuonSach)
+                        .ThenInclude(cs => cs!.Sach)
                     .Include(c => c.PhieuMuon)
-                    .ThenInclude(p => p!.DocGia)
+                        .ThenInclude(p => p!.DocGia)
                     .FirstOrDefaultAsync(c => c.MaCuonSach == maCuonSach && c.NgayTraThucTe == null);
 
                 // Nếu không tìm thấy, ném ra ngoại lệ cảnh báo chính xác theo yêu cầu
