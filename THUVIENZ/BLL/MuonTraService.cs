@@ -125,7 +125,8 @@ namespace THUVIENZ.BLL
                         string message = tienPhat > 0 
                             ? $"{friendlyName} ơi, bạn đã trả quyển '{chiTiet.CuonSach?.Sach?.TenSach}' thành công, nhưng bạn còn nợ {tienPhat:N0} VNĐ phí trễ hạn nhé, bạn lưu ý nha!"
                             : $"{friendlyName} ơi, bạn đã trả quyển '{chiTiet.CuonSach?.Sach?.TenSach}' thành công rồi nhé!!";
-                        await notificationService.CreateNotificationAsync(
+                        await notificationService.CreateNotificationWithContextAsync(
+                            _context,
                             chiTiet.PhieuMuon.DocGia.MaDocGia,
                             "Trả sách thành công",
                             message,
@@ -236,7 +237,8 @@ namespace THUVIENZ.BLL
                     var docGia = await _context.DocGias.FindAsync(maDocGia);
                     string friendlyName = docGia != null ? NotificationService.GetFirstName(docGia.HoTen) : "Bạn";
                     var notificationService = new NotificationService();
-                    await notificationService.CreateNotificationAsync(
+                    await notificationService.CreateNotificationWithContextAsync(
+                        _context,
                         maDocGia,
                         "Mượn sách thành công",
                         $"{friendlyName} ơi, bạn đã mượn thành công {danhSachMaCuonSach.Count} cuốn sách rồi nhé. Hạn trả là ngày {hanTra:dd/MM/yyyy}, bạn đừng quên nhé!!",

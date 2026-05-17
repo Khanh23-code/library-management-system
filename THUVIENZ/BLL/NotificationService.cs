@@ -194,6 +194,15 @@ namespace THUVIENZ.BLL
         }
 
         /// <summary>
+        /// Tạo thông báo mới cho độc giả sử dụng DbContext dùng chung (để tham gia cùng Transaction).
+        /// </summary>
+        public async Task CreateNotificationWithContextAsync(LmsDbContext context, int maDocGia, string title, string message, NotificationType type)
+        {
+            var thongBaoRepo = new ThongBaoRepository(context);
+            await CreateNotificationInternalAsync(context, thongBaoRepo, maDocGia, title, message, type);
+        }
+
+        /// <summary>
         /// Tạo thông báo mới cho độc giả sử dụng DbContext độc lập.
         /// </summary>
         public async Task CreateNotificationAsync(int maDocGia, string title, string message, NotificationType type)
